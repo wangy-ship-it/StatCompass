@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  /* Structural — light mode defaults (Tailwind utility registration) */
+  --color-app-bg: #ffffff;
+  --color-app-surface: #f8fafc;
+  --color-app-card: #f1f5f9;
+  --color-app-glass: rgba(0, 0, 0, 0.04);
+  --color-sidebar: #f8fafc;
+  --color-sidebar-hover: #f1f5f9;
+  --color-sidebar-active: rgba(99, 102, 241, 0.10);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-subtle: rgba(0, 0, 0, 0.05);
+}
+
+/* Light mode defaults — MUST come before .dark */
+:root {
+  --fill-red: rgba(239,68,68, 0.18);
+  --fill-amber: rgba(245,158,11, 0.16);
+  --fill-emerald: rgba(16,185,129, 0.16);
+  --fill-indigo: rgba(99,102,241, 0.16);
+  --fill-overlap: rgba(120,100,200, 0.12);
+
+  --svg-text: #334155;
+  --svg-text-faint: #64748b;
+  --svg-axis: #cbd5e1;
+  --svg-grid: #e2e8f0;
+  --svg-grid-subtle: #f1f5f9;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-tertiary: #64748b;
+  --color-text-muted: #6b7280;
+
+  --color-accent: #4f46e5;
+  --color-accent-faint: rgba(79, 70, 229, 0.55);
+  --color-accent-bg: rgba(99, 102, 241, 0.07);
+  --color-accent-ring: rgba(99, 102, 241, 0.15);
+
+  --color-emerald-text: #059669;
+  --color-red-text: #dc2626;
+}
+
+/* Dark mode overrides — AFTER :root so .dark wins on <html> */
+.dark {
+  --color-app-bg: #0a0f1a;
+  --color-app-surface: #0f1420;
+  --color-app-card: #161b2e;
+  --color-app-glass: rgba(255, 255, 255, 0.03);
+  --color-sidebar: #0c1019;
+  --color-sidebar-hover: #1a2035;
+  --color-sidebar-active: rgba(129, 140, 248, 0.12);
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  --fill-red: rgba(248,113,113, 0.28);
+  --fill-amber: rgba(250,204,21, 0.20);
+  --fill-emerald: rgba(52,211,153, 0.18);
+  --fill-indigo: rgba(129,140,248, 0.18);
+  --fill-overlap: rgba(200,200,255, 0.08);
+
+  --svg-text: #e2e8f0;
+  --svg-text-faint: #cbd5e1;
+  --svg-axis: #334155;
+  --svg-grid: #1e293b;
+  --svg-grid-subtle: #0f172a;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #e2e8f0;
+  --color-text-tertiary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+
+  --color-accent: #a5b4fc;
+  --color-accent-faint: rgba(165, 180, 252, 0.6);
+  --color-accent-bg: rgba(129, 140, 248, 0.06);
+  --color-accent-ring: rgba(129, 140, 248, 0.10);
+
+  --color-emerald-text: #34d399;
+  --color-red-text: #fca5a5;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128,128,128,0.15) transparent;
+}
+
+body {
+  margin: 0;
+  background: var(--color-app-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  height: 28px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--color-border);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--thumb-color, #818cf8);
+  margin-top: -9px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(0,0,0,0.12);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--color-border);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--thumb-color, #818cf8);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Sidebar scrollbar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+}
+
+/* Glass card utility */
+.glass-card {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: var(--color-app-glass);
+}
