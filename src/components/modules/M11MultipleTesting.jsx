@@ -18,11 +18,9 @@ export default function M11MultipleTesting() {
       const hasEffect = i < trueEffects;
       isTrue.push(hasEffect);
       if (hasEffect) {
-        // True effect: generate z-score with shift
         const z = 2.5 + (sR(i * 37 + seed * 71) - 0.5) * 2;
         pValues.push(2 * (1 - nCDF(Math.abs(z), 0, 1)));
       } else {
-        // Null: uniform p-value
         pValues.push(sR(i * 53 + seed * 97 + 500));
       }
     }
@@ -57,96 +55,218 @@ export default function M11MultipleTesting() {
     return { pValues, isTrue, significant, threshold, bhThresholds, tp, fp, fn, fwer, fdr };
   }, [nTests, trueEffects, correction, seed]);
 
-  const W = 600, H = 240, pl = 36, pr = 20, pt = 30, pb = 36;
-  const barW = Math.min(16, (W - pl - pr - nTests * 2) / nTests);
-  const toX = (i) => pl + (i / nTests) * (W - pl - pr) + barW / 2;
-  const toY = (p) => pt + p * (H - pt - pb);
+  // ── Sorted visualization data (sorted by p-value, smallest first) ──
+  const sorted = useMemo(() => {
+    return data.pValues
+      .map((p, i) => ({
+        p,
+        i,
+        isTrue: data.isTrue[i],
+        sig: data.significant[i],
+        wouldBeSig: p < alpha,
+      }))
+      .sort((a, b) => a.p - b.p);
+  }, [data]);
+
+  // ── Chart layout (-log₁₀ scale: tall bars = more significant) ──
+  const W = 600, H = 280, pl = 52, pr = 20, pt = 24, pb = 44;
+  const negLogAlpha = -Math.log10(alpha);
+  const negLogThresh = -Math.log10(Math.max(data.threshold, 1e-10));
+  const maxNLP = Math.max(
+    ...sorted.map((s) => -Math.log10(Math.max(s.p, 1e-8))),
+    correction === 'bonferroni' ? negLogThresh + 0.5 : negLogAlpha + 0.5,
+    negLogAlpha + 1.5
+  );
+  const yMax = Math.ceil(maxNLP);
+  const barW = Math.max(4, Math.min(16, (W - pl - pr) / sorted.length - 2));
+  const toX = (rank) => pl + ((rank + 0.5) / sorted.length) * (W - pl - pr);
+  const toY = (nlp) => H - pb - (nlp / yMax) * (H - pt - pb);
+
+  const fpPrevented = correction !== 'none'
+    ? sorted.filter((s) => s.wouldBeSig && !s.sig && !s.isTrue).length
+    : 0;
 
   return (
     <div>
       <Hdr sub="Analyze">Multiple Testing & Corrections</Hdr>
       <Desc>
-        Test 20 metrics and 1 will be "significant" by pure chance. The more tests you run, the
-        more false positives you get. Correction methods raise the bar to account for multiple
-        comparisons — keeping false discoveries under control.
+        Test 20 metrics and on average 1 will be "significant" by pure chance alone. The more tests
+        you run, the more false positives you collect. Correction methods raise the significance bar —
+        demanding stronger evidence to account for multiple comparisons.
       </Desc>
 
-      <div className="bg-app-surface rounded-2xl p-6 mb-7 ring-1 ring-[var(--color-border-subtle)]">
+      <Sl label="Number of Tests" value={nTests} min={1} max={50} step={1} onChange={setNTests} color={colors.indigo} />
+      <Sl label="True Effects" value={trueEffects} min={0} max={Math.min(10, nTests)} step={1} onChange={setTrueEffects} color={colors.emerald} />
+
+      <div className="flex gap-2 mb-5 flex-wrap">
+        <PillBtn on={correction === 'none'} onClick={() => setCorrection('none')}>No Correction</PillBtn>
+        <PillBtn on={correction === 'bonferroni'} onClick={() => setCorrection('bonferroni')}>Bonferroni</PillBtn>
+        <PillBtn on={correction === 'bh'} onClick={() => setCorrection('bh')}>BH-FDR</PillBtn>
+        <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>Re-simulate</PillBtn>
+      </div>
+
+      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
         <svg viewBox={'0 0 ' + W + ' ' + H} width="100%" style={{ maxHeight: H, display: 'block', overflow: 'visible' }}>
-          {/* Threshold line(s) */}
+          {/* Y-axis gridlines with p-value labels */}
+          {Array.from({ length: yMax }, (_, k) => k + 1).map((v) => (
+            <g key={v}>
+              <line x1={pl} y1={toY(v)} x2={W - pr} y2={toY(v)} stroke={sv.grid} />
+              <text x={pl - 6} y={toY(v) + 3} fill={sv.textFaint} fontSize={8} textAnchor="end">
+                {'p = ' + (1 / Math.pow(10, v)).toFixed(Math.min(v, 4))}
+              </text>
+            </g>
+          ))}
+
+          {/* Original α reference line (shown when correction is active) */}
+          {correction !== 'none' && (
+            <>
+              <line x1={pl} y1={toY(negLogAlpha)} x2={W - pr} y2={toY(negLogAlpha)}
+                stroke={sv.textFaint} strokeWidth={1} strokeDasharray="4,3" opacity={0.4} />
+              <text x={W - pr + 2} y={toY(negLogAlpha) + 3} fill={sv.textFaint} fontSize={8} opacity={0.6}>
+                Original α = 0.05
+              </text>
+            </>
+          )}
+
+          {/* Active threshold line */}
           {correction !== 'bh' && (
             <>
-              <line x1={pl} y1={toY(data.threshold)} x2={W - pr} y2={toY(data.threshold)} stroke={colors.amber} strokeWidth={1.5} strokeDasharray="6,4" />
-              <text x={W - pr} y={toY(data.threshold) - 4} fill={colors.amber} fontSize={9} textAnchor="end" fontWeight="600">
-                {'α' + (correction === 'bonferroni' ? '/' + nTests : '') + ' = ' + data.threshold.toFixed(4)}
+              <line
+                x1={pl} y1={toY(correction === 'bonferroni' ? negLogThresh : negLogAlpha)}
+                x2={W - pr} y2={toY(correction === 'bonferroni' ? negLogThresh : negLogAlpha)}
+                stroke={colors.amber} strokeWidth={2} strokeDasharray="8,4"
+              />
+              <text
+                x={pl + 4} y={toY(correction === 'bonferroni' ? negLogThresh : negLogAlpha) - 6}
+                fill={colors.amber} fontSize={9} fontWeight="600"
+              >
+                {correction === 'bonferroni'
+                  ? 'Bonferroni: α/' + nTests + ' = ' + data.threshold.toFixed(4)
+                  : 'Significance threshold: α = ' + alpha}
               </text>
             </>
           )}
 
           {/* BH stepped threshold */}
-          {correction === 'bh' && data.bhThresholds && (() => {
+          {correction === 'bh' && (() => {
             let bhPath = '';
-            data.bhThresholds.forEach((bt, k) => {
-              const x0 = pl + (k / nTests) * (W - pl - pr);
-              const x1 = pl + ((k + 1) / nTests) * (W - pl - pr);
-              bhPath += (k === 0 ? 'M' : 'L') + x0 + ',' + toY(bt.threshold) + 'L' + x1 + ',' + toY(bt.threshold);
-            });
-            return <path d={bhPath} fill="none" stroke={colors.amber} strokeWidth={1.5} strokeDasharray="4,3" />;
+            for (let k = 0; k < sorted.length; k++) {
+              const thr = -Math.log10(((k + 1) / nTests) * alpha);
+              const x0 = pl + (k / sorted.length) * (W - pl - pr);
+              const x1 = pl + ((k + 1) / sorted.length) * (W - pl - pr);
+              bhPath += (k === 0 ? 'M' : 'L') + x0 + ',' + toY(thr) + 'L' + x1 + ',' + toY(thr);
+            }
+            return (
+              <>
+                <path d={bhPath} fill="none" stroke={colors.amber} strokeWidth={2} strokeDasharray="6,3" />
+                <text x={pl + 4} y={toY(-Math.log10(alpha / nTests)) - 6} fill={colors.amber} fontSize={9} fontWeight="600">
+                  BH stepped threshold
+                </text>
+              </>
+            );
           })()}
 
-          {/* P-value bars */}
-          {data.pValues.map((p, i) => {
-            const isSig = data.significant[i];
-            const isTP = isSig && data.isTrue[i];
-            const isFP = isSig && !data.isTrue[i];
-            const barColor = isTP ? colors.emerald : isFP ? colors.red : isSig ? colors.emerald : colors.slate500;
-            const barOpacity = isSig ? 0.8 : 0.3;
+          {/* Bars (sorted by p-value, tallest = most significant on left) */}
+          {sorted.map((s, rank) => {
+            const nlp = -Math.log10(Math.max(s.p, 1e-8));
+            const barH = Math.max(1, toY(0) - toY(nlp));
+            let barColor, barOpacity;
+            if (s.sig) {
+              barColor = s.isTrue ? colors.emerald : colors.red;
+              barOpacity = 0.85;
+            } else if (s.wouldBeSig && correction !== 'none') {
+              barColor = s.isTrue ? colors.emerald : colors.red;
+              barOpacity = 0.25;
+            } else {
+              barColor = colors.slate500;
+              barOpacity = 0.2;
+            }
+
             return (
-              <g key={i}>
+              <g key={s.i}>
                 <rect
-                  x={toX(i) - barW / 2}
-                  y={toY(0)}
+                  x={toX(rank) - barW / 2}
+                  y={toY(nlp)}
                   width={barW}
-                  height={Math.max(1, toY(p) - toY(0))}
+                  height={barH}
                   rx={2}
                   fill={barColor}
                   opacity={barOpacity}
                 />
-                {isFP && (
+                {/* Dashed outline for bars caught by correction */}
+                {!s.sig && s.wouldBeSig && correction !== 'none' && (
                   <rect
-                    x={toX(i) - barW / 2 - 1}
-                    y={toY(0) - 1}
+                    x={toX(rank) - barW / 2 - 1}
+                    y={toY(nlp) - 1}
                     width={barW + 2}
-                    height={Math.max(3, toY(p) - toY(0) + 2)}
+                    height={barH + 2}
+                    rx={3}
+                    fill="none"
+                    stroke={s.isTrue ? colors.amber : colors.red}
+                    strokeWidth={1}
+                    strokeDasharray="3,2"
+                    opacity={0.5}
+                  />
+                )}
+                {/* Solid outline for significant false positives */}
+                {s.sig && !s.isTrue && (
+                  <rect
+                    x={toX(rank) - barW / 2 - 1}
+                    y={toY(nlp) - 1}
+                    width={barW + 2}
+                    height={barH + 2}
                     rx={3}
                     fill="none"
                     stroke={colors.red}
                     strokeWidth={1.5}
                   />
                 )}
-                {data.isTrue[i] && (
-                  <circle cx={toX(i)} cy={H - pb + 10} r={2.5} fill={colors.emerald} />
+                {/* True effect indicator below x-axis */}
+                {s.isTrue && (
+                  <circle cx={toX(rank)} cy={H - pb + 12} r={3} fill={colors.emerald} opacity={0.7} />
                 )}
               </g>
             );
           })}
 
-          {/* Axis */}
-          <line x1={pl} y1={toY(0)} x2={W - pr} y2={toY(0)} stroke={sv.axis} />
-          <text x={pl - 4} y={toY(0) + 3} fill={sv.text} fontSize={9} textAnchor="end">0</text>
-          <text x={pl - 4} y={toY(0.5) + 3} fill={sv.text} fontSize={9} textAnchor="end">0.5</text>
-          <text x={pl - 4} y={toY(1) + 3} fill={sv.text} fontSize={9} textAnchor="end">1.0</text>
-          <text x={W / 2} y={H - 2} fill={sv.text} fontSize={9} textAnchor="middle">
-            {'Tests (green dots = true effects)'}
-          </text>
-          <text x={pl} y={pt - 8} fill={sv.text} fontSize={9}>p-value</text>
+          {/* Axes */}
+          <line x1={pl} y1={pt} x2={pl} y2={H - pb} stroke={sv.axis} />
+          <line x1={pl} y1={H - pb} x2={W - pr} y2={H - pb} stroke={sv.axis} />
 
-          {/* Legend */}
-          <rect x={W - pr - 120} y={pt - 8} width={10} height={10} rx={2} fill={colors.emerald} opacity={0.8} />
-          <text x={W - pr - 106} y={pt} fill={sv.text} fontSize={9}>True Positive</text>
-          <rect x={W - pr - 120} y={pt + 6} width={10} height={10} rx={2} fill={colors.red} opacity={0.8} />
-          <text x={W - pr - 106} y={pt + 14} fill={sv.text} fontSize={9}>False Positive</text>
+          {/* Axis labels */}
+          <text x={W / 2} y={H - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">
+            Tests sorted by p-value (most significant → least) · green dots = true effects
+          </text>
+          <text x={14} y={(H - pt - pb) / 2 + pt} fill={sv.textFaint} fontSize={9} textAnchor="middle"
+            transform={'rotate(-90,14,' + ((H - pt - pb) / 2 + pt) + ')'}>
+            ← More significant
+          </text>
+
+          {/* Summary annotation */}
+          <text x={W - pr} y={pt - 4} fill={sv.text} fontSize={10} textAnchor="end" fontWeight="600">
+            {data.tp + data.fp > 0
+              ? (data.tp + data.fp) + ' significant: ' + data.tp + ' true, ' + data.fp + ' false'
+              : 'No significant results'}
+          </text>
         </svg>
+
+        {/* Legend below chart */}
+        <div className="flex items-center justify-end gap-4 mt-2">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: colors.emerald, opacity: 0.8 }} />
+            <span className="text-[11px]" style={{ color: sv.text }}>True Positive</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: colors.red, opacity: 0.8 }} />
+            <span className="text-[11px]" style={{ color: sv.text }}>False Positive</span>
+          </span>
+          {correction !== 'none' && fpPrevented > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-sm border border-dashed" style={{ borderColor: colors.red, opacity: 0.6 }} />
+              <span className="text-[11px]" style={{ color: sv.text }}>Caught by correction</span>
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3 mb-5 flex-wrap">
@@ -154,16 +274,6 @@ export default function M11MultipleTesting() {
         <StatBox label="False Positives" value={data.fp} color={colors.red} />
         <StatBox label="FWER" value={data.fwer ? 'Yes' : 'No'} color={data.fwer ? colors.red : colors.emerald} />
         <StatBox label="FDR" value={(data.fdr * 100).toFixed(0) + '%'} color={data.fdr > 0.05 ? colors.red : colors.emerald} />
-      </div>
-
-      <Sl label="Number of Tests" value={nTests} min={1} max={50} step={1} onChange={setNTests} color={colors.indigo} />
-      <Sl label="True Effects" value={trueEffects} min={0} max={Math.min(10, nTests)} step={1} onChange={setTrueEffects} color={colors.emerald} />
-
-      <div className="flex gap-2 mb-4 flex-wrap">
-        <PillBtn on={correction === 'none'} onClick={() => setCorrection('none')}>No Correction</PillBtn>
-        <PillBtn on={correction === 'bonferroni'} onClick={() => setCorrection('bonferroni')}>Bonferroni</PillBtn>
-        <PillBtn on={correction === 'bh'} onClick={() => setCorrection('bh')}>BH-FDR</PillBtn>
-        <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>Re-simulate</PillBtn>
       </div>
 
       <QA

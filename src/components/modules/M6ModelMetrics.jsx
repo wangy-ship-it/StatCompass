@@ -19,14 +19,20 @@ export default function M6ModelMetrics() {
     const prec = tp + fp > 0 ? tp / (tp + fp) : 0;
     const rec = tp + fn > 0 ? tp / (tp + fn) : 0;
     const f1 = prec + rec > 0 ? (2 * prec * rec) / (prec + rec) : 0;
-    const roc = [];
-    for (let t = 0; t <= 1; t += 0.02) {
-      roc.push({
-        fpr: pts.filter((p) => p.act === 0 && p.sc >= t).length / 100,
-        tpr: pts.filter((p) => p.act === 1 && p.sc >= t).length / 100,
-      });
+    // ROC: sort all points by score descending, walk to build proper monotonic curve
+    const sortedPts = [...pts].sort((a, b) => b.sc - a.sc);
+    const nPos = pts.filter((p) => p.act === 1).length;
+    const nNeg = pts.filter((p) => p.act === 0).length;
+    const roc = [{ fpr: 0, tpr: 0 }];
+    let tpCount = 0, fpCount = 0;
+    for (let k = 0; k < sortedPts.length; k++) {
+      if (sortedPts[k].act === 1) tpCount++;
+      else fpCount++;
+      // Only add a point when the score changes (or at the end) to avoid duplicates
+      if (k === sortedPts.length - 1 || sortedPts[k].sc !== sortedPts[k + 1].sc) {
+        roc.push({ fpr: fpCount / nNeg, tpr: tpCount / nPos });
+      }
     }
-    roc.sort((a, b) => a.fpr - b.fpr);
     let auc = 0;
     for (let i = 1; i < roc.length; i++) auc += (roc[i].fpr - roc[i - 1].fpr) * (roc[i].tpr + roc[i - 1].tpr) / 2;
     return {
@@ -40,6 +46,7 @@ export default function M6ModelMetrics() {
   const rToX = (v) => rpl + v * (RW - rpl - rpr);
   const rToY = (v) => RH - rpb - v * (RH - rpt - rpb);
   const rocP = data.roc.map((p, i) => (i === 0 ? 'M' : 'L') + rToX(p.fpr) + ',' + rToY(p.tpr)).join('');
+  const rocFill = rocP + 'L' + rToX(data.roc[data.roc.length - 1].fpr) + ',' + rToY(0) + 'L' + rToX(0) + ',' + rToY(0) + 'Z';
 
   return (
     <div>
@@ -94,7 +101,13 @@ export default function M6ModelMetrics() {
             ROC Curve
           </div>
           <svg viewBox={'0 0 ' + RW + ' ' + RH} width="100%" style={{ maxHeight: RH }}>
-            <line x1={rToX(0)} y1={rToY(0)} x2={rToX(1)} y2={rToY(1)} stroke={sv.axis} strokeWidth={1} strokeDasharray="4,3" />
+            <defs>
+              <linearGradient id="m6-roc-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />
+                <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.03" />
+              </linearGradient>
+            </defs>
+            {/* Grid */}
             {[0, 0.25, 0.5, 0.75, 1].map((v) => (
               <g key={v}>
                 <line x1={rToX(v)} y1={rToY(0) + 2} x2={rToX(v)} y2={rToY(1)} stroke={sv.grid} strokeWidth={0.5} />
@@ -103,11 +116,17 @@ export default function M6ModelMetrics() {
                 <text x={rpl - 3} y={rToY(v) + 3} fill={sv.text} fontSize={8} textAnchor="end">{v}</text>
               </g>
             ))}
+            {/* Random classifier diagonal */}
+            <line x1={rToX(0)} y1={rToY(0)} x2={rToX(1)} y2={rToY(1)} stroke={sv.axis} strokeWidth={1} strokeDasharray="4,3" />
+            {/* AUC fill + ROC curve */}
+            <path d={rocFill} fill="url(#m6-roc-fill)" />
             <path d={rocP} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
-            <circle cx={rToX(data.curFPR)} cy={rToY(data.curTPR)} r={5} fill={colors.amber} stroke={sv.gridSubtle} strokeWidth={2} />
+            {/* Current threshold marker */}
+            <circle cx={rToX(data.curFPR)} cy={rToY(data.curTPR)} r={5} fill={colors.amber} stroke="#fff" strokeWidth={2} />
+            {/* Labels */}
             <text x={RW / 2} y={RH - 4} fill={sv.text} fontSize={8} textAnchor="middle">False Positive Rate</text>
             <text x={6} y={RH / 2} fill={sv.text} fontSize={8} textAnchor="middle" transform={'rotate(-90,6,' + RH / 2 + ')'}>True Positive Rate</text>
-            <text x={rToX(0.55)} y={rToY(0.25)} fill={sv.fillIndigo} fontSize={16} fontWeight="800">{'AUC = ' + data.auc.toFixed(2)}</text>
+            <text x={rToX(0.55)} y={rToY(0.25)} fill={colors.indigo} fontSize={14} fontWeight="800" opacity={0.6}>{'AUC = ' + data.auc.toFixed(2)}</text>
           </svg>
         </div>
       </div>

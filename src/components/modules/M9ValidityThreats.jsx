@@ -169,6 +169,23 @@ export default function M9ValidityThreats() {
         ))}
       </div>
 
+      {/* Bias type definition */}
+      {biasType !== 'clean' && (
+        <div className="rounded-xl bg-app-glass ring-1 ring-[var(--color-border-subtle)] px-5 py-3.5 mb-5">
+          <div className="text-[11px] uppercase tracking-[0.12em] font-medium mb-1" style={{ color: curveColor }}>
+            {biasType === 'selection' ? 'Selection Bias' : biasType === 'novelty' ? 'Novelty Effect' : 'Network Interference'}
+          </div>
+          <div className="text-[13px] text-[var(--svg-text)] leading-[1.65]">
+            {biasType === 'selection' &&
+              'Groups differ systematically before the experiment starts. For example, power users end up overrepresented in one group due to faulty randomization or self-selection, making the groups non-comparable from day one.'}
+            {biasType === 'novelty' &&
+              'Users engage more with a treatment simply because it is new, not because it is better. The initial spike in the treatment metric fades as users habituate, meaning the early observed lift overstates the true long-run effect.'}
+            {biasType === 'interference' &&
+              'Treatment effects spill over into the control group. For example, if treated users share a new feature with control users via social networks or marketplaces, the control group\'s behavior changes too — diluting the measured difference between groups.'}
+          </div>
+        </div>
+      )}
+
       {/* Magnitude slider */}
       <Sl
         label="Bias Magnitude"

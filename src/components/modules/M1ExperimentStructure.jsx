@@ -63,6 +63,32 @@ export default function M1ExperimentStructure() {
         dealt equally.
       </Desc>
 
+      <div className="flex gap-2.5 mb-5 flex-wrap">
+        <PillBtn on={!rand} onClick={() => setRand(false)}>Sequential Split</PillBtn>
+        <PillBtn on={rand} onClick={() => { setRand(true); setSeed((s) => s + 1); }}>Randomize</PillBtn>
+        {rand && <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>Re-shuffle</PillBtn>}
+      </div>
+
+      <Sl
+        label="Sample Size"
+        value={N}
+        min={20}
+        max={200}
+        step={10}
+        onChange={setN}
+        fmt={(v) => v + ' users'}
+      />
+
+      <Sl
+        label="Allocation Ratio"
+        value={split}
+        min={10}
+        max={90}
+        step={5}
+        onChange={setSplit}
+        fmt={(v) => v + '% Control / ' + (100 - v) + '% Treatment'}
+      />
+
       <div className="bg-app-surface rounded-2xl p-6 mb-7 ring-1 ring-[var(--color-border-subtle)]">
         <svg viewBox={'0 0 600 ' + svgH} width="100%" style={{ maxHeight: svgH, display: 'block' }}>
           <text x={300} y={16} fill={sv.text} fontSize={11} textAnchor="middle" fontWeight="600">
@@ -105,32 +131,6 @@ export default function M1ExperimentStructure() {
           </text>
         </svg>
       </div>
-
-      <div className="flex gap-2.5 mb-5 flex-wrap">
-        <PillBtn on={!rand} onClick={() => setRand(false)}>Sequential Split</PillBtn>
-        <PillBtn on={rand} onClick={() => { setRand(true); setSeed((s) => s + 1); }}>Randomize</PillBtn>
-        {rand && <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>Re-shuffle</PillBtn>}
-      </div>
-
-      <Sl
-        label="Sample Size"
-        value={N}
-        min={20}
-        max={200}
-        step={10}
-        onChange={setN}
-        fmt={(v) => v + ' users'}
-      />
-
-      <Sl
-        label="Allocation Ratio"
-        value={split}
-        min={10}
-        max={90}
-        step={5}
-        onChange={setSplit}
-        fmt={(v) => v + '% Control / ' + (100 - v) + '% Treatment'}
-      />
 
       {/* ── Power Mini-Chart ── */}
       <ChartBox h={PH}>

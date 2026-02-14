@@ -45,13 +45,15 @@ export default function M16EffectSizeMDE() {
   const v1pl = 40, v1pr = 20, v1pt = 20, v1pb = 26;
   const barY = v1pt + 8;
   const barH = 18;
-  const v1toX = (d) => v1pl + (d / 1.0) * (V1W - v1pl - v1pr);
+  const scaleMax = Math.max(computed.d * 2.5, 0.15);
+  const v1toX = (d) => v1pl + (d / scaleMax) * (V1W - v1pl - v1pr);
 
-  const benchmarks = [
+  const allBenchmarks = [
     { d: 0.2, label: 'Small' },
     { d: 0.5, label: 'Medium' },
     { d: 0.8, label: 'Large' },
   ];
+  const benchmarks = allBenchmarks.filter((b) => b.d <= scaleMax);
 
   // ── Visual 2: Power curve ──
   const V2W = 600, V2H = 200;
@@ -121,11 +123,17 @@ export default function M16EffectSizeMDE() {
 
         {/* Scale labels */}
         <text x={v1pl} y={V1H - v1pb + 16} fill={sv.text} fontSize={9} textAnchor="middle">0</text>
-        <text x={v1toX(0.5)} y={V1H - v1pb + 16} fill={sv.text} fontSize={9} textAnchor="middle">0.5</text>
-        <text x={v1toX(1.0)} y={V1H - v1pb + 16} fill={sv.text} fontSize={9} textAnchor="middle">1.0</text>
+        <text x={v1toX(scaleMax / 2)} y={V1H - v1pb + 16} fill={sv.text} fontSize={9} textAnchor="middle">{(scaleMax / 2).toFixed(2)}</text>
+        <text x={v1toX(scaleMax)} y={V1H - v1pb + 16} fill={sv.text} fontSize={9} textAnchor="end">{scaleMax.toFixed(2)}</text>
         <text x={V1W / 2} y={v1pt - 6} fill={sv.text} fontSize={9} textAnchor="middle">
           {"Cohen's d"}
         </text>
+        {/* Off-screen benchmark indicator */}
+        {allBenchmarks.filter((b) => b.d > scaleMax).length > 0 && (
+          <text x={V1W - v1pr} y={barY + barH + 14} fill={sv.textFaint} fontSize={8} textAnchor="end">
+            {allBenchmarks.filter((b) => b.d > scaleMax).map((b) => b.label + '(' + b.d + ')').join(' · ') + ' →'}
+          </text>
+        )}
 
         {/* Benchmark lines */}
         {benchmarks.map((b) => (
@@ -138,36 +146,17 @@ export default function M16EffectSizeMDE() {
         ))}
 
         {/* User's MDE pointer (triangle) */}
-        {computed.d <= 1.0 && (
-          <polygon
-            points={[
-              v1toX(computed.d) + ',' + (barY - 3),
-              (v1toX(computed.d) - 6) + ',' + (barY - 13),
-              (v1toX(computed.d) + 6) + ',' + (barY - 13),
-            ].join(' ')}
-            fill={colors.indigo}
-          />
-        )}
-        {computed.d > 1.0 && (
-          <g>
-            <polygon
-              points={[
-                v1toX(1.0) + ',' + (barY - 3),
-                (v1toX(1.0) - 6) + ',' + (barY - 13),
-                (v1toX(1.0) + 6) + ',' + (barY - 13),
-              ].join(' ')}
-              fill={colors.indigo}
-            />
-            <text x={v1toX(1.0) - 14} y={barY - 6} fill={colors.indigo} fontSize={9} textAnchor="end" fontWeight="600">
-              {'d = ' + computed.d.toFixed(2)}
-            </text>
-          </g>
-        )}
-        {computed.d <= 1.0 && (
-          <text x={v1toX(computed.d)} y={barY - 16} fill={colors.indigo} fontSize={9} textAnchor="middle" fontWeight="600">
-            {'Your MDE: d = ' + computed.d.toFixed(3)}
-          </text>
-        )}
+        <polygon
+          points={[
+            v1toX(Math.min(computed.d, scaleMax)) + ',' + (barY - 3),
+            (v1toX(Math.min(computed.d, scaleMax)) - 6) + ',' + (barY - 13),
+            (v1toX(Math.min(computed.d, scaleMax)) + 6) + ',' + (barY - 13),
+          ].join(' ')}
+          fill={colors.indigo}
+        />
+        <text x={v1toX(Math.min(computed.d, scaleMax))} y={barY - 16} fill={colors.indigo} fontSize={9} textAnchor="middle" fontWeight="600">
+          {'Your MDE: d = ' + computed.d.toFixed(3)}
+        </text>
       </ChartBox>
 
       {/* Visual 2: Power curve */}

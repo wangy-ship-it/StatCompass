@@ -89,7 +89,7 @@ export default function M13BayesianFrequentist() {
 
   return (
     <div>
-      <Hdr sub="Model & Evaluate">Bayesian vs Frequentist</Hdr>
+      <Hdr sub="Foundations">Bayesian vs Frequentist</Hdr>
       <Desc>
         Two philosophies, one question. Frequentists ask "how surprising is this data if H0 is true?"
         Bayesians ask "given this data, what do I believe now?" Watch how prior beliefs and data

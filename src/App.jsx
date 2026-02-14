@@ -22,6 +22,15 @@ const modules = {
   m18: lazy(() => import('./components/modules/M18SequentialTesting')),
   m19: lazy(() => import('./components/modules/M19HeterogeneousEffects')),
   m20: lazy(() => import('./components/modules/M20CrossValidation')),
+  m21: lazy(() => import('./components/modules/M21PracticalSignificance')),
+  m22: lazy(() => import('./components/modules/M22VarianceReduction')),
+  m23: lazy(() => import('./components/modules/M23RegressionToMean')),
+  m24: lazy(() => import('./components/modules/M24NoveltyTimeEffects')),
+  m25: lazy(() => import('./components/modules/M25InteractionEffects')),
+  m26: lazy(() => import('./components/modules/M26FeatureImportance')),
+  m27: lazy(() => import('./components/modules/M27ModelDrift')),
+  m28: lazy(() => import('./components/modules/M28Calibration')),
+  m29: lazy(() => import('./components/modules/M29CumulativeGains')),
 };
 
 function LoadingFallback() {
@@ -33,7 +42,7 @@ function LoadingFallback() {
 }
 
 export default function App() {
-  const [active, setActive] = useState('m1');
+  const [active, setActive] = useState('m3');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const Comp = modules[active];
 

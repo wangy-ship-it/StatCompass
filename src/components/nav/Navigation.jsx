@@ -3,6 +3,17 @@ import ThemeToggle from '../ui/ThemeToggle';
 const sections = [
   {
     id: 's1',
+    title: 'Foundations',
+    desc: 'Understand the building blocks',
+    modules: [
+      { id: 'm3', label: 'Type I & II Errors' },
+      { id: 'm4', label: 'P-Value & Significance' },
+      { id: 'm5', label: 'Confidence Intervals' },
+      { id: 'm13', label: 'Bayesian vs Frequentist' },
+    ],
+  },
+  {
+    id: 's2',
     title: 'Design',
     desc: 'Plan your experiment',
     modules: [
@@ -10,50 +21,55 @@ const sections = [
       { id: 'm15', label: 'Metrics & Guardrails' },
       { id: 'm2', label: 'Sample Size & Power' },
       { id: 'm16', label: 'Effect Size & MDE' },
+      { id: 'm22', label: 'Variance Reduction (CUPED)' },
     ],
   },
   {
-    id: 's2',
+    id: 's3',
     title: 'Validate & Run',
     desc: 'Execute with confidence',
     modules: [
       { id: 'm17', label: 'A/A Testing' },
       { id: 'm18', label: 'Sequential Testing' },
       { id: 'm9', label: 'Validity Threats' },
-    ],
-  },
-  {
-    id: 's3',
-    title: 'Analyze',
-    desc: 'Crunch the numbers',
-    modules: [
-      { id: 'm3', label: 'Type I & II Errors' },
-      { id: 'm4', label: 'P-Value & Significance' },
-      { id: 'm5', label: 'Confidence Intervals' },
-      { id: 'm12', label: 'Choosing the Right Test' },
-      { id: 'm11', label: 'Multiple Testing' },
+      { id: 'm24', label: 'Novelty & Time Effects' },
+      { id: 'm25', label: 'Interaction Effects' },
     ],
   },
   {
     id: 's4',
-    title: 'Interpret & Decide',
-    desc: 'Make the call',
+    title: 'Analyze',
+    desc: 'Crunch the numbers',
     modules: [
+      { id: 'm12', label: 'Choosing the Right Test' },
+      { id: 'm11', label: 'Multiple Testing' },
       { id: 'm7', label: 'Lift Calculator' },
-      { id: 'm8', label: 'Result Interpreter' },
-      { id: 'm19', label: 'Heterogeneous Effects' },
-      { id: 'm14', label: "Simpson's Paradox" },
+      { id: 'm21', label: 'Practical vs Statistical Significance' },
     ],
   },
   {
     id: 's5',
+    title: 'Interpret & Decide',
+    desc: 'Make the call',
+    modules: [
+      { id: 'm8', label: 'Result Interpreter' },
+      { id: 'm19', label: 'Heterogeneous Effects' },
+      { id: 'm14', label: "Simpson's Paradox" },
+      { id: 'm23', label: 'Regression to the Mean' },
+    ],
+  },
+  {
+    id: 's6',
     title: 'Model & Evaluate',
     desc: 'Beyond A/B testing',
     modules: [
       { id: 'm6', label: 'Model Metrics' },
+      { id: 'm28', label: 'Calibration' },
+      { id: 'm29', label: 'Cumulative Gains' },
+      { id: 'm26', label: 'Feature Importance' },
       { id: 'm10', label: 'Bias-Variance Tradeoff' },
       { id: 'm20', label: 'Cross-Validation' },
-      { id: 'm13', label: 'Bayesian vs Frequentist' },
+      { id: 'm27', label: 'Model Drift & Monitoring' },
     ],
   },
 ];
@@ -76,12 +92,12 @@ export default function Navigation({ active, setActive, onClose }) {
         {sections.map((s) => (
           <div key={s.id} className="mb-5">
             <div className={
-              'text-[10px] uppercase tracking-[0.15em] font-medium px-2 mb-0.5 transition-colors duration-200 ' +
+              'text-[12px] uppercase tracking-[0.12em] font-semibold px-2 mb-0.5 transition-colors duration-200 ' +
               (activeSection?.id === s.id ? 'text-[var(--color-accent)]' : 'text-[var(--svg-text-faint)]')
             }>
               {s.title}
             </div>
-            <div className="text-[9px] text-[var(--color-text-muted)] px-2 mb-1.5">{s.desc}</div>
+            <div className="text-[10px] text-[var(--color-text-muted)] px-2 mb-1.5">{s.desc}</div>
             {s.modules.map((m) => (
               <button
                 key={m.id}

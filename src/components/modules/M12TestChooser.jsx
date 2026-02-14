@@ -767,70 +767,139 @@ export default function M12TestChooser() {
   const reset = () => setPath(['root']);
 
   // SVG flowchart
-  const W = 600, H = 280;
-  const nodeW = 140, nodeH = 32, gapX = 20, gapY = 48;
+  const W = 600;
+  const nodeW = 220, nodeH = 38, gapY = 52;
+  const leafW = 240, leafH = 42;
 
   const renderNodesSVG = () => {
     const elements = [];
     const levels = path.map((id) => tree[id]);
 
     levels.forEach((node, i) => {
-      const y = 16 + i * (nodeH + gapY);
+      const y = 20 + i * (nodeH + gapY);
       const isActive = i === path.length - 1;
       const isFinal = !!node.test;
+      const isPast = !isActive && !isFinal;
+      const w = isFinal ? leafW : nodeW;
+      const h = isFinal ? leafH : nodeH;
+      const x = W / 2 - w / 2;
 
-      // Node box
-      const x = W / 2 - nodeW / 2;
-      elements.push(
-        <g key={'node-' + i}>
-          <rect
-            x={x} y={y} width={nodeW} height={nodeH} rx={10}
-            fill={isFinal ? 'rgba(52,211,153,.12)' : isActive ? 'rgba(129,140,248,.12)' : 'rgba(255,255,255,.03)'}
-            stroke={isFinal ? colors.emerald : isActive ? colors.indigo : sv.axis}
-            strokeWidth={isFinal || isActive ? 1.5 : 1}
-          />
-          <text
-            x={W / 2} y={y + nodeH / 2 + 4}
-            fill={isFinal ? colors.emerald : isActive ? colors.indigo : sv.text}
-            fontSize={isFinal ? 10 : 9}
-            textAnchor="middle"
-            fontWeight={isActive ? '700' : '500'}
-          >
-            {isFinal ? node.test : node.question}
-          </text>
-        </g>
-      );
+      // Connector line + arrow to this node from previous
+      if (i > 0) {
+        const prevY = 20 + (i - 1) * (nodeH + gapY) + nodeH;
+        const arrowY = y;
+        const midY = (prevY + arrowY) / 2;
 
-      // Connector line to next
-      if (i < levels.length - 1) {
+        // Vertical line
         elements.push(
           <line
             key={'line-' + i}
-            x1={W / 2} y1={y + nodeH}
-            x2={W / 2} y2={y + nodeH + gapY}
-            stroke={colors.indigo} strokeWidth={1.5} opacity={0.4}
+            x1={W / 2} y1={prevY}
+            x2={W / 2} y2={arrowY}
+            stroke={colors.indigo} strokeWidth={1.5} opacity={0.35}
           />
         );
-        // Choice label
-        const chosenOption = tree[path[i]].options?.find((o) => o.next === path[i + 1]);
+        // Arrow head
+        elements.push(
+          <polygon
+            key={'arrow-' + i}
+            points={`${W / 2},${arrowY} ${W / 2 - 5},${arrowY - 7} ${W / 2 + 5},${arrowY - 7}`}
+            fill={colors.indigo} opacity={0.5}
+          />
+        );
+
+        // Choice label pill
+        const chosenOption = tree[path[i - 1]].options?.find((o) => o.next === path[i]);
         if (chosenOption) {
+          const pillText = chosenOption.label;
+          const pillW = pillText.length * 6.5 + 20;
           elements.push(
-            <text
-              key={'choice-' + i}
-              x={W / 2 + 8} y={y + nodeH + gapY / 2 + 3}
-              fill={colors.indigo} fontSize={9} fontWeight="600"
-            >
-              {chosenOption.label}
-            </text>
+            <g key={'pill-' + i}>
+              <rect
+                x={W / 2 + 10} y={midY - 10}
+                width={pillW} height={20}
+                rx={10}
+                fill="var(--color-app-bg)" stroke={colors.indigo} strokeWidth={1} opacity={0.7}
+              />
+              <text
+                x={W / 2 + 10 + pillW / 2} y={midY + 4}
+                fill={colors.indigo} fontSize={10} textAnchor="middle" fontWeight="600"
+              >
+                {pillText}
+              </text>
+            </g>
           );
         }
+      }
+
+      // Node box
+      if (isFinal) {
+        // Leaf: result node with accent styling
+        elements.push(
+          <g key={'node-' + i}>
+            <rect
+              x={x} y={y} width={w} height={h} rx={14}
+              fill="rgba(52,211,153,.10)"
+              stroke={colors.emerald} strokeWidth={2}
+            />
+            <text
+              x={W / 2} y={y + h / 2 + 5}
+              fill={colors.emerald}
+              fontSize={12}
+              textAnchor="middle"
+              fontWeight="700"
+            >
+              {node.test}
+            </text>
+          </g>
+        );
+      } else if (isActive) {
+        // Active question node
+        elements.push(
+          <g key={'node-' + i}>
+            <rect
+              x={x} y={y} width={w} height={h} rx={12}
+              fill="rgba(129,140,248,.10)"
+              stroke={colors.indigo} strokeWidth={1.5}
+            />
+            <text
+              x={W / 2} y={y + h / 2 + 4}
+              fill={colors.indigo}
+              fontSize={11}
+              textAnchor="middle"
+              fontWeight="600"
+            >
+              {node.question}
+            </text>
+          </g>
+        );
+      } else {
+        // Past (answered) question node
+        elements.push(
+          <g key={'node-' + i}>
+            <rect
+              x={x} y={y} width={w} height={h} rx={12}
+              fill="rgba(129,140,248,.04)"
+              stroke={sv.axis} strokeWidth={1} opacity={0.7}
+            />
+            <text
+              x={W / 2} y={y + h / 2 + 4}
+              fill={sv.textFaint}
+              fontSize={10}
+              textAnchor="middle"
+              fontWeight="500"
+            >
+              {node.question}
+            </text>
+          </g>
+        );
       }
     });
 
     return elements;
   };
 
-  const svgH = Math.min(H, 16 + path.length * (nodeH + gapY));
+  const svgH = 20 + path.length * (nodeH + gapY) - gapY + (isLeaf ? (leafH - nodeH) : 0) + 10;
 
   return (
     <div>

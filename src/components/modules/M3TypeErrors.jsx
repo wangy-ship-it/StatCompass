@@ -50,7 +50,7 @@ export default function M3TypeErrors() {
 
   return (
     <div>
-      <Hdr sub="Analyze">Type I and Type II Errors</Hdr>
+      <Hdr sub="Foundations">Type I and Type II Errors</Hdr>
       <Desc>
         Every test has two risk types: a false alarm (concluding something works when it does not)
         and a missed signal (failing to detect a real improvement). Like a smoke detector — too

@@ -30,7 +30,7 @@ export default function M4PValueTesting() {
 
   return (
     <div>
-      <Hdr sub="Analyze">P-Value and Hypothesis Testing</Hdr>
+      <Hdr sub="Foundations">P-Value and Hypothesis Testing</Hdr>
       <Desc>
         The p-value answers: "If there were truly no effect, how surprising is our result?" The
         shaded area shows that probability. A tiny shaded area means the result is very unlikely

@@ -25,7 +25,7 @@ export default function M5ConfidenceIntervals() {
 
   return (
     <div>
-      <Hdr sub="Analyze">Confidence Intervals</Hdr>
+      <Hdr sub="Foundations">Confidence Intervals</Hdr>
       <Desc>
         Each bar below is one experiment. Most capture the true value (gold line), but some miss —
         and that is expected. A 95% CI means our method catches the truth about 95% of the time.

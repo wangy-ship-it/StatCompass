@@ -26,7 +26,7 @@ export default function M7LiftCalculator() {
 
   return (
     <div>
-      <Hdr sub="Interpret & Decide">Lift Calculator</Hdr>
+      <Hdr sub="Analyze">Lift Calculator</Hdr>
       <Desc>
         Lift measures how much your treatment moved the needle compared to the control. This
         calculator shows the absolute and relative lift with confidence intervals — so you know not

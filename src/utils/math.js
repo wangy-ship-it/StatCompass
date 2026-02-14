@@ -211,6 +211,12 @@ export const alphaSpend = (stage, total, alpha, method) => {
   return alpha * t;
 };
 
+// ── M22: CUPED / Variance reduction ──
+
+export const cupedVariance = (originalVar, rho) => originalVar * (1 - rho * rho);
+
+export const effectiveN = (n, rho) => n / (1 - rho * rho);
+
 // ── M20: Cross-validation ──
 
 export const kFoldSplit = (n, k, seed) => {
