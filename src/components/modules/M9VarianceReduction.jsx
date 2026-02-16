@@ -3,7 +3,7 @@ import { nPDF, nCDF, zInv, cupedVariance, effectiveN } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M22VarianceReduction() {
+export default function M9VarianceReduction() {
   const [rho, setRho] = useState(0.5);
   const [sampleSize, setSampleSize] = useState(5000);
   const [trueEffect, setTrueEffect] = useState(5);
@@ -100,19 +100,19 @@ export default function M22VarianceReduction() {
       </div>
 
       {/* Distribution comparison */}
-      <ChartBox h={H1}>
+      <ChartBox h={H1} label="Distribution comparison showing how CUPED reduces variance by using pre-experiment covariate data">
         <defs>
-          <linearGradient id="grad-orig-22" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-orig-9" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.2" />
             <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.02" />
           </linearGradient>
-          <linearGradient id="grad-adj-22" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-adj-9" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.emerald} stopOpacity="0.25" />
             <stop offset="100%" stopColor={colors.emerald} stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        <path d={origFill} fill="url(#grad-orig-22)" />
-        <path d={adjFill} fill="url(#grad-adj-22)" />
+        <path d={origFill} fill="url(#grad-orig-9)" />
+        <path d={adjFill} fill="url(#grad-adj-9)" />
         <path d={origPath} fill="none" stroke={colors.indigo} strokeWidth={2} strokeDasharray="6,4" />
         <path d={adjPath} fill="none" stroke={colors.emerald} strokeWidth={2.5} />
         <line x1={toX(0)} y1={pt} x2={toX(0)} y2={H1 - pb} stroke={sv.axis} strokeWidth={1} strokeDasharray="3,3" />
@@ -125,7 +125,7 @@ export default function M22VarianceReduction() {
       </ChartBox>
 
       {/* Power curve comparison */}
-      <ChartBox h={H2}>
+      <ChartBox h={H2} label="Power curves comparing original and CUPED-adjusted experiments, showing how variance reduction increases power at every sample size">
         {/* Grid lines */}
         {[0.2, 0.4, 0.6, 0.8].map((p) => (
           <g key={p}>

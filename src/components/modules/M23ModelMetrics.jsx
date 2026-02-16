@@ -3,7 +3,7 @@ import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M6ModelMetrics() {
+export default function M23ModelMetrics() {
   const [thr, setThr] = useState(0.5);
 
   const data = useMemo(() => {
@@ -75,21 +75,21 @@ export default function M6ModelMetrics() {
             <div className="text-[9px] text-[var(--svg-text)] p-1">Pred +</div>
             <div className="text-[9px] text-[var(--svg-text)] p-1">Pred −</div>
             <div className="text-[9px] text-[var(--svg-text)] p-1 text-right">Act +</div>
-            <div className="bg-emerald-400/[0.12] rounded-lg py-3 px-2">
-              <div className="text-emerald-400 font-extrabold text-lg">{data.tp}</div>
+            <div className="rounded-lg py-3 px-2" style={{ background: sv.fillEmerald }}>
+              <div className="font-extrabold text-lg" style={{ color: colors.emerald }}>{data.tp}</div>
               <div className="text-[var(--svg-text)] text-[9px]">True Pos</div>
             </div>
-            <div className="bg-red-400/[0.10] rounded-lg py-3 px-2">
-              <div className="text-red-400 font-extrabold text-lg">{data.fn}</div>
+            <div className="rounded-lg py-3 px-2" style={{ background: sv.fillRed }}>
+              <div className="font-extrabold text-lg" style={{ color: colors.red }}>{data.fn}</div>
               <div className="text-[var(--svg-text)] text-[9px]">False Neg</div>
             </div>
             <div className="text-[9px] text-[var(--svg-text)] p-1 text-right">Act −</div>
-            <div className="bg-red-400/[0.10] rounded-lg py-3 px-2">
-              <div className="text-red-400 font-extrabold text-lg">{data.fp}</div>
+            <div className="rounded-lg py-3 px-2" style={{ background: sv.fillRed }}>
+              <div className="font-extrabold text-lg" style={{ color: colors.red }}>{data.fp}</div>
               <div className="text-[var(--svg-text)] text-[9px]">False Pos</div>
             </div>
-            <div className="bg-emerald-400/[0.12] rounded-lg py-3 px-2">
-              <div className="text-emerald-400 font-extrabold text-lg">{data.tn}</div>
+            <div className="rounded-lg py-3 px-2" style={{ background: sv.fillEmerald }}>
+              <div className="font-extrabold text-lg" style={{ color: colors.emerald }}>{data.tn}</div>
               <div className="text-[var(--svg-text)] text-[9px]">True Neg</div>
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function M6ModelMetrics() {
           </div>
           <svg viewBox={'0 0 ' + RW + ' ' + RH} width="100%" style={{ maxHeight: RH }}>
             <defs>
-              <linearGradient id="m6-roc-fill" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="m23-roc-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />
                 <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.03" />
               </linearGradient>
@@ -119,10 +119,10 @@ export default function M6ModelMetrics() {
             {/* Random classifier diagonal */}
             <line x1={rToX(0)} y1={rToY(0)} x2={rToX(1)} y2={rToY(1)} stroke={sv.axis} strokeWidth={1} strokeDasharray="4,3" />
             {/* AUC fill + ROC curve */}
-            <path d={rocFill} fill="url(#m6-roc-fill)" />
+            <path d={rocFill} fill="url(#m23-roc-fill)" />
             <path d={rocP} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
             {/* Current threshold marker */}
-            <circle cx={rToX(data.curFPR)} cy={rToY(data.curTPR)} r={5} fill={colors.amber} stroke="#fff" strokeWidth={2} />
+            <circle cx={rToX(data.curFPR)} cy={rToY(data.curTPR)} r={5} fill={colors.amber} stroke={sv.appBg} strokeWidth={2} />
             {/* Labels */}
             <text x={RW / 2} y={RH - 4} fill={sv.text} fontSize={8} textAnchor="middle">False Positive Rate</text>
             <text x={6} y={RH / 2} fill={sv.text} fontSize={8} textAnchor="middle" transform={'rotate(-90,6,' + RH / 2 + ')'}>True Positive Rate</text>

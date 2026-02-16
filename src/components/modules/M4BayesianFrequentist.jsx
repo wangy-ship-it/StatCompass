@@ -9,7 +9,7 @@ const priors = {
   strong: { label: 'Strong (α=20, β=80)', a: 20, b: 80 },
 };
 
-export default function M13BayesianFrequentist() {
+export default function M4BayesianFrequentist() {
   const [priorKey, setPriorKey] = useState('uninformative');
   const [observed, setObserved] = useState(100);
   const trueRate = 0.25;
@@ -150,7 +150,7 @@ export default function M13BayesianFrequentist() {
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox label="Posterior Mean" value={data.postMean.toFixed(3)} color={colors.indigo} />
         <StatBox label="Freq. Estimate" value={data.pHat.toFixed(3)} color={colors.emerald} />
-        <StatBox label="P-value (H0: p=0.2)" value={pVal < 0.0001 ? '< 0.0001' : pVal.toFixed(4)} color={sig ? colors.emerald : colors.slate400} />
+        <StatBox label="P-value (H0: p=0.2)" value={pVal < 0.0001 ? '< 0.0001' : pVal.toFixed(4)} color={sig ? colors.emerald : sv.textFaint} />
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">

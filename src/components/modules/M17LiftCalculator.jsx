@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { liftCI } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
-export default function M7LiftCalculator() {
-  const [controlRate, setControlRate] = useState(10);
-  const [treatmentRate, setTreatmentRate] = useState(12);
-  const [sampleSize, setSampleSize] = useState(5000);
+const defaults = { controlRate: 10, treatmentRate: 12, sampleSize: 5000 };
+
+export default function M17LiftCalculator() {
+  const [p, set] = useModuleParams(defaults);
+  const { controlRate, treatmentRate, sampleSize } = p;
+  const setControlRate = (v) => set('controlRate', v);
+  const setTreatmentRate = (v) => set('treatmentRate', v);
+  const setSampleSize = (v) => set('sampleSize', v);
 
   const result = useMemo(() => {
     const pC = controlRate / 100;
@@ -33,7 +38,7 @@ export default function M7LiftCalculator() {
         just the point estimate, but the range of plausible values.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Lift estimate with confidence interval showing the absolute difference between treatment and control conversion rates">
           {/* Zero line */}
           <line x1={toX(0)} y1={pt - 10} x2={toX(0)} y2={H - pb + 10} stroke={sv.text} strokeWidth={1.5} strokeDasharray="6,4" />
           <text x={toX(0)} y={pt - 14} fill={sv.text} fontSize={9} textAnchor="middle">
@@ -91,13 +96,13 @@ export default function M7LiftCalculator() {
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox label="Relative Lift" value={(result.relLift > 0 ? '+' : '') + result.relLift.toFixed(1) + '%'} color={barColor} />
         <StatBox label="Absolute Lift" value={(result.absLift > 0 ? '+' : '') + (result.absLift * 100).toFixed(2) + 'pp'} color={barColor} />
-        <StatBox label="P-value" value={result.pValue < 0.0001 ? '< 0.0001' : result.pValue.toFixed(4)} color={result.pValue < 0.05 ? colors.emerald : colors.slate400} />
-        <StatBox label="95% CI" value={(result.ciLo * 100).toFixed(2) + ' to ' + (result.ciHi * 100).toFixed(2) + 'pp'} color={colors.slate400} />
+        <StatBox label="P-value" value={result.pValue < 0.0001 ? '< 0.0001' : result.pValue.toFixed(4)} color={result.pValue < 0.05 ? colors.emerald : sv.textFaint} />
+        <StatBox label="95% CI" value={(result.ciLo * 100).toFixed(2) + ' to ' + (result.ciHi * 100).toFixed(2) + 'pp'} color={sv.textFaint} />
       </div>
 
       <Sl label="Control Conversion Rate" value={controlRate} min={1} max={50} step={0.5} onChange={setControlRate} fmt={(v) => v.toFixed(1) + '%'} color={colors.indigo} />
       <Sl label="Treatment Conversion Rate" value={treatmentRate} min={1} max={50} step={0.5} onChange={setTreatmentRate} fmt={(v) => v.toFixed(1) + '%'} color={colors.emerald} />
-      <Sl label="Sample Size per Group" value={sampleSize} min={100} max={100000} step={100} onChange={setSampleSize} fmt={(v) => v.toLocaleString()} color={colors.slate400} />
+      <Sl label="Sample Size per Group" value={sampleSize} min={100} max={100000} step={100} onChange={setSampleSize} fmt={(v) => v.toLocaleString()} color={sv.textFaint} />
 
       <QA
         items={[

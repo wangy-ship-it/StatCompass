@@ -3,7 +3,7 @@ import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 
-export default function M17AATesting() {
+export default function M10AATesting() {
   const [nSims, setNSims] = useState(500);
   const [alpha, setAlpha] = useState(0.05);
   const [seed, setSeed] = useState(1);
@@ -57,7 +57,7 @@ export default function M17AATesting() {
         of tests should appear "significant." This is the sanity check before running real experiments.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="A/A test results showing distribution of p-values across simulated tests to verify the testing system produces expected false positive rates">
         {/* Expected frequency dashed line */}
         <line
           x1={pl}

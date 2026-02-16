@@ -3,7 +3,7 @@ import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, Sl, PillBtn, QA, TechNote, Insight, ChartBox, StatBox } from '../ui';
 
-export default function M1ExperimentStructure() {
+export default function M5ExperimentStructure() {
   const [split, setSplit] = useState(50);
   const [rand, setRand] = useState(false);
   const [seed, setSeed] = useState(1);
@@ -107,25 +107,28 @@ export default function M1ExperimentStructure() {
           <text x={450} y={68} fill={colors.emerald} fontSize={11} textAnchor="middle" fontWeight="700">
             {'Treatment (B) n=' + (N - nA)}
           </text>
-          {users.map((u, i) => {
-            const isA = u.g === 'A';
-            const idx = users.slice(0, i).filter((x) => x.g === u.g).length;
-            return (
-              <circle
-                key={i}
-                cx={(isA ? 30 : 320) + (idx % dotsPerRow) * 30 + 15}
-                cy={78 + Math.floor(idx / dotsPerRow) * 20}
-                r={7}
-                fill={isA ? colors.indigo : colors.emerald}
-                opacity={0.65}
-              />
-            );
-          })}
-          <rect x={30} y={dotGridBottom + 6} width={240} height={26} rx={6} fill="rgba(129,140,248,.06)" stroke="rgba(129,140,248,.19)" />
+          {(() => {
+            const counters = { A: 0, B: 0 };
+            return users.map((u, i) => {
+              const isA = u.g === 'A';
+              const idx = counters[u.g]++;
+              return (
+                <circle
+                  key={i}
+                  cx={(isA ? 30 : 320) + (idx % dotsPerRow) * 30 + 15}
+                  cy={78 + Math.floor(idx / dotsPerRow) * 20}
+                  r={7}
+                  fill={isA ? colors.indigo : colors.emerald}
+                  opacity={0.65}
+                />
+              );
+            });
+          })()}
+          <rect x={30} y={dotGridBottom + 6} width={240} height={26} rx={6} fill={sv.fillIndigoSubtle} stroke={sv.borderIndigo} />
           <text x={150} y={dotGridBottom + 23} fill={sv.text} fontSize={9} textAnchor="middle">
             Primary: Conversion Rate
           </text>
-          <rect x={330} y={dotGridBottom + 6} width={240} height={26} rx={6} fill="rgba(52,211,153,.06)" stroke="rgba(52,211,153,.19)" />
+          <rect x={330} y={dotGridBottom + 6} width={240} height={26} rx={6} fill={sv.fillEmeraldSubtle} stroke={sv.borderEmerald} />
           <text x={450} y={dotGridBottom + 23} fill={sv.text} fontSize={9} textAnchor="middle">
             Guardrail: Revenue / Session
           </text>
@@ -133,7 +136,7 @@ export default function M1ExperimentStructure() {
       </div>
 
       {/* ── Power Mini-Chart ── */}
-      <ChartBox h={PH}>
+      <ChartBox h={PH} label="Relative statistical power vs control allocation percentage, showing how unequal splits reduce power">
         {[0.25, 0.5, 0.75, 1].map((v) => (
           <g key={v}>
             <line x1={pL} y1={toY(v)} x2={PW - pR} y2={toY(v)} stroke={sv.grid} />
@@ -154,15 +157,15 @@ export default function M1ExperimentStructure() {
           Relative Power
         </text>
         <defs>
-          <linearGradient id="m1-power-grad" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="m5-power-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.2" />
             <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        <path d={powerArea} fill="url(#m1-power-grad)" />
+        <path d={powerArea} fill="url(#m5-power-grad)" />
         <path d={powerLine} fill="none" stroke={colors.indigo} strokeWidth={2} />
         {/* Current split marker */}
-        <circle cx={toX(split)} cy={toY(currentPower)} r={5} fill={colors.indigo} stroke="#fff" strokeWidth={1.5} />
+        <circle cx={toX(split)} cy={toY(currentPower)} r={5} fill={colors.indigo} stroke={sv.appBg} strokeWidth={1.5} />
         <text x={toX(split)} y={toY(currentPower) - 9} fill={colors.indigo} fontSize={9} textAnchor="middle" fontWeight="600">
           {currentPower.toFixed(2)}
         </text>
@@ -175,7 +178,7 @@ export default function M1ExperimentStructure() {
         <StatBox
           label={srmWarning ? 'SRM Warning' : 'SRM p-value'}
           value={srmP < 0.001 ? srmP.toExponential(1) : srmP.toFixed(3)}
-          color={srmWarning ? colors.red : colors.slate400}
+          color={srmWarning ? colors.red : sv.textFaint}
         />
         <StatBox label="Relative Power" value={currentPower.toFixed(2)} color={colors.indigo} />
       </div>

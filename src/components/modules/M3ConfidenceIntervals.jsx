@@ -3,7 +3,7 @@ import { zInv, sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M5ConfidenceIntervals() {
+export default function M3ConfidenceIntervals() {
   const [cl, setCl] = useState(0.95);
   const [ss, setSs] = useState(30);
   const [seed, setSeed] = useState(1);
@@ -32,7 +32,7 @@ export default function M5ConfidenceIntervals() {
         Wider bars = more uncertainty; narrower = more precision.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Twenty-five confidence intervals from repeated samples, showing how most capture the true value while some miss">
         <line x1={toX(truM)} y1={pt} x2={toX(truM)} y2={H - ppb} stroke={colors.amber} strokeWidth={2} strokeDasharray="6,4" />
         <text x={toX(truM)} y={pt - 4} fill={colors.amber} fontSize={11} textAnchor="middle" fontWeight="700">
           {'True Value = ' + truM}
@@ -54,7 +54,7 @@ export default function M5ConfidenceIntervals() {
         ))}
       </ChartBox>
 
-      <div className="bg-indigo-500/[0.07] rounded-xl py-3 px-4 mb-4 text-center">
+      <div className="rounded-xl py-3 px-4 mb-4 text-center" style={{ background: sv.fillIndigo }}>
         <span className="text-lg font-extrabold" style={{ color: colors.indigo }}>{capN + '/' + ivs.length}</span>
         <span className="text-sm text-[var(--svg-text)]">{' captured true value (' + Math.round((capN / ivs.length) * 100) + '%)'}</span>
         <span className="text-sm ml-2" style={{ color: colors.red }}>{'  ' + (ivs.length - capN) + ' missed'}</span>

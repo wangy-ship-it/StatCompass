@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M29CumulativeGains() {
+export default function M25CumulativeGains() {
   const [modelQuality, setModelQuality] = useState(0.8);
   const [targetPct, setTargetPct] = useState(20);
   const [baseRate, setBaseRate] = useState(10);
@@ -141,101 +141,96 @@ export default function M29CumulativeGains() {
       </div>
 
       {/* ── Cumulative Gains Chart ── */}
-      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
-        <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
-          Cumulative Gains Curve
-        </div>
-        <svg viewBox={'0 0 ' + W + ' ' + H} width="100%" style={{ maxHeight: H, display: 'block' }}>
-          <defs>
-            <linearGradient id="m29-adv" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />
-              <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.04" />
-            </linearGradient>
-          </defs>
+      <ChartBox h={H} label="Cumulative gains curve showing what fraction of positive outcomes is captured at each targeting level compared to random and perfect models">
+        <defs>
+          <linearGradient id="m25-adv" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.04" />
+          </linearGradient>
+        </defs>
 
-          {/* Grid */}
-          {[0, 25, 50, 75, 100].map((v) => (
-            <g key={v}>
-              <line x1={toX(v)} y1={pt} x2={toX(v)} y2={H - pb} stroke={sv.grid} strokeWidth={0.5} />
-              <line x1={pl} y1={toY(v)} x2={W - pr} y2={toY(v)} stroke={sv.grid} strokeWidth={0.5} />
-              <text x={toX(v)} y={H - pb + 14} fill={sv.textFaint} fontSize={8} textAnchor="middle">{v}%</text>
-              <text x={pl - 6} y={toY(v) + 3} fill={sv.textFaint} fontSize={8} textAnchor="end">{v}%</text>
-            </g>
-          ))}
+        {/* Grid */}
+        {[0, 25, 50, 75, 100].map((v) => (
+          <g key={v}>
+            <line x1={toX(v)} y1={pt} x2={toX(v)} y2={H - pb} stroke={sv.grid} strokeWidth={0.5} />
+            <line x1={pl} y1={toY(v)} x2={W - pr} y2={toY(v)} stroke={sv.grid} strokeWidth={0.5} />
+            <text x={toX(v)} y={H - pb + 14} fill={sv.textFaint} fontSize={8} textAnchor="middle">{v}%</text>
+            <text x={pl - 6} y={toY(v) + 3} fill={sv.textFaint} fontSize={8} textAnchor="end">{v}%</text>
+          </g>
+        ))}
 
-          {/* Random baseline (diagonal) */}
-          <line x1={toX(0)} y1={toY(0)} x2={toX(100)} y2={toY(100)} stroke={sv.axis} strokeWidth={1.5} strokeDasharray="6,4" />
-          <text x={toX(78)} y={toY(74)} fill={sv.textFaint} fontSize={9} opacity={0.6}>Random</text>
+        {/* Random baseline (diagonal) */}
+        <line x1={toX(0)} y1={toY(0)} x2={toX(100)} y2={toY(100)} stroke={sv.axis} strokeWidth={1.5} strokeDasharray="6,4" />
+        <text x={toX(78)} y={toY(74)} fill={sv.textFaint} fontSize={9} opacity={0.6}>Random</text>
 
-          {/* Perfect model */}
-          <path d={perfectPath} fill="none" stroke={colors.emerald} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.5} />
-          <text x={toX(Math.min(50, perfectTurnPct + 8))} y={toY(100) + 14} fill={colors.emerald} fontSize={9} opacity={0.6}>Perfect</text>
+        {/* Perfect model */}
+        <path d={perfectPath} fill="none" stroke={colors.emerald} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.5} />
+        <text x={toX(Math.min(50, perfectTurnPct + 8))} y={toY(100) + 14} fill={colors.emerald} fontSize={9} opacity={0.6}>Perfect</text>
 
-          {/* Model advantage shaded area (between curve and diagonal) */}
-          <path d={advantageFill} fill="url(#m29-adv)" />
+        {/* Model advantage shaded area (between curve and diagonal) */}
+        <path d={advantageFill} fill="url(#m25-adv)" />
 
-          {/* Model curve */}
-          <path d={modelPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
+        {/* Model curve */}
+        <path d={modelPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
 
-          {/* Targeting vertical line */}
-          <line x1={toX(targetPct)} y1={pt} x2={toX(targetPct)} y2={H - pb} stroke={colors.amber} strokeWidth={2} strokeDasharray="6,3" />
-          <text x={toX(targetPct)} y={pt - 6} fill={colors.amber} fontSize={9} textAnchor="middle" fontWeight="600">
-            Top {targetPct}%
-          </text>
+        {/* Targeting vertical line */}
+        <line x1={toX(targetPct)} y1={pt} x2={toX(targetPct)} y2={H - pb} stroke={colors.amber} strokeWidth={2} strokeDasharray="6,3" />
+        <text x={toX(targetPct)} y={pt - 6} fill={colors.amber} fontSize={9} textAnchor="middle" fontWeight="600">
+          Top {targetPct}%
+        </text>
 
-          {/* Horizontal guide from model capture point to y-axis */}
-          <line x1={pl} y1={toY(data.capturedAtTarget)} x2={toX(targetPct)} y2={toY(data.capturedAtTarget)}
-            stroke={colors.indigo} strokeWidth={1} strokeDasharray="3,2" opacity={0.4} />
+        {/* Horizontal guide from model capture point to y-axis */}
+        <line x1={pl} y1={toY(data.capturedAtTarget)} x2={toX(targetPct)} y2={toY(data.capturedAtTarget)}
+          stroke={colors.indigo} strokeWidth={1} strokeDasharray="3,2" opacity={0.4} />
 
-          {/* Vertical connector between random and model at targeting level */}
-          <line x1={toX(targetPct)} y1={toY(targetPct)} x2={toX(targetPct)} y2={toY(data.capturedAtTarget)}
-            stroke={colors.amber} strokeWidth={3} opacity={0.3} />
+        {/* Vertical connector between random and model at targeting level */}
+        <line x1={toX(targetPct)} y1={toY(targetPct)} x2={toX(targetPct)} y2={toY(data.capturedAtTarget)}
+          stroke={colors.amber} strokeWidth={3} opacity={0.3} />
 
-          {/* Random point at targeting level */}
-          <circle cx={toX(targetPct)} cy={toY(targetPct)} r={4} fill={sv.textFaint} opacity={0.5} />
+        {/* Random point at targeting level */}
+        <circle cx={toX(targetPct)} cy={toY(targetPct)} r={4} fill={sv.textFaint} opacity={0.5} />
 
-          {/* Model capture point */}
-          <circle cx={toX(targetPct)} cy={toY(data.capturedAtTarget)} r={6} fill={colors.indigo} stroke="#fff" strokeWidth={2} />
+        {/* Model capture point */}
+        <circle cx={toX(targetPct)} cy={toY(data.capturedAtTarget)} r={6} fill={colors.indigo} stroke={sv.appBg} strokeWidth={2} />
 
-          {/* Advantage annotation */}
-          {data.advantagePP > 5 && (
-            <g>
-              <line
-                x1={toX(targetPct) + 8}
-                y1={(toY(targetPct) + toY(data.capturedAtTarget)) / 2}
-                x2={toX(targetPct) + 50}
-                y2={(toY(targetPct) + toY(data.capturedAtTarget)) / 2}
-                stroke={colors.amber} strokeWidth={1} opacity={0.6}
-              />
-              <text
-                x={toX(targetPct) + 54}
-                y={(toY(targetPct) + toY(data.capturedAtTarget)) / 2 + 3}
-                fill={colors.amber} fontSize={10} fontWeight="700"
-              >
-                +{data.advantagePP.toFixed(0)}pp advantage
-              </text>
-            </g>
-          )}
-
-          {/* "Model advantage" label inside shaded area */}
-          {data.gini > 0.1 && (
+        {/* Advantage annotation */}
+        {data.advantagePP > 5 && (
+          <g>
+            <line
+              x1={toX(targetPct) + 8}
+              y1={(toY(targetPct) + toY(data.capturedAtTarget)) / 2}
+              x2={toX(targetPct) + 50}
+              y2={(toY(targetPct) + toY(data.capturedAtTarget)) / 2}
+              stroke={colors.amber} strokeWidth={1} opacity={0.6}
+            />
             <text
-              x={toX(55)} y={toY(45)}
-              fill={colors.indigo} fontSize={9} opacity={0.4}
-              textAnchor="middle" fontWeight="600"
+              x={toX(targetPct) + 54}
+              y={(toY(targetPct) + toY(data.capturedAtTarget)) / 2 + 3}
+              fill={colors.amber} fontSize={10} fontWeight="700"
             >
-              Model Advantage
+              +{data.advantagePP.toFixed(0)}pp advantage
             </text>
-          )}
+          </g>
+        )}
 
-          {/* Axes */}
-          <line x1={pl} y1={pt} x2={pl} y2={H - pb} stroke={sv.axis} />
-          <line x1={pl} y1={H - pb} x2={W - pr} y2={H - pb} stroke={sv.axis} />
-          <text x={W / 2} y={H - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">% of Customers Targeted (sorted by model score)</text>
-          <text x={14} y={(H - pt - pb) / 2 + pt} fill={sv.textFaint} fontSize={9} textAnchor="middle"
-            transform={'rotate(-90,14,' + ((H - pt - pb) / 2 + pt) + ')'}>% of Conversions Captured</text>
-        </svg>
-      </div>
+        {/* "Model advantage" label inside shaded area */}
+        {data.gini > 0.1 && (
+          <text
+            x={toX(55)} y={toY(45)}
+            fill={colors.indigo} fontSize={9} opacity={0.4}
+            textAnchor="middle" fontWeight="600"
+          >
+            Model Advantage
+          </text>
+        )}
+
+        {/* Axes */}
+        <line x1={pl} y1={pt} x2={pl} y2={H - pb} stroke={sv.axis} />
+        <line x1={pl} y1={H - pb} x2={W - pr} y2={H - pb} stroke={sv.axis} />
+        <text x={W / 2} y={H - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">% of Customers Targeted (sorted by model score)</text>
+        <text x={14} y={(H - pt - pb) / 2 + pt} fill={sv.textFaint} fontSize={9} textAnchor="middle"
+          transform={'rotate(-90,14,' + ((H - pt - pb) / 2 + pt) + ')'}>% of Conversions Captured</text>
+      </ChartBox>
 
       <div className="flex gap-3 flex-wrap mb-5">
         <StatBox label="Captured" value={data.capturedAtTarget.toFixed(0) + '%'} color={colors.indigo} />

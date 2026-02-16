@@ -3,7 +3,7 @@ import { sR, polyFit, polyEval } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 
-export default function M10BiasVariance() {
+export default function M27BiasVariance() {
   const [degree, setDegree] = useState(3);
   const [noise, setNoise] = useState(0.3);
   const [seed, setSeed] = useState(1);
@@ -83,8 +83,9 @@ export default function M10BiasVariance() {
     testErrPath += (i === 0 ? 'M' : 'L') + eToX(e.d) + ',' + eToY(e.test);
   });
 
-  const fitLabel = degree <= 2 ? 'Underfitting' : degree <= 6 ? 'Good Fit' : 'Overfitting';
-  const fitColor = degree <= 2 ? colors.amber : degree <= 6 ? colors.emerald : colors.red;
+  const errRatio = data.trainErr > 0 ? data.testErr / data.trainErr : 1;
+  const fitLabel = errRatio > 3 ? 'Overfitting' : data.testErr > 0.5 ? 'Underfitting' : 'Good Fit';
+  const fitColor = fitLabel === 'Underfitting' ? colors.amber : fitLabel === 'Good Fit' ? colors.emerald : colors.red;
 
   return (
     <div>
@@ -96,7 +97,7 @@ export default function M10BiasVariance() {
       </Desc>
 
       {/* Chart 1: Scatter + Fit */}
-      <ChartBox h={H1}>
+      <ChartBox h={H1} label="Scatter plot showing model predictions with bias and variance, demonstrating the tradeoff between underfitting and overfitting">
           {showTrue && <path d={truePath} fill="none" stroke={sv.text} strokeWidth={1.5} strokeDasharray="6,4" />}
           <path d={fitPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
           {data.trainX.map((x, i) => (
@@ -114,7 +115,7 @@ export default function M10BiasVariance() {
       </ChartBox>
 
       {/* Chart 2: Error curves */}
-      <ChartBox h={H2}>
+      <ChartBox h={H2} label="Error decomposition showing how total error is composed of bias squared plus variance as model complexity changes">
           <path d={trainErrPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
           <path d={testErrPath} fill="none" stroke={colors.red} strokeWidth={2.5} />
           <line x1={eToX(degree)} y1={pt} x2={eToX(degree)} y2={H2 - pb} stroke={sv.text} strokeWidth={1.5} strokeDasharray="4,3" />
@@ -142,7 +143,7 @@ export default function M10BiasVariance() {
       </div>
 
       <Sl label="Model Complexity (Degree)" value={degree} min={1} max={15} step={1} onChange={setDegree} fmt={(v) => v} color={colors.indigo} />
-      <Sl label="Noise Level" value={noise} min={0.05} max={1} step={0.05} onChange={setNoise} fmt={(v) => v.toFixed(2)} color={colors.slate400} />
+      <Sl label="Noise Level" value={noise} min={0.05} max={1} step={0.05} onChange={setNoise} fmt={(v) => v.toFixed(2)} color={sv.textFaint} />
 
       <div className="flex gap-2 mb-4 flex-wrap">
         <PillBtn on={showTrue} onClick={() => setShowTrue(!showTrue)}>

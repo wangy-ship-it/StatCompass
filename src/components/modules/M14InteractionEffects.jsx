@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
 
-export default function M25InteractionEffects() {
+export default function M14InteractionEffects() {
   const [effectA, setEffectA] = useState(5);
   const [effectB, setEffectB] = useState(3);
   const [interactionPct, setInteractionPct] = useState(0);
@@ -99,7 +99,7 @@ export default function M25InteractionEffects() {
                 <span className="text-[18px] font-mono font-bold" style={{ color: colors.indigo }}>{data.cells.ac.toFixed(1)}</span>
               </div>
               <div className="w-[120px] h-[70px] flex items-center justify-center rounded-br-xl ring-1 ring-[var(--color-border-subtle)]"
-                style={{ background: data.interactionTerm > 0 ? 'rgba(52,211,153,0.08)' : data.interactionTerm < 0 ? 'rgba(248,113,113,0.08)' : 'var(--color-app-glass)' }}>
+                style={{ background: data.interactionTerm > 0 ? sv.fillEmerald : data.interactionTerm < 0 ? sv.fillRed : 'var(--color-app-glass)' }}>
                 <span className="text-[18px] font-mono font-bold" style={{ color: colors.amber }}>{data.cells.ab.toFixed(1)}</span>
               </div>
             </div>
@@ -108,7 +108,7 @@ export default function M25InteractionEffects() {
       </div>
 
       {/* Bar chart */}
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Interaction effects between simultaneous experiments, showing how treatments can amplify, cancel, or reverse each other">
         {/* Zero line */}
         <line x1={pl} y1={zeroY} x2={W - pr} y2={zeroY} stroke={sv.axis} strokeWidth={1} />
 
@@ -171,10 +171,11 @@ export default function M25InteractionEffects() {
       </div>
 
       {data.interactionTerm !== 0 && (
-        <div className={'rounded-xl px-5 py-3 mt-4 text-[14px] ring-1 ' +
-          (data.interactionTerm > 0
-            ? 'bg-[rgba(52,211,153,0.06)] ring-[rgba(52,211,153,0.2)] text-[var(--svg-text)]'
-            : 'bg-[rgba(248,113,113,0.06)] ring-[rgba(248,113,113,0.2)] text-[var(--svg-text)]')}>
+        <div className="rounded-xl px-5 py-3 mt-4 text-[14px] text-[var(--svg-text)]"
+          style={{
+            background: data.interactionTerm > 0 ? sv.fillEmerald : sv.fillRed,
+            border: '1px solid ' + (data.interactionTerm > 0 ? sv.borderEmerald : sv.borderRed),
+          }}>
           <span className="font-medium" style={{ color: data.interactionTerm > 0 ? colors.emerald : colors.red }}>
             Interaction: {data.interactionTerm > 0 ? '+' : ''}{data.interactionTerm.toFixed(2)}%
           </span>

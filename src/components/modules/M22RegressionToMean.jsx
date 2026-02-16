@@ -3,7 +3,7 @@ import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M23RegressionToMean() {
+export default function M22RegressionToMean() {
   const [nUnits, setNUnits] = useState(30);
   const [noise, setNoise] = useState(0.5);
   const [seed, setSeed] = useState(1);
@@ -47,7 +47,7 @@ export default function M23RegressionToMean() {
         re-measuring them will almost always show improvement, even with zero treatment effect.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Scatter plot demonstrating regression to the mean, showing how extreme initial measurements tend to move toward the average on retest">
         {/* Identity line */}
         <line x1={toX(mn)} y1={toY(mn)} x2={toX(mx)} y2={toY(mx)} stroke={sv.axis} strokeWidth={1} strokeDasharray="6,4" opacity={0.5} />
 

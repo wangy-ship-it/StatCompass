@@ -3,7 +3,7 @@ import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M27ModelDrift() {
+export default function M29ModelDrift() {
   const [driftRate, setDriftRate] = useState(0.5);
   const [retrainFreq, setRetrainFreq] = useState(0);
 
@@ -125,7 +125,7 @@ export default function M27ModelDrift() {
           <path d={perfPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
 
           {/* Current month marker */}
-          <circle cx={toX(months)} cy={toY(data.currentPerf)} r={5} fill={colors.indigo} stroke="#fff" strokeWidth={2} />
+          <circle cx={toX(months)} cy={toY(data.currentPerf)} r={5} fill={colors.indigo} stroke={sv.appBg} strokeWidth={2} />
 
           {/* Axes */}
           <line x1={pl} y1={pt} x2={pl} y2={H - pb} stroke={sv.axis} />
@@ -163,7 +163,7 @@ export default function M27ModelDrift() {
         <StatBox label="Deploy AUC" value={basePerf.toFixed(2)} color={colors.emerald} />
         <StatBox label="Current AUC" value={data.currentPerf.toFixed(2)} color={data.gapPct > 10 ? colors.red : colors.indigo} />
         <StatBox label="Degradation" value={data.gapPct.toFixed(1) + '%'} color={data.gapPct > 10 ? colors.red : colors.amber} />
-        <StatBox label="Since Retrain" value={data.monthsSinceRetrain + ' mo'} color={colors.slate400} />
+        <StatBox label="Since Retrain" value={data.monthsSinceRetrain + ' mo'} color={sv.textFaint} />
       </div>
 
       <QA

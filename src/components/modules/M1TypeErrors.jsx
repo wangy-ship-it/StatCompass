@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { nPDF, nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
-export default function M3TypeErrors() {
-  const [alp, setAlp] = useState(0.05);
-  const [eff, setEff] = useState(2.0);
-  const [ss, setSs] = useState(30);
+const defaults = { alp: 0.05, eff: 2.0, ss: 30 };
+
+export default function M1TypeErrors() {
+  const [p, set] = useModuleParams(defaults);
+  const { alp, eff, ss } = p;
+  const setAlp = (v) => set('alp', v);
+  const setEff = (v) => set('eff', v);
+  const setSs = (v) => set('ss', v);
 
   const d = useMemo(() => {
     const std = 3 / Math.sqrt(ss / 30);
@@ -96,9 +101,9 @@ export default function M3TypeErrors() {
 
       <div className="flex gap-4 mb-4 flex-wrap justify-center">
         {[
-          { bg: 'rgba(248,113,113,.45)', brd: colors.red, lbl: 'False Alarm (Type I)', val: alp.toFixed(3) },
-          { bg: 'rgba(250,204,21,.4)', brd: colors.amber, lbl: 'Missed Signal (Type II)', val: d.beta },
-          { bg: 'rgba(52,211,153,.35)', brd: colors.emerald, lbl: 'Power (1 − β)', val: d.pow },
+          { bg: sv.fillRed, brd: colors.red, lbl: 'False Alarm (Type I)', val: alp.toFixed(3) },
+          { bg: sv.fillAmber, brd: colors.amber, lbl: 'Missed Signal (Type II)', val: d.beta },
+          { bg: sv.fillEmerald, brd: colors.emerald, lbl: 'Power (1 − β)', val: d.pow },
         ].map((item, i) => (
           <div key={i} className="flex items-center gap-2">
             <div

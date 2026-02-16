@@ -10,7 +10,7 @@ const presets = {
 
 const N = 400;
 
-export default function M14SimpsonsParadox() {
+export default function M21SimpsonsParadox() {
   const [preset, setPreset] = useState('medical');
   const [segRatio, setSegRatio] = useState(75);
   const [seg1RateA, setSeg1RateA] = useState(80);
@@ -129,7 +129,7 @@ export default function M14SimpsonsParadox() {
           value={segRatio} min={10} max={90} step={5}
           onChange={(v) => { setSegRatio(v); setPreset(null); }}
           fmt={(v) => v + '% easy / ' + (100 - v) + '% hard'}
-          color={colors.slate400}
+          color={sv.textFaint}
         />
         <div />
         <Sl
@@ -164,7 +164,7 @@ export default function M14SimpsonsParadox() {
 
       {/* Paradox indicator banner */}
       {paradoxActive && (
-        <div className="rounded-xl p-4 mb-6 bg-amber-500/[0.08] border border-amber-500/20 flex items-center gap-3">
+        <div className="rounded-xl p-4 mb-6 flex items-center gap-3" style={{ background: sv.fillAmber, border: '1px solid ' + sv.borderAmber }}>
           <div
             className="w-3 h-3 rounded-full shrink-0"
             style={{ background: colors.amber, boxShadow: '0 0 8px ' + colors.amber }}
@@ -183,7 +183,7 @@ export default function M14SimpsonsParadox() {
       <div className="text-[11px] uppercase tracking-widest mb-2 font-bold text-[var(--svg-text)] px-1">
         Aggregate View
       </div>
-      <ChartBox h={140}>
+      <ChartBox h={140} label="Aggregate view bar chart comparing overall success rates between Group A and Group B">
         <text x={W / 2} y={16} fill={aggWinColor} fontSize={11} textAnchor="middle" fontWeight="700">
           {aggWinLabel}
         </text>
@@ -217,7 +217,7 @@ export default function M14SimpsonsParadox() {
       <div className="text-[11px] uppercase tracking-widest mb-2 font-bold text-[var(--svg-text)] px-1">
         Segmented View
       </div>
-      <ChartBox h={180}>
+      <ChartBox h={180} label="Segmented view showing Group A vs Group B success rates within easy and hard segments separately, revealing the paradox">
         {/* --- Segment 1: Easy --- */}
         <text x={pl / 2} y={seg1Y - 8} fill={sv.text} fontSize={10} textAnchor="middle" fontWeight="700">
           Easy Segment
@@ -304,7 +304,7 @@ export default function M14SimpsonsParadox() {
         <StatBox
           label="Confounding Strength"
           value={paradoxActive ? (confounding * 100).toFixed(1) + ' pp' : '\u2014'}
-          color={paradoxActive ? colors.red : colors.slate500}
+          color={paradoxActive ? colors.red : sv.textFaint}
         />
       </div>
 

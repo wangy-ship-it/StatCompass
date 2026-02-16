@@ -10,7 +10,7 @@ const presets = [
   { label: 'Flat', controlRate: 5.0, treatmentRate: 5.02, sampleSize: 100000 },
 ];
 
-export default function M8ResultInterpreter() {
+export default function M19ResultInterpreter() {
   const [controlRate, setControlRate] = useState(5.0);
   const [treatmentRate, setTreatmentRate] = useState(5.8);
   const [sampleSize, setSampleSize] = useState(50000);
@@ -43,30 +43,30 @@ export default function M8ResultInterpreter() {
       : 0;
 
     // Recommendation logic
-    let recText, recColor, recBorder, recBg;
+    let recText, recColor, recBorderVar, recBgVar;
     if (pValue < 0.05 && treatmentRate > controlRate) {
       recText = 'Ship it \u2014 statistically significant improvement. Monitor guardrail metrics post-launch.';
       recColor = colors.emerald;
-      recBorder = 'border-emerald-400/30';
-      recBg = 'bg-emerald-400/[0.06]';
+      recBorderVar = sv.borderEmerald;
+      recBgVar = sv.fillEmeraldSubtle;
     } else if (pValue < 0.05 && treatmentRate < controlRate) {
       recText = 'Revert \u2014 statistically significant regression. Investigate root cause.';
       recColor = colors.red;
-      recBorder = 'border-red-400/30';
-      recBg = 'bg-red-400/[0.06]';
+      recBorderVar = sv.borderRed;
+      recBgVar = sv.fillRedSubtle;
     } else if (pValue >= 0.05 && Math.abs(relLift) < 1) {
       recText = 'No meaningful difference \u2014 decide based on other factors like simplicity or maintenance cost.';
-      recColor = colors.slate400;
-      recBorder = 'border-slate-400/30';
-      recBg = 'bg-app-glass';
+      recColor = sv.textFaint;
+      recBorderVar = 'var(--color-border-subtle)';
+      recBgVar = 'var(--color-app-glass)';
     } else {
       recText = 'Inconclusive \u2014 extend the test or accept uncertainty. The sample may be too small to detect this effect size.';
       recColor = colors.amber;
-      recBorder = 'border-amber-500/30';
-      recBg = 'bg-amber-500/[0.06]';
+      recBorderVar = sv.borderAmber;
+      recBgVar = sv.fillAmberSubtle;
     }
 
-    return { se, zStat, pValue, absLift, relLift, direction, power, recText, recColor, recBorder, recBg };
+    return { se, zStat, pValue, absLift, relLift, direction, power, recText, recColor, recBorderVar, recBgVar };
   }, [controlRate, treatmentRate, sampleSize]);
 
   // ── Chart geometry ──
@@ -210,11 +210,11 @@ export default function M8ResultInterpreter() {
         step={1000}
         onChange={setSampleSize}
         fmt={(v) => (v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v)}
-        color={colors.slate400}
+        color={sv.textFaint}
       />
 
       {/* ── Overlapping distributions chart ── */}
-      <ChartBox h={chart.H}>
+      <ChartBox h={chart.H} label="Experiment result visualization showing confidence interval, point estimate, and significance assessment">
         <defs>
           <linearGradient id="grad-ctrl" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.28" />
@@ -305,7 +305,7 @@ export default function M8ResultInterpreter() {
           color={
             stats.direction === 'Positive' ? colors.emerald :
             stats.direction === 'Negative' ? colors.red :
-            colors.slate400
+            sv.textFaint
           }
         />
         <StatBox
@@ -314,23 +314,23 @@ export default function M8ResultInterpreter() {
           color={
             stats.pValue < 0.05 && stats.relLift > 0 ? colors.emerald :
             stats.pValue < 0.05 && stats.relLift < 0 ? colors.red :
-            colors.slate400
+            sv.textFaint
           }
         />
         <StatBox
           label="P-value"
           value={stats.pValue < 0.001 ? '<0.001' : stats.pValue.toFixed(3)}
-          color={stats.pValue < 0.05 ? colors.emerald : colors.slate400}
+          color={stats.pValue < 0.05 ? colors.emerald : sv.textFaint}
         />
         <StatBox
           label="Power"
           value={(stats.power * 100).toFixed(0) + '%'}
-          color={stats.power >= 0.8 ? colors.emerald : stats.power >= 0.5 ? colors.amber : colors.slate400}
+          color={stats.power >= 0.8 ? colors.emerald : stats.power >= 0.5 ? colors.amber : sv.textFaint}
         />
       </div>
 
       {/* ── Recommendation ── */}
-      <div className={'rounded-xl p-5 mb-5 ' + stats.recBg + ' ' + stats.recBorder + ' border transition-all duration-300'}>
+      <div className="rounded-xl p-5 mb-5 transition-all duration-300" style={{ background: stats.recBgVar, border: '1px solid ' + stats.recBorderVar }}>
         <div
           className="text-[11px] uppercase tracking-widest mb-2 font-bold transition-colors duration-300"
           style={{ color: stats.recColor }}

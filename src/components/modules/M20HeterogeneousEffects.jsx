@@ -3,7 +3,7 @@ import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 
-export default function M19HeterogeneousEffects() {
+export default function M20HeterogeneousEffects() {
   const [overallATE, setOverallATE] = useState(0.8);
   const [heterogeneity, setHeterogeneity] = useState(0.3);
   const [nGroups, setNGroups] = useState(5);
@@ -85,7 +85,7 @@ export default function M19HeterogeneousEffects() {
         real rather than due to chance.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Heterogeneous treatment effects showing how the experiment impact varies across different user segments">
         {/* Zero reference line */}
         <line
           x1={toX(0)}

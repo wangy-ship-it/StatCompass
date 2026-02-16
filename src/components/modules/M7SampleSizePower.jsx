@@ -1,11 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
-export default function M2SampleSizePower() {
-  const [eff, setEff] = useState(0.5);
-  const [alp, setAlp] = useState(0.05);
+const defaults = { eff: 0.5, alp: 0.05 };
+
+export default function M7SampleSizePower() {
+  const [p, set] = useModuleParams(defaults);
+  const { eff, alp } = p;
+  const setEff = (v) => set('eff', v);
+  const setAlp = (v) => set('alp', v);
   const pts = useMemo(() => {
     const cz = zInv(alp);
     return Array.from({ length: 99 }, (_, i) => {
@@ -31,7 +36,7 @@ export default function M2SampleSizePower() {
         more data.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Power curve showing how statistical power increases with sample size for the selected effect size and significance level">
         {[0.2, 0.4, 0.6, 0.8, 1].map((v) => (
           <g key={v}>
             <line x1={pl} y1={toY(v)} x2={W - pr} y2={toY(v)} stroke={sv.grid} />

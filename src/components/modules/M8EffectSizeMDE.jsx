@@ -9,7 +9,7 @@ const fmtN = (n) => {
   return n.toString();
 };
 
-export default function M16EffectSizeMDE() {
+export default function M8EffectSizeMDE() {
   const [baseline, setBaseline] = useState(10);
   const [sampleSize, setSampleSize] = useState(10000);
   const [power, setPower] = useState(80);
@@ -111,7 +111,7 @@ export default function M16EffectSizeMDE() {
       </Desc>
 
       {/* Visual 1: Effect size spectrum bar */}
-      <ChartBox h={V1H}>
+      <ChartBox h={V1H} label="Effect size visualization showing the overlap between control and treatment distributions with Cohen's d">
         {/* Background bar */}
         <defs>
           <linearGradient id="spectrumGrad" x1="0" y1="0" x2="1" y2="0">
@@ -160,7 +160,7 @@ export default function M16EffectSizeMDE() {
       </ChartBox>
 
       {/* Visual 2: Power curve */}
-      <ChartBox h={V2H}>
+      <ChartBox h={V2H} label="Minimum detectable effect curve showing the tradeoff between sample size and the smallest effect that can be reliably detected">
         <defs>
           <linearGradient id="underGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.18" />

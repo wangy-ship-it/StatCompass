@@ -3,7 +3,7 @@ import { sR, polyFit, polyEval, kFoldSplit } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 
-export default function M20CrossValidation() {
+export default function M28CrossValidation() {
   const [kFolds, setKFolds] = useState(5);
   const [complexity, setComplexity] = useState(3);
   const [seed, setSeed] = useState(1);
@@ -41,7 +41,7 @@ export default function M20CrossValidation() {
 
     for (let d = 1; d <= 15; d++) {
       // k-fold cross-validation
-      const folds = kFoldSplit(n, kFolds, seed + d * 1000);
+      const folds = kFoldSplit(n, kFolds, seed);
       const foldErrors = [];
 
       for (let f = 0; f < kFolds; f++) {
@@ -99,7 +99,7 @@ export default function M20CrossValidation() {
     }
 
     // Per-fold errors for the current complexity
-    const currentFolds = kFoldSplit(n, kFolds, seed + complexity * 1000);
+    const currentFolds = kFoldSplit(n, kFolds, seed);
     const currentFoldErrors = [];
     for (let f = 0; f < kFolds; f++) {
       const { train, test } = currentFolds[f];
@@ -188,7 +188,7 @@ export default function M20CrossValidation() {
       </Desc>
 
       {/* Visual 1: Fold structure */}
-      <ChartBox h={H1}>
+      <ChartBox h={H1} label="K-fold cross-validation diagram showing how data is split into training and test folds across iterations">
         {/* Fold rows */}
         {Array.from({ length: kFolds }, (_, f) => {
           const y = pt1 + f * (rowH + rowGap);
@@ -245,7 +245,7 @@ export default function M20CrossValidation() {
       </ChartBox>
 
       {/* Visual 2: CV error curve */}
-      <ChartBox h={H2}>
+      <ChartBox h={H2} label="Cross-validation results showing training vs test error across folds to assess model generalization">
         {/* Grid lines */}
         {yTicks2.map((t, i) => (
           <line

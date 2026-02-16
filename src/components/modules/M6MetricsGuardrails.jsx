@@ -3,7 +3,7 @@ import { nCDF, zInv, sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 
-export default function M15MetricsGuardrails() {
+export default function M6MetricsGuardrails() {
   const [effectSize, setEffectSize] = useState(2.0);
   const [threshold, setThreshold] = useState(2.0);
   const [nGuardrails, setNGuardrails] = useState(3);
@@ -14,7 +14,7 @@ export default function M15MetricsGuardrails() {
     const se = 0.8;
 
     /* --- Primary metric --- */
-    const ciHalf = 1.5 * se;
+    const ciHalf = zInv(alpha) * se;
     const ciLo = effectSize - ciHalf;
     const ciHi = effectSize + ciHalf;
     const zStat = effectSize / se;
@@ -92,7 +92,7 @@ export default function M15MetricsGuardrails() {
         of guardrails and threshold width interact with the multiple testing problem.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Metrics dashboard showing primary metric, secondary metrics, and guardrail metrics with their current values and thresholds">
         {/* Center line (zero reference) */}
         <line
           x1={centerX} y1={pt} x2={centerX} y2={H - pb}
@@ -122,7 +122,7 @@ export default function M15MetricsGuardrails() {
         {/* Point estimate marker */}
         <circle
           cx={toX(data.effectSize)} cy={primaryY + barH / 2}
-          r={4} fill={data.primaryColor} stroke="#fff" strokeWidth={1.5}
+          r={4} fill={data.primaryColor} stroke={sv.appBg} strokeWidth={1.5}
         />
         {/* CI endpoints */}
         <line
@@ -211,7 +211,7 @@ export default function M15MetricsGuardrails() {
               {/* Observed value dot */}
               <circle
                 cx={obsX} cy={rowY + gBarH / 2}
-                r={3.5} fill={barColor} stroke={g.tripped ? '#fff' : 'none'} strokeWidth={1}
+                r={3.5} fill={barColor} stroke={g.tripped ? sv.appBg : 'none'} strokeWidth={1}
               />
 
               {/* Value label */}
@@ -277,7 +277,7 @@ export default function M15MetricsGuardrails() {
         <StatBox
           label="Primary Significant"
           value={data.primarySig ? 'Yes' : 'No'}
-          color={data.primarySig ? colors.emerald : colors.slate400}
+          color={data.primarySig ? colors.emerald : sv.textFaint}
         />
       </div>
 

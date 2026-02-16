@@ -26,5 +26,13 @@ export const sv = {
   fillEmerald: 'var(--fill-emerald)',
   fillIndigo: 'var(--fill-indigo)',
   fillOverlap: 'var(--fill-overlap)',
+  fillRedSubtle: 'var(--fill-red-subtle)',
+  fillEmeraldSubtle: 'var(--fill-emerald-subtle)',
+  fillIndigoSubtle: 'var(--fill-indigo-subtle)',
+  fillAmberSubtle: 'var(--fill-amber-subtle)',
+  borderRed: 'var(--border-red)',
+  borderEmerald: 'var(--border-emerald)',
+  borderIndigo: 'var(--border-indigo)',
+  borderAmber: 'var(--border-amber)',
   appBg: 'var(--color-app-bg)',
 };

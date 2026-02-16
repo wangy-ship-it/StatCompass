@@ -3,7 +3,7 @@ import { sR, nCDF, obfBounds, pocockBounds, alphaSpend } from '../../utils/math'
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 
-export default function M18SequentialTesting() {
+export default function M11SequentialTesting() {
   const [maxN, setMaxN] = useState(50000);
   const [nLooks, setNLooks] = useState(5);
   const [trueEffect, setTrueEffect] = useState(0.5);
@@ -161,7 +161,7 @@ export default function M18SequentialTesting() {
         valid conclusion.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Sequential testing chart showing test statistic path, decision boundaries, and rejection regions across interim analysis stages">
         {/* Rejection region fills */}
         <path d={buildUpperFill()} fill={sv.fillRed} />
         <path d={buildLowerFill()} fill={sv.fillRed} />

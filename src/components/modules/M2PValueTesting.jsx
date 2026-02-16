@@ -3,7 +3,7 @@ import { nPDF, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
 
-export default function M4PValueTesting() {
+export default function M2PValueTesting() {
   const [ts, setTs] = useState(1.96);
   const [two, setTwo] = useState(true);
   const pVal = two ? 2 * (1 - nCDF(Math.abs(ts), 0, 1)) : 1 - nCDF(ts, 0, 1);
@@ -37,7 +37,7 @@ export default function M4PValueTesting() {
         under no-effect — strong evidence for a real change.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Normal distribution with shaded p-value region showing probability of observing results as extreme as the test statistic">
         <defs>
           <linearGradient id="grad-pshade-red" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.35" />
@@ -78,8 +78,8 @@ export default function M4PValueTesting() {
       <div
         className="rounded-xl p-4 mb-4 text-center"
         style={{
-          background: sig ? 'rgba(248,113,113,.07)' : 'rgba(129,140,248,.07)',
-          border: '1px solid ' + (sig ? 'rgba(248,113,113,.18)' : 'rgba(129,140,248,.18)'),
+          background: sig ? sv.fillRedSubtle : sv.fillIndigoSubtle,
+          border: '1px solid ' + (sig ? sv.borderRed : sv.borderIndigo),
         }}
       >
         <div className="text-[26px] font-extrabold font-mono" style={{ color: sig ? colors.red : colors.indigo }}>

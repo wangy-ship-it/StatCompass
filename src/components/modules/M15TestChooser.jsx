@@ -671,8 +671,8 @@ function AssumptionsChecker({ nodeId }) {
       onClick={() => onChange(!value)}
       className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-200"
       style={{
-        background: value ? 'rgba(52,211,153,0.08)' : 'rgba(245,158,11,0.08)',
-        border: '1px solid ' + (value ? 'rgba(52,211,153,0.25)' : 'rgba(245,158,11,0.25)'),
+        background: value ? sv.fillEmeraldSubtle : sv.fillAmberSubtle,
+        border: '1px solid ' + (value ? sv.borderEmerald : sv.borderAmber),
       }}
     >
       <span
@@ -727,8 +727,8 @@ function AssumptionsChecker({ nodeId }) {
               key={i}
               className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg text-[12px] leading-relaxed"
               style={{
-                background: w.ok ? 'rgba(52,211,153,0.06)' : 'rgba(245,158,11,0.06)',
-                border: '1px solid ' + (w.ok ? 'rgba(52,211,153,0.15)' : 'rgba(245,158,11,0.15)'),
+                background: w.ok ? sv.fillEmeraldSubtle : sv.fillAmberSubtle,
+                border: '1px solid ' + (w.ok ? sv.borderEmerald : sv.borderAmber),
               }}
             >
               <span
@@ -753,7 +753,7 @@ function AssumptionsChecker({ nodeId }) {
 
 /* ── Main Component ── */
 
-export default function M12TestChooser() {
+export default function M15TestChooser() {
   const [path, setPath] = useState(['root']);
 
   const currentNodeId = path[path.length - 1];
@@ -839,7 +839,7 @@ export default function M12TestChooser() {
           <g key={'node-' + i}>
             <rect
               x={x} y={y} width={w} height={h} rx={14}
-              fill="rgba(52,211,153,.10)"
+              fill={sv.fillEmeraldSubtle}
               stroke={colors.emerald} strokeWidth={2}
             />
             <text
@@ -859,7 +859,7 @@ export default function M12TestChooser() {
           <g key={'node-' + i}>
             <rect
               x={x} y={y} width={w} height={h} rx={12}
-              fill="rgba(129,140,248,.10)"
+              fill={sv.fillIndigoSubtle}
               stroke={colors.indigo} strokeWidth={1.5}
             />
             <text
@@ -879,7 +879,7 @@ export default function M12TestChooser() {
           <g key={'node-' + i}>
             <rect
               x={x} y={y} width={w} height={h} rx={12}
-              fill="rgba(129,140,248,.04)"
+              fill={sv.fillIndigoSubtle}
               stroke={sv.axis} strokeWidth={1} opacity={0.7}
             />
             <text
@@ -932,7 +932,7 @@ export default function M12TestChooser() {
 
       {/* Result */}
       {isLeaf && (
-        <div className="rounded-xl p-5 mb-5 bg-emerald-400/[0.06] border border-emerald-400/20">
+        <div className="rounded-xl p-5 mb-5" style={{ background: sv.fillEmeraldSubtle, border: '1px solid ' + sv.borderEmerald }}>
           <div className="text-[11px] uppercase tracking-widest mb-2 font-bold text-[var(--color-emerald-text)]">
             Recommended Test
           </div>
@@ -944,7 +944,7 @@ export default function M12TestChooser() {
 
       {/* Mini-visualization for leaf nodes */}
       {isLeaf && currentNode.viz && (
-        <ChartBox h={140}>
+        <ChartBox h={140} label="Distribution comparison for the recommended statistical test, showing test statistic and critical region">
           {renderViz(currentNode.viz)}
         </ChartBox>
       )}

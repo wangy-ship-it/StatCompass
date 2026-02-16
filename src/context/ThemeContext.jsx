@@ -2,15 +2,18 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
+const MQ = window.matchMedia('(prefers-color-scheme: dark)');
+
 function getInitial() {
   const stored = localStorage.getItem('sc-theme');
   if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return MQ.matches ? 'dark' : 'light';
 }
 
 export function ThemeProvider({ children }) {
   const [mode, setMode] = useState(getInitial);
 
+  // Apply theme class to document
   useEffect(() => {
     const root = document.documentElement;
     if (mode === 'dark') {
@@ -18,10 +21,27 @@ export function ThemeProvider({ children }) {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('sc-theme', mode);
   }, [mode]);
 
-  const toggle = () => setMode((m) => (m === 'dark' ? 'light' : 'dark'));
+  // Follow system dark mode changes when user hasn't explicitly chosen
+  useEffect(() => {
+    const onChange = (e) => {
+      if (!localStorage.getItem('sc-theme')) {
+        setMode(e.matches ? 'dark' : 'light');
+      }
+    };
+    MQ.addEventListener('change', onChange);
+    return () => MQ.removeEventListener('change', onChange);
+  }, []);
+
+  // Toggle stores explicit choice; user can no longer auto-follow system
+  const toggle = () => {
+    setMode((m) => {
+      const next = m === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('sc-theme', next);
+      return next;
+    });
+  };
 
   return (
     <ThemeContext.Provider value={{ mode, toggle }}>

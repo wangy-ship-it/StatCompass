@@ -3,7 +3,7 @@ import { nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 
-export default function M21PracticalSignificance() {
+export default function M18PracticalSignificance() {
   const [effect, setEffect] = useState(0.5);
   const [sampleSize, setSampleSize] = useState(10000);
   const [mwe, setMwe] = useState(0.5);
@@ -61,7 +61,7 @@ export default function M21PracticalSignificance() {
         current data. Always define a Minimum Worthwhile Effect (MWE) before running a test.
       </Desc>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Comparison of statistical significance versus practical significance, showing minimum detectable effect against business-meaningful threshold">
         {/* Zero line */}
         <line x1={zeroX} y1={pt - 10} x2={zeroX} y2={H - pb + 10} stroke={sv.axis} strokeWidth={1.5} />
         <text x={zeroX} y={pt - 16} fill={sv.text} fontSize={10} textAnchor="middle">0</text>

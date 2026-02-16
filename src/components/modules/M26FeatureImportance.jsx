@@ -135,7 +135,7 @@ export default function M26FeatureImportance() {
                 const y = pt + i * rowH;
                 const x1 = wfToX(w.start);
                 const x2 = wfToX(w.end);
-                const barColor = w.type === 'base' ? colors.slate500
+                const barColor = w.type === 'base' ? sv.textFaint
                   : w.type === 'result' ? colors.indigo
                   : w.type === 'pos' ? colors.emerald : colors.red;
                 const barOpacity = w.type === 'base' || w.type === 'result' ? 0.5 : 0.7;
@@ -185,7 +185,7 @@ export default function M26FeatureImportance() {
         {view === 'individual' && (
           <StatBox label="Prediction" value={(data.prediction * 100).toFixed(1) + '%'} color={data.prediction > 0.5 ? colors.emerald : colors.red} />
         )}
-        <StatBox label="Features Used" value={nFeatures} color={colors.slate400} />
+        <StatBox label="Features Used" value={nFeatures} color={sv.textFaint} />
       </div>
 
       <QA

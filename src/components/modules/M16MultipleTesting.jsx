@@ -3,7 +3,7 @@ import { sR, nCDF, bonferroni, benjaminiHochberg } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
 
-export default function M11MultipleTesting() {
+export default function M16MultipleTesting() {
   const [nTests, setNTests] = useState(20);
   const [trueEffects, setTrueEffects] = useState(3);
   const [correction, setCorrection] = useState('none');
@@ -178,7 +178,7 @@ export default function M11MultipleTesting() {
               barColor = s.isTrue ? colors.emerald : colors.red;
               barOpacity = 0.25;
             } else {
-              barColor = colors.slate500;
+              barColor = sv.textFaint;
               barOpacity = 0.2;
             }
 

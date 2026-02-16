@@ -21,6 +21,16 @@
   --fill-indigo: rgba(99,102,241, 0.16);
   --fill-overlap: rgba(120,100,200, 0.12);
 
+  --fill-red-subtle: rgba(239,68,68, 0.07);
+  --fill-emerald-subtle: rgba(16,185,129, 0.07);
+  --fill-indigo-subtle: rgba(99,102,241, 0.07);
+  --fill-amber-subtle: rgba(245,158,11, 0.07);
+
+  --border-red: rgba(239,68,68, 0.20);
+  --border-emerald: rgba(16,185,129, 0.20);
+  --border-indigo: rgba(99,102,241, 0.20);
+  --border-amber: rgba(245,158,11, 0.20);
+
   --svg-text: #334155;
   --svg-text-faint: #64748b;
   --svg-axis: #cbd5e1;
@@ -58,6 +68,16 @@
   --fill-emerald: rgba(52,211,153, 0.18);
   --fill-indigo: rgba(129,140,248, 0.18);
   --fill-overlap: rgba(200,200,255, 0.08);
+
+  --fill-red-subtle: rgba(248,113,113, 0.08);
+  --fill-emerald-subtle: rgba(52,211,153, 0.08);
+  --fill-indigo-subtle: rgba(129,140,248, 0.08);
+  --fill-amber-subtle: rgba(250,204,21, 0.08);
+
+  --border-red: rgba(248,113,113, 0.25);
+  --border-emerald: rgba(52,211,153, 0.22);
+  --border-indigo: rgba(129,140,248, 0.22);
+  --border-amber: rgba(250,204,21, 0.22);
 
   --svg-text: #e2e8f0;
   --svg-text-faint: #cbd5e1;
@@ -149,4 +169,47 @@ input[type="range"]::-moz-range-thumb {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   background: var(--color-app-glass);
+}
+
+/* Skip navigation link */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 100;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-app-surface);
+  ring: 1px solid var(--color-border);
+  text-decoration: none;
+}
+.skip-nav:focus {
+  top: 12px;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Touch-optimized sliders */
+@media (pointer: coarse) {
+  input[type="range"] {
+    height: 40px;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 32px;
+    height: 32px;
+    margin-top: -12px;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 8px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+  }
 }

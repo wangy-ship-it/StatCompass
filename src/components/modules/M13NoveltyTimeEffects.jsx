@@ -26,7 +26,7 @@ function effectCurve(type, magnitude, decayRate, week) {
   return { current: mag, steadyState: mag };
 }
 
-export default function M24NoveltyTimeEffects() {
+export default function M13NoveltyTimeEffects() {
   const [effectType, setEffectType] = useState('novelty');
   const [magnitude, setMagnitude] = useState(15);
   const [decayRate, setDecayRate] = useState(0.3);
@@ -101,9 +101,9 @@ export default function M24NoveltyTimeEffects() {
         ))}
       </div>
 
-      <ChartBox h={H}>
+      <ChartBox h={H} label="Time series showing how novelty and primacy effects cause treatment impact to change over the experiment duration">
         <defs>
-          <linearGradient id="grad-time-24" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-time-13" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={curveColor} stopOpacity="0.25" />
             <stop offset="100%" stopColor={curveColor} stopOpacity="0.02" />
           </linearGradient>
@@ -126,7 +126,7 @@ export default function M24NoveltyTimeEffects() {
         <text x={toX(window)} y={pt - 6} fill={colors.red} fontSize={9} textAnchor="middle">Read point</text>
 
         {/* Effect curve */}
-        <path d={fillPath} fill="url(#grad-time-24)" />
+        <path d={fillPath} fill="url(#grad-time-13)" />
         <path d={curvePath} fill="none" stroke={curveColor} strokeWidth={2.5} />
 
         {/* Measured point */}

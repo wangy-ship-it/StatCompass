@@ -63,7 +63,7 @@ function biasExplanation(biasType, mag) {
   };
 }
 
-export default function M9ValidityThreats() {
+export default function M12ValidityThreats() {
   const [biasType, setBiasType] = useState('clean');
   const [mag, setMag] = useState(0);
 
@@ -195,7 +195,7 @@ export default function M9ValidityThreats() {
         step={1}
         onChange={(v) => { if (!isClean) setMag(v); }}
         fmt={(v) => (isClean ? '— (no effect)' : v + '%')}
-        color={isClean ? colors.slate500 : curveColor}
+        color={isClean ? sv.textFaint : curveColor}
       />
 
       {/* StatBoxes */}
@@ -213,7 +213,7 @@ export default function M9ValidityThreats() {
         <StatBox
           label="Bias Strength"
           value={biasStrength.toFixed(1) + '%'}
-          color={hasBias ? colors.amber : colors.slate400}
+          color={hasBias ? colors.amber : sv.textFaint}
         />
         <StatBox
           label="Distortion"
@@ -229,7 +229,7 @@ export default function M9ValidityThreats() {
       </div>
 
       {/* Chart 1: Observed vs True horizontal bars */}
-      <ChartBox h={H1}>
+      <ChartBox h={H1} label="Visualization of selection bias showing how non-random assignment distorts group comparisons">
         {/* Title */}
         <text x={W / 2} y={18} fill={liftColor} fontSize={12} textAnchor="middle" fontWeight="700">
           {'Observed Lift: ' + (observedLift >= 0 ? '+' : '') + observedLift.toFixed(2) + 'pp   |   True Lift: +' + TRUE_LIFT.toFixed(1) + 'pp'}
@@ -305,7 +305,7 @@ export default function M9ValidityThreats() {
       </ChartBox>
 
       {/* Chart 2: Divergence chart — Lift vs Magnitude */}
-      <ChartBox h={H2}>
+      <ChartBox h={H2} label="Visualization of survivorship and spillover biases showing how they threaten experiment validity">
         {/* Title */}
         <text x={W / 2} y={14} fill={sv.text} fontSize={11} textAnchor="middle" fontWeight="600">
           Observed Lift vs Bias Magnitude
@@ -420,7 +420,7 @@ export default function M9ValidityThreats() {
 
       {/* Novelty time-decay note */}
       {biasType === 'novelty' && mag > 0 && (
-        <div className="rounded-xl p-4 mb-5 border bg-amber-400/[0.04] border-amber-400/20">
+        <div className="rounded-xl p-4 mb-5" style={{ background: sv.fillAmberSubtle, border: '1px solid ' + sv.borderAmber }}>
           <div className="text-[11px] uppercase tracking-widest mb-1 font-bold" style={{ color: colors.amber }}>
             Time-Decay Warning
           </div>
@@ -435,12 +435,11 @@ export default function M9ValidityThreats() {
 
       {/* Explanation box */}
       <div
-        className={
-          'rounded-xl p-5 mb-5 border ' +
-          (hasBias
-            ? 'bg-red-400/[0.04] border-red-400/20'
-            : 'bg-emerald-400/[0.04] border-emerald-400/20')
-        }
+        className="rounded-xl p-5 mb-5"
+        style={{
+          background: hasBias ? sv.fillRedSubtle : sv.fillEmeraldSubtle,
+          border: '1px solid ' + (hasBias ? sv.borderRed : sv.borderEmerald),
+        }}
       >
         <div
           className="text-[11px] uppercase tracking-widest mb-2 font-bold"

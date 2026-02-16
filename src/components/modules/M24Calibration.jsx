@@ -10,7 +10,7 @@ function calibrate(p, calType, strength) {
   return Math.max(0.001, Math.min(0.999, 0.5 + deviation * factor));
 }
 
-export default function M28Calibration() {
+export default function M24Calibration() {
   const [calType, setCalType] = useState('over');
   const [strength, setStrength] = useState(0.5);
   const [nBins, setNBins] = useState(10);
@@ -160,7 +160,7 @@ export default function M28Calibration() {
                 />
                 {/* Dot at actual rate */}
                 <circle cx={toX((b.lo + b.hi) / 2)} cy={y2} r={5}
-                  fill={gapColor} stroke="#fff" strokeWidth={1.5} />
+                  fill={gapColor} stroke={sv.appBg} strokeWidth={1.5} />
               </g>
             );
           })}
@@ -187,7 +187,7 @@ export default function M28Calibration() {
 
           {/* Probe marker on diagram */}
           <circle cx={toX(probe)} cy={toY(probe)} r={4} fill={colors.amber} opacity={0.5} />
-          <circle cx={toX(probe)} cy={toY(probeActual)} r={5} fill={colors.emerald} stroke="#fff" strokeWidth={1.5} />
+          <circle cx={toX(probe)} cy={toY(probeActual)} r={5} fill={colors.emerald} stroke={sv.appBg} strokeWidth={1.5} />
           <line x1={toX(probe)} y1={toY(probe)} x2={toX(probe)} y2={toY(probeActual)}
             stroke={colors.amber} strokeWidth={2} strokeDasharray="3,2" opacity={0.6} />
 
