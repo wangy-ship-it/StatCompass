@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { usePresent } from '../../context/PresentContext';
 
 export default function QA({ items }) {
+  const { presenting } = usePresent();
   const [open, setOpen] = useState(null);
+  if (presenting) return null;
   return (
     <div className="mt-8">
       <div className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.15em] font-medium mb-3">

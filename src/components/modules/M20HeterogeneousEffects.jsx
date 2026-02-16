@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { overallATE: 0.8, heterogeneity: 0.3, nGroups: 5 };
 
 export default function M20HeterogeneousEffects() {
-  const [overallATE, setOverallATE] = useState(0.8);
-  const [heterogeneity, setHeterogeneity] = useState(0.3);
-  const [nGroups, setNGroups] = useState(5);
+  const [p, set] = useModuleParams(defaults);
+  const { overallATE, heterogeneity, nGroups } = p;
+  const setOverallATE = (v) => set('overallATE', v);
+  const setHeterogeneity = (v) => set('heterogeneity', v);
+  const setNGroups = (v) => set('nGroups', v);
 
   const data = useMemo(() => {
     const subgroups = [];

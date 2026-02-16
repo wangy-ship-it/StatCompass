@@ -2,10 +2,15 @@ import { useState, useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { nUnits: 30, noise: 0.5 };
 
 export default function M22RegressionToMean() {
-  const [nUnits, setNUnits] = useState(30);
-  const [noise, setNoise] = useState(0.5);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { nUnits, noise } = p;
+  const setNUnits = (v) => set('nUnits', v);
+  const setNoise = (v) => set('noise', v);
   const [seed, setSeed] = useState(1);
 
   const data = useMemo(() => {

@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { nPDF, nCDF, zInv, cupedVariance, effectiveN } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { rho: 0.5, sampleSize: 5000, trueEffect: 5 };
 
 export default function M9VarianceReduction() {
-  const [rho, setRho] = useState(0.5);
-  const [sampleSize, setSampleSize] = useState(5000);
-  const [trueEffect, setTrueEffect] = useState(5);
+  const [p, set] = useModuleParams(defaults);
+  const { rho, sampleSize, trueEffect } = p;
+  const setRho = (v) => set('rho', v);
+  const setSampleSize = (v) => set('sampleSize', v);
+  const setTrueEffect = (v) => set('trueEffect', v);
 
   const data = useMemo(() => {
     const originalVar = 1;

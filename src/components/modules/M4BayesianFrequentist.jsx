@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { betaPDF, nPDF, nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const priors = {
   uninformative: { label: 'Uninformative', a: 1, b: 1 },
@@ -9,9 +10,13 @@ const priors = {
   strong: { label: 'Strong (α=20, β=80)', a: 20, b: 80 },
 };
 
+const defaults = { priorKey: 'uninformative', observed: 100 };
+
 export default function M4BayesianFrequentist() {
-  const [priorKey, setPriorKey] = useState('uninformative');
-  const [observed, setObserved] = useState(100);
+  const [p, set] = useModuleParams(defaults);
+  const { priorKey, observed } = p;
+  const setPriorKey = (v) => set('priorKey', v);
+  const setObserved = (v) => set('observed', v);
   const trueRate = 0.25;
 
   const data = useMemo(() => {

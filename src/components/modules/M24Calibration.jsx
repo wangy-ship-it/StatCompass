@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 function calibrate(p, calType, strength) {
   if (calType === 'well') return p;
@@ -10,11 +11,15 @@ function calibrate(p, calType, strength) {
   return Math.max(0.001, Math.min(0.999, 0.5 + deviation * factor));
 }
 
+const paramDefaults = { calType: 'over', strength: 0.5, nBins: 10, probe: 0.8 };
+
 export default function M24Calibration() {
-  const [calType, setCalType] = useState('over');
-  const [strength, setStrength] = useState(0.5);
-  const [nBins, setNBins] = useState(10);
-  const [probe, setProbe] = useState(0.8);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { calType, strength, nBins, probe } = p;
+  const setCalType = (v) => set('calType', v);
+  const setStrength = (v) => set('strength', v);
+  const setNBins = (v) => set('nBins', v);
+  const setProbe = (v) => set('probe', v);
 
   const probeActual = calibrate(probe, calType, strength);
   const probeGap = Math.abs(probe - probeActual);

@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { nPDF, nCDF, zInv, sePropDiff } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const presets = [
   { label: 'Significant +', controlRate: 5.0, treatmentRate: 5.8, sampleSize: 50000 },
@@ -10,10 +11,14 @@ const presets = [
   { label: 'Flat', controlRate: 5.0, treatmentRate: 5.02, sampleSize: 100000 },
 ];
 
+const paramDefaults = { controlRate: 5.0, treatmentRate: 5.8, sampleSize: 50000 };
+
 export default function M19ResultInterpreter() {
-  const [controlRate, setControlRate] = useState(5.0);
-  const [treatmentRate, setTreatmentRate] = useState(5.8);
-  const [sampleSize, setSampleSize] = useState(50000);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { controlRate, treatmentRate, sampleSize } = p;
+  const setControlRate = (v) => set('controlRate', v);
+  const setTreatmentRate = (v) => set('treatmentRate', v);
+  const setSampleSize = (v) => set('sampleSize', v);
 
   // ── Derived statistics ──
   const stats = useMemo(() => {

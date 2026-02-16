@@ -2,12 +2,17 @@ import { useState, useMemo } from 'react';
 import { sR, nCDF, obfBounds, pocockBounds, alphaSpend } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { maxN: 50000, nLooks: 5, trueEffect: 0.5, method: 'obf' };
 
 export default function M11SequentialTesting() {
-  const [maxN, setMaxN] = useState(50000);
-  const [nLooks, setNLooks] = useState(5);
-  const [trueEffect, setTrueEffect] = useState(0.5);
-  const [method, setMethod] = useState('obf');
+  const [p, set] = useModuleParams(paramDefaults);
+  const { maxN, nLooks, trueEffect, method } = p;
+  const setMaxN = (v) => set('maxN', v);
+  const setNLooks = (v) => set('nLooks', v);
+  const setTrueEffect = (v) => set('trueEffect', v);
+  const setMethod = (v) => set('method', v);
   const [seed, setSeed] = useState(1);
 
   const data = useMemo(() => {

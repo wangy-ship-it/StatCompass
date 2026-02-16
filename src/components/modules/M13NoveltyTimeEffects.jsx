@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const effectTypes = {
   novelty: { label: 'Novelty Decay', desc: 'Initial spike, then decay' },
@@ -26,11 +27,15 @@ function effectCurve(type, magnitude, decayRate, week) {
   return { current: mag, steadyState: mag };
 }
 
+const paramDefaults = { effectType: 'novelty', magnitude: 15, decayRate: 0.3, window: 8 };
+
 export default function M13NoveltyTimeEffects() {
-  const [effectType, setEffectType] = useState('novelty');
-  const [magnitude, setMagnitude] = useState(15);
-  const [decayRate, setDecayRate] = useState(0.3);
-  const [window, setWindow] = useState(8);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { effectType, magnitude, decayRate, window } = p;
+  const setEffectType = (v) => set('effectType', v);
+  const setMagnitude = (v) => set('magnitude', v);
+  const setDecayRate = (v) => set('decayRate', v);
+  const setWindow = (v) => set('window', v);
 
   const data = useMemo(() => {
     const points = [];

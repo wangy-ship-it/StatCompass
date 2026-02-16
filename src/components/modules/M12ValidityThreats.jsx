@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const BIAS_TYPES = [
   { key: 'clean', label: 'Clean Experiment' },
@@ -63,9 +64,13 @@ function biasExplanation(biasType, mag) {
   };
 }
 
+const paramDefaults = { biasType: 'clean', mag: 0 };
+
 export default function M12ValidityThreats() {
-  const [biasType, setBiasType] = useState('clean');
-  const [mag, setMag] = useState(0);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { biasType, mag } = p;
+  const setBiasType = (v) => set('biasType', v);
+  const setMag = (v) => set('mag', v);
 
   const { controlObs, treatmentObs, observedLift } = useMemo(
     () => computeRates(biasType, mag),

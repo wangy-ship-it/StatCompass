@@ -2,10 +2,15 @@ import { useState, useMemo } from 'react';
 import { zInv, sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { cl: 0.95, ss: 30 };
 
 export default function M3ConfidenceIntervals() {
-  const [cl, setCl] = useState(0.95);
-  const [ss, setSs] = useState(30);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { cl, ss } = p;
+  const setCl = (v) => set('cl', v);
+  const setSs = (v) => set('ss', v);
   const [seed, setSeed] = useState(1);
   const truM = 50, sigma = 10;
 

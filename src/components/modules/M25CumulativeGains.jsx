@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { modelQuality: 0.8, targetPct: 20, baseRate: 10 };
 
 export default function M25CumulativeGains() {
-  const [modelQuality, setModelQuality] = useState(0.8);
-  const [targetPct, setTargetPct] = useState(20);
-  const [baseRate, setBaseRate] = useState(10);
+  const [p, set] = useModuleParams(defaults);
+  const { modelQuality, targetPct, baseRate } = p;
+  const setModelQuality = (v) => set('modelQuality', v);
+  const setTargetPct = (v) => set('targetPct', v);
+  const setBaseRate = (v) => set('baseRate', v);
 
   const data = useMemo(() => {
     const nTotal = 1000;

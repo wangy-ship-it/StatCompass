@@ -2,10 +2,15 @@ import { useState, useMemo } from 'react';
 import { sR, polyFit, polyEval, kFoldSplit } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { kFolds: 5, complexity: 3 };
 
 export default function M28CrossValidation() {
-  const [kFolds, setKFolds] = useState(5);
-  const [complexity, setComplexity] = useState(3);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { kFolds, complexity } = p;
+  const setKFolds = (v) => set('kFolds', v);
+  const setComplexity = (v) => set('complexity', v);
   const [seed, setSeed] = useState(1);
 
   const data = useMemo(() => {

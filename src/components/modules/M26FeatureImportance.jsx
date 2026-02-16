@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const featureDefs = [
   { name: 'Purchase History', w: 0.32 },
@@ -18,10 +19,14 @@ const featureDefs = [
   { name: 'Weekend Visit', w: 0.03 },
 ];
 
+const paramDefaults = { view: 'global', nFeatures: 8, dataPoint: 1 };
+
 export default function M26FeatureImportance() {
-  const [view, setView] = useState('global');
-  const [nFeatures, setNFeatures] = useState(8);
-  const [dataPoint, setDataPoint] = useState(1);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { view, nFeatures, dataPoint } = p;
+  const setView = (v) => set('view', v);
+  const setNFeatures = (v) => set('nFeatures', v);
+  const setDataPoint = (v) => set('dataPoint', v);
 
   const baseValue = 0.35;
 

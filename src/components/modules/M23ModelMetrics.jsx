@@ -1,10 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { thr: 0.5 };
 
 export default function M23ModelMetrics() {
-  const [thr, setThr] = useState(0.5);
+  const [p, set] = useModuleParams(defaults);
+  const { thr } = p;
+  const setThr = (v) => set('thr', v);
 
   const data = useMemo(() => {
     const pts = Array.from({ length: 200 }, (_, i) => {

@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const presets = {
   medical:    { label: 'Medical',    segRatio: 75, seg1RateA: 80, seg1RateB: 78, seg2RateA: 70, seg2RateB: 65 },
@@ -10,22 +11,30 @@ const presets = {
 
 const N = 400;
 
+const paramDefaults = { segRatio: 75, seg1RateA: 80, seg1RateB: 78, seg2RateA: 70, seg2RateB: 65 };
+
 export default function M21SimpsonsParadox() {
-  const [preset, setPreset] = useState('medical');
-  const [segRatio, setSegRatio] = useState(75);
-  const [seg1RateA, setSeg1RateA] = useState(80);
-  const [seg1RateB, setSeg1RateB] = useState(78);
-  const [seg2RateA, setSeg2RateA] = useState(70);
-  const [seg2RateB, setSeg2RateB] = useState(65);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { segRatio, seg1RateA, seg1RateB, seg2RateA, seg2RateB } = p;
+  const setSegRatio = (v) => set('segRatio', v);
+  const setSeg1RateA = (v) => set('seg1RateA', v);
+  const setSeg1RateB = (v) => set('seg1RateB', v);
+  const setSeg2RateA = (v) => set('seg2RateA', v);
+  const setSeg2RateB = (v) => set('seg2RateB', v);
+
+  // Derive preset from current slider values
+  const preset = Object.keys(presets).find((k) => {
+    const pr = presets[k];
+    return pr.segRatio === segRatio && pr.seg1RateA === seg1RateA && pr.seg1RateB === seg1RateB && pr.seg2RateA === seg2RateA && pr.seg2RateB === seg2RateB;
+  }) || 'custom';
 
   const applyPreset = (key) => {
-    const p = presets[key];
-    setPreset(key);
-    setSegRatio(p.segRatio);
-    setSeg1RateA(p.seg1RateA);
-    setSeg1RateB(p.seg1RateB);
-    setSeg2RateA(p.seg2RateA);
-    setSeg2RateB(p.seg2RateB);
+    const pr = presets[key];
+    set('segRatio', pr.segRatio);
+    set('seg1RateA', pr.seg1RateA);
+    set('seg1RateB', pr.seg1RateB);
+    set('seg2RateA', pr.seg2RateA);
+    set('seg2RateB', pr.seg2RateB);
   };
 
   /* --- Derived calculations --- */

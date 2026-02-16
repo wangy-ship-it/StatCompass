@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { usePresent } from '../../context/PresentContext';
 
 export default function Hdr({ sub, children }) {
+  const { presenting } = usePresent();
   const [copied, setCopied] = useState(false);
 
   const copyLink = () => {
@@ -13,7 +15,10 @@ export default function Hdr({ sub, children }) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between">
-        <div className="text-[11px] text-[var(--color-accent-faint)] uppercase tracking-[0.15em] font-medium">{sub}</div>
+        <div className="text-[11px] text-[var(--color-accent-faint)] uppercase tracking-[0.15em] font-medium flex items-center gap-2">
+          {sub}
+          {presenting && <span className="text-[9px] bg-[var(--color-accent-bg)] text-[var(--color-accent)] px-1.5 py-0.5 rounded-full ring-1 ring-[var(--color-accent-ring)] normal-case tracking-normal">Presenting</span>}
+        </div>
         <button
           onClick={copyLink}
           className="text-[11px] text-[var(--svg-text-faint)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors flex items-center gap-1"

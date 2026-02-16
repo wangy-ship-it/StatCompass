@@ -1,11 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { driftRate: 0.5, retrainFreq: 0 };
 
 export default function M29ModelDrift() {
-  const [driftRate, setDriftRate] = useState(0.5);
-  const [retrainFreq, setRetrainFreq] = useState(0);
+  const [p, set] = useModuleParams(defaults);
+  const { driftRate, retrainFreq } = p;
+  const setDriftRate = (v) => set('driftRate', v);
+  const setRetrainFreq = (v) => set('retrainFreq', v);
 
   const basePerf = 0.92;
   const months = 24;

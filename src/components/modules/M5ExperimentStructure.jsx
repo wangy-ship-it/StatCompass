@@ -2,12 +2,17 @@ import { useState, useMemo } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, Sl, PillBtn, QA, TechNote, Insight, ChartBox, StatBox } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { split: 50, rand: false, N: 60 };
 
 export default function M5ExperimentStructure() {
-  const [split, setSplit] = useState(50);
-  const [rand, setRand] = useState(false);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { split, rand, N } = p;
+  const setSplit = (v) => set('split', v);
+  const setRand = (v) => set('rand', v);
+  const setN = (v) => set('N', v);
   const [seed, setSeed] = useState(1);
-  const [N, setN] = useState(60);
   const users = useMemo(
     () =>
       Array.from({ length: N }, (_, i) => {

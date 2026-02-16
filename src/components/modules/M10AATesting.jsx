@@ -2,10 +2,15 @@ import { useState, useMemo } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { nSims: 500, alpha: 0.05 };
 
 export default function M10AATesting() {
-  const [nSims, setNSims] = useState(500);
-  const [alpha, setAlpha] = useState(0.05);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { nSims, alpha } = p;
+  const setNSims = (v) => set('nSims', v);
+  const setAlpha = (v) => set('alpha', v);
   const [seed, setSeed] = useState(1);
 
   const data = useMemo(() => {

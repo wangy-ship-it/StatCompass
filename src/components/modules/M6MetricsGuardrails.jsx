@@ -2,11 +2,16 @@ import { useState, useMemo } from 'react';
 import { nCDF, zInv, sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { effectSize: 2.0, threshold: 2.0, nGuardrails: 3 };
 
 export default function M6MetricsGuardrails() {
-  const [effectSize, setEffectSize] = useState(2.0);
-  const [threshold, setThreshold] = useState(2.0);
-  const [nGuardrails, setNGuardrails] = useState(3);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { effectSize, threshold, nGuardrails } = p;
+  const setEffectSize = (v) => set('effectSize', v);
+  const setThreshold = (v) => set('threshold', v);
+  const setNGuardrails = (v) => set('nGuardrails', v);
   const [seed, setSeed] = useState(1);
 
   const data = useMemo(() => {

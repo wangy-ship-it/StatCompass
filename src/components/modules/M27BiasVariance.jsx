@@ -2,12 +2,17 @@ import { useState, useMemo } from 'react';
 import { sR, polyFit, polyEval } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { degree: 3, noise: 0.3, showTrue: true };
 
 export default function M27BiasVariance() {
-  const [degree, setDegree] = useState(3);
-  const [noise, setNoise] = useState(0.3);
+  const [p, set] = useModuleParams(paramDefaults);
+  const { degree, noise, showTrue } = p;
+  const setDegree = (v) => set('degree', v);
+  const setNoise = (v) => set('noise', v);
+  const setShowTrue = (v) => set('showTrue', v);
   const [seed, setSeed] = useState(1);
-  const [showTrue, setShowTrue] = useState(true);
 
   const data = useMemo(() => {
     const nTrain = 30, nTest = 50;

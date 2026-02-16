@@ -18,7 +18,11 @@ export default function useModuleParams(defaults) {
     const result = { ...defaults };
     for (const key of Object.keys(defaults)) {
       const v = params.get(key);
-      if (v !== null && !isNaN(+v)) result[key] = +v;
+      if (v === null) continue;
+      const t = typeof defaults[key];
+      if (t === 'boolean') result[key] = v === '1' || v === 'true';
+      else if (t === 'string') result[key] = v;
+      else if (!isNaN(+v)) result[key] = +v;
     }
     return result;
   }, []); // defaults is stable per module mount
@@ -36,7 +40,7 @@ export default function useModuleParams(defaults) {
       for (const [k, v] of Object.entries(next)) {
         // Only include non-default values to keep URLs clean
         if (v !== defaults[k]) {
-          searchParams.set(k, v);
+          searchParams.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : v);
         }
       }
       const qs = searchParams.toString();

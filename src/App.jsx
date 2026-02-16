@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import Navigation, { allModules, sections } from './components/nav/Navigation';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { usePresent } from './context/PresentContext';
 
 const modules = {
+  home: lazy(() => import('./components/modules/Landing')),
   m1: lazy(() => import('./components/modules/M1TypeErrors')),
   m2: lazy(() => import('./components/modules/M2PValueTesting')),
   m3: lazy(() => import('./components/modules/M3ConfidenceIntervals')),
@@ -36,7 +38,7 @@ const modules = {
 
 function getHashModule() {
   const h = window.location.hash.replace('#', '').split('?')[0];
-  return modules[h] ? h : 'm1';
+  return modules[h] ? h : 'home';
 }
 
 function LoadingFallback() {
@@ -51,6 +53,7 @@ export default function App() {
   const [active, setActive] = useState(getHashModule);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { toggle: togglePresent } = usePresent();
   const Comp = modules[active];
 
   // Progress tracking via localStorage
@@ -98,6 +101,13 @@ export default function App() {
         return;
       }
 
+      // Cmd+Shift+P / Ctrl+Shift+P → present mode
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'p') {
+        e.preventDefault();
+        togglePresent();
+        return;
+      }
+
       // ArrowDown → next, ArrowUp → prev (only preventDefault when navigation occurs)
       if (e.key === 'ArrowDown') {
         const idx = allModules.findIndex((m) => m.id === active);
@@ -116,7 +126,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, navigate]);
+  }, [active, navigate, togglePresent]);
 
   // Prev/next module info
   const activeIdx = allModules.findIndex((m) => m.id === active);
@@ -197,12 +207,12 @@ export default function App() {
         <div className="max-w-[800px] mx-auto px-6 md:px-10 py-8 md:py-12 pb-20">
           <ErrorBoundary key={active}>
             <Suspense fallback={<LoadingFallback />}>
-              {Comp && <Comp />}
+              {Comp && <Comp navigate={navigate} visited={visited} />}
             </Suspense>
           </ErrorBoundary>
 
           {/* Prev / Next navigation */}
-          <nav className="flex items-center justify-between mt-12 pt-6 border-t border-[var(--color-border-subtle)]" aria-label="Module navigation">
+          {active !== 'home' && <nav className="flex items-center justify-between mt-12 pt-6 border-t border-[var(--color-border-subtle)]" aria-label="Module navigation">
             {prevModule ? (
               <button
                 onClick={() => navigate(prevModule.id)}
@@ -235,7 +245,7 @@ export default function App() {
                 </span>
               </button>
             ) : <div />}
-          </nav>
+          </nav>}
         </div>
 
         {/* Mobile bottom nav */}

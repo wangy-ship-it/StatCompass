@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { effect: 0.5, sampleSize: 10000, mwe: 0.5 };
 
 export default function M18PracticalSignificance() {
-  const [effect, setEffect] = useState(0.5);
-  const [sampleSize, setSampleSize] = useState(10000);
-  const [mwe, setMwe] = useState(0.5);
+  const [p, set] = useModuleParams(defaults);
+  const { effect, sampleSize, mwe } = p;
+  const setEffect = (v) => set('effect', v);
+  const setSampleSize = (v) => set('sampleSize', v);
+  const setMwe = (v) => set('mwe', v);
 
   const data = useMemo(() => {
     const effectFrac = effect / 100;

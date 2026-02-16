@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { nCDF, zInv, mdeFromN, nFromMDE, cohensD } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, StatBox, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
 
 const fmtN = (n) => {
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
@@ -9,10 +10,14 @@ const fmtN = (n) => {
   return n.toString();
 };
 
+const defaults = { baseline: 10, sampleSize: 10000, power: 80 };
+
 export default function M8EffectSizeMDE() {
-  const [baseline, setBaseline] = useState(10);
-  const [sampleSize, setSampleSize] = useState(10000);
-  const [power, setPower] = useState(80);
+  const [p, set] = useModuleParams(defaults);
+  const { baseline, sampleSize, power } = p;
+  const setBaseline = (v) => set('baseline', v);
+  const setSampleSize = (v) => set('sampleSize', v);
+  const setPower = (v) => set('power', v);
 
   const computed = useMemo(() => {
     const p = baseline / 100;

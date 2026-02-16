@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { effectA: 5, effectB: 3, interactionPct: 0, interType: 'none' };
 
 export default function M14InteractionEffects() {
-  const [effectA, setEffectA] = useState(5);
-  const [effectB, setEffectB] = useState(3);
-  const [interactionPct, setInteractionPct] = useState(0);
-  const [interType, setInterType] = useState('none');
+  const [p, set] = useModuleParams(paramDefaults);
+  const { effectA, effectB, interactionPct, interType } = p;
+  const setEffectA = (v) => set('effectA', v);
+  const setEffectB = (v) => set('effectB', v);
+  const setInteractionPct = (v) => set('interactionPct', v);
+  const setInterType = (v) => set('interType', v);
 
   const data = useMemo(() => {
     let interaction;

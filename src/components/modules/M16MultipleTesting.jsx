@@ -2,11 +2,16 @@ import { useState, useMemo } from 'react';
 import { sR, nCDF, bonferroni, benjaminiHochberg } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const paramDefaults = { nTests: 20, trueEffects: 3, correction: 'none' };
 
 export default function M16MultipleTesting() {
-  const [nTests, setNTests] = useState(20);
-  const [trueEffects, setTrueEffects] = useState(3);
-  const [correction, setCorrection] = useState('none');
+  const [p, set] = useModuleParams(paramDefaults);
+  const { nTests, trueEffects, correction } = p;
+  const setNTests = (v) => set('nTests', v);
+  const setTrueEffects = (v) => set('trueEffects', v);
+  const setCorrection = (v) => set('correction', v);
   const [seed, setSeed] = useState(1);
   const alpha = 0.05;
 

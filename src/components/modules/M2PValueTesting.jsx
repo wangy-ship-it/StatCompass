@@ -1,11 +1,15 @@
-import { useState } from 'react';
 import { nPDF, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useModuleParams from '../../hooks/useModuleParams';
+
+const defaults = { ts: 1.96, two: true };
 
 export default function M2PValueTesting() {
-  const [ts, setTs] = useState(1.96);
-  const [two, setTwo] = useState(true);
+  const [p, set] = useModuleParams(defaults);
+  const { ts, two } = p;
+  const setTs = (v) => set('ts', v);
+  const setTwo = (v) => set('two', v);
   const pVal = two ? 2 * (1 - nCDF(Math.abs(ts), 0, 1)) : 1 - nCDF(ts, 0, 1);
   const sig = pVal < 0.05;
 
