@@ -66,7 +66,7 @@ function biasExplanation(biasType, mag) {
 
 const paramDefaults = { biasType: 'clean', mag: 0 };
 
-export default function M12ValidityThreats() {
+export default function M13ValidityThreats() {
   const [p, set] = useModuleParams(paramDefaults);
   const { biasType, mag } = p;
   const setBiasType = (v) => set('biasType', v);

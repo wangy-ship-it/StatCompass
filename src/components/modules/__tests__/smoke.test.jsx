@@ -24,12 +24,12 @@ import M6 from '../M6MetricsGuardrails';
 import M7 from '../M7SampleSizePower';
 import M8 from '../M8EffectSizeMDE';
 import M9 from '../M9VarianceReduction';
-import M10 from '../M10AATesting';
-import M11 from '../M11SequentialTesting';
-import M12 from '../M12ValidityThreats';
-import M13 from '../M13NoveltyTimeEffects';
-import M14 from '../M14InteractionEffects';
-import M15 from '../M15TestChooser';
+import M10 from '../M10TestChooser';
+import M11 from '../M11AATesting';
+import M12 from '../M12SequentialTesting';
+import M13 from '../M13ValidityThreats';
+import M14 from '../M14NoveltyTimeEffects';
+import M15 from '../M15InteractionEffects';
 import M16 from '../M16MultipleTesting';
 import M17 from '../M17LiftCalculator';
 import M18 from '../M18PracticalSignificance';
@@ -56,12 +56,12 @@ const modules = [
   ['M7 – Sample Size & Power', M7],
   ['M8 – Effect Size & MDE', M8],
   ['M9 – Variance Reduction', M9],
-  ['M10 – A/A Testing', M10],
-  ['M11 – Sequential Testing', M11],
-  ['M12 – Validity Threats', M12],
-  ['M13 – Novelty & Time Effects', M13],
-  ['M14 – Interaction Effects', M14],
-  ['M15 – Choosing the Right Test', M15],
+  ['M10 – Choosing the Right Test', M10],
+  ['M11 – A/A Testing', M11],
+  ['M12 – Sequential Testing', M12],
+  ['M13 – Validity Threats', M13],
+  ['M14 – Novelty & Time Effects', M14],
+  ['M15 – Interaction Effects', M15],
   ['M16 – Multiple Testing', M16],
   ['M17 – Lift Calculator', M17],
   ['M18 – Practical Significance', M18],

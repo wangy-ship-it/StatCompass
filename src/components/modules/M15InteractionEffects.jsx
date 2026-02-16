@@ -5,7 +5,7 @@ import useModuleParams from '../../hooks/useModuleParams';
 
 const paramDefaults = { effectA: 5, effectB: 3, interactionPct: 0, interType: 'none' };
 
-export default function M14InteractionEffects() {
+export default function M15InteractionEffects() {
   const [p, set] = useModuleParams(paramDefaults);
   const { effectA, effectB, interactionPct, interType } = p;
   const setEffectA = (v) => set('effectA', v);

@@ -13,7 +13,7 @@ const scenarios = [
   { title: 'Explaining experiment results', desc: 'Walk stakeholders through what the numbers mean', links: [{ id: 'm19', label: 'Result Interpreter' }, { id: 'm18', label: 'Practical Significance' }] },
   { title: 'Justifying test duration', desc: 'Show why we need more time or more users', links: [{ id: 'm7', label: 'Sample Size & Power' }, { id: 'm8', label: 'Effect Size & MDE' }] },
   { title: 'Why our test showed no effect', desc: 'Explain null results without losing credibility', links: [{ id: 'm1', label: 'Type I & II Errors' }, { id: 'm22', label: 'Regression to Mean' }] },
-  { title: 'Reviewing test validity', desc: 'Check for threats before trusting the results', links: [{ id: 'm12', label: 'Validity Threats' }, { id: 'm14', label: 'Interaction Effects' }] },
+  { title: 'Reviewing test validity', desc: 'Check for threats before trusting the results', links: [{ id: 'm13', label: 'Validity Threats' }, { id: 'm15', label: 'Interaction Effects' }] },
 ];
 
 export default function Landing({ navigate, visited, resetVisited }) {

@@ -29,7 +29,7 @@ function effectCurve(type, magnitude, decayRate, week) {
 
 const paramDefaults = { effectType: 'novelty', magnitude: 15, decayRate: 0.3, window: 8 };
 
-export default function M13NoveltyTimeEffects() {
+export default function M14NoveltyTimeEffects() {
   const [p, set] = useModuleParams(paramDefaults);
   const { effectType, magnitude, decayRate, window } = p;
   const setEffectType = (v) => set('effectType', v);

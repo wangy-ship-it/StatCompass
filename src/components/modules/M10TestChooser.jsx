@@ -753,7 +753,7 @@ function AssumptionsChecker({ nodeId }) {
 
 /* ── Main Component ── */
 
-export default function M15TestChooser() {
+export default function M10TestChooser() {
   const [path, setPath] = useState(['root']);
 
   const currentNodeId = path[path.length - 1];

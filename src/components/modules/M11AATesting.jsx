@@ -6,7 +6,7 @@ import useModuleParams from '../../hooks/useModuleParams';
 
 const paramDefaults = { nSims: 500, alpha: 0.05 };
 
-export default function M10AATesting() {
+export default function M11AATesting() {
   const [p, set] = useModuleParams(paramDefaults);
   const { nSims, alpha } = p;
   const setNSims = (v) => set('nSims', v);

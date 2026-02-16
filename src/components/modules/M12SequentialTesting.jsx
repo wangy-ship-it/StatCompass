@@ -6,7 +6,7 @@ import useModuleParams from '../../hooks/useModuleParams';
 
 const paramDefaults = { maxN: 50000, nLooks: 5, trueEffect: 0.5, method: 'obf' };
 
-export default function M11SequentialTesting() {
+export default function M12SequentialTesting() {
   const [p, set] = useModuleParams(paramDefaults);
   const { maxN, nLooks, trueEffect, method } = p;
   const setMaxN = (v) => set('maxN', v);

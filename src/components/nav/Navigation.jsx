@@ -23,6 +23,7 @@ const sections = [
       { id: 'm7', label: 'Sample Size & Power' },
       { id: 'm8', label: 'Effect Size & MDE' },
       { id: 'm9', label: 'Variance Reduction (CUPED)' },
+      { id: 'm10', label: 'Choosing the Right Test' },
     ],
   },
   {
@@ -30,11 +31,11 @@ const sections = [
     title: 'Validate & Run',
     desc: 'Execute with confidence',
     modules: [
-      { id: 'm10', label: 'A/A Testing' },
-      { id: 'm11', label: 'Sequential Testing' },
-      { id: 'm12', label: 'Validity Threats' },
-      { id: 'm13', label: 'Novelty & Time Effects' },
-      { id: 'm14', label: 'Interaction Effects' },
+      { id: 'm11', label: 'A/A Testing' },
+      { id: 'm12', label: 'Sequential Testing' },
+      { id: 'm13', label: 'Validity Threats' },
+      { id: 'm14', label: 'Novelty & Time Effects' },
+      { id: 'm15', label: 'Interaction Effects' },
     ],
   },
   {
@@ -42,7 +43,6 @@ const sections = [
     title: 'Analyze',
     desc: 'Crunch the numbers',
     modules: [
-      { id: 'm15', label: 'Choosing the Right Test' },
       { id: 'm16', label: 'Multiple Testing' },
       { id: 'm17', label: 'Lift Calculator' },
       { id: 'm18', label: 'Practical vs Statistical Significance' },
