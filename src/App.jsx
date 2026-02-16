@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import Navigation, { allModules, sections } from './components/nav/Navigation';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import { usePresent } from './context/PresentContext';
 
 const modules = {
   home: lazy(() => import('./components/modules/Landing')),
@@ -53,7 +52,6 @@ export default function App() {
   const [active, setActive] = useState(getHashModule);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { toggle: togglePresent } = usePresent();
   const Comp = modules[active];
 
   // Progress tracking via localStorage
@@ -101,12 +99,6 @@ export default function App() {
         return;
       }
 
-      // Cmd+Shift+P / Ctrl+Shift+P → present mode
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'p') {
-        e.preventDefault();
-        togglePresent();
-        return;
-      }
 
       // ArrowDown → next, ArrowUp → prev (only preventDefault when navigation occurs)
       if (e.key === 'ArrowDown') {
@@ -126,7 +118,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, navigate, togglePresent]);
+  }, [active, navigate]);
 
   // Prev/next module info
   const activeIdx = allModules.findIndex((m) => m.id === active);
@@ -207,7 +199,7 @@ export default function App() {
         <div className="max-w-[800px] mx-auto px-6 md:px-10 py-8 md:py-12 pb-20">
           <ErrorBoundary key={active}>
             <Suspense fallback={<LoadingFallback />}>
-              {Comp && <Comp navigate={navigate} visited={visited} />}
+              {Comp && <Comp navigate={navigate} visited={visited} resetVisited={() => { localStorage.removeItem('sc-visited'); setVisited(new Set()); }} />}
             </Suspense>
           </ErrorBoundary>
 

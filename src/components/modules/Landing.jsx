@@ -16,7 +16,7 @@ const scenarios = [
   { title: 'Reviewing test validity', desc: 'Check for threats before trusting the results', links: [{ id: 'm12', label: 'Validity Threats' }, { id: 'm14', label: 'Interaction Effects' }] },
 ];
 
-export default function Landing({ navigate, visited }) {
+export default function Landing({ navigate, visited, resetVisited }) {
   const visitedCount = visited ? visited.size : 0;
 
   return (
@@ -32,8 +32,18 @@ export default function Landing({ navigate, visited }) {
           Each one turns a complex statistical concept into a visual you can share in a meeting.
         </p>
         {visitedCount > 0 && (
-          <div className="mt-3 text-[13px] text-[var(--svg-text-faint)]">
-            {visitedCount} of 29 modules explored
+          <div className="mt-3 text-[13px] text-[var(--svg-text-faint)] flex items-center gap-2">
+            <span>{visitedCount} of 29 modules explored</span>
+            <button
+              onClick={resetVisited}
+              className="text-[11px] text-[var(--svg-text-faint)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors"
+              title="Reset progress"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 4v6h6M23 20v-6h-6" />
+                <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
+              </svg>
+            </button>
           </div>
         )}
       </div>

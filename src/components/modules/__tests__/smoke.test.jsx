@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { ThemeProvider } from '../../../context/ThemeContext';
-import { PresentProvider } from '../../../context/PresentContext';
 
 beforeEach(() => {
   window.location.hash = '';
@@ -10,9 +9,7 @@ beforeEach(() => {
 function Wrapper({ children }) {
   return (
     <ThemeProvider>
-      <PresentProvider>
-        {children}
-      </PresentProvider>
+      {children}
     </ThemeProvider>
   );
 }
@@ -96,7 +93,7 @@ describe('Module smoke tests', () => {
     const visited = new Set(['m1', 'm2']);
     const { container } = render(
       <Wrapper>
-        <Landing navigate={navigate} visited={visited} />
+        <Landing navigate={navigate} visited={visited} resetVisited={() => {}} />
       </Wrapper>
     );
     expect(container.firstChild).toBeTruthy();

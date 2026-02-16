@@ -23,7 +23,7 @@ export function ThemeProvider({ children }) {
     }
   }, [mode]);
 
-  // Follow system dark mode changes when user hasn't explicitly chosen
+  // Follow system changes when user hasn't explicitly chosen
   useEffect(() => {
     const onChange = (e) => {
       if (!localStorage.getItem('sc-theme')) {
@@ -34,7 +34,6 @@ export function ThemeProvider({ children }) {
     return () => MQ.removeEventListener('change', onChange);
   }, []);
 
-  // Toggle stores explicit choice; user can no longer auto-follow system
   const toggle = () => {
     setMode((m) => {
       const next = m === 'dark' ? 'light' : 'dark';

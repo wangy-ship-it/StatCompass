@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import ThemeToggle from '../ui/ThemeToggle';
-import { usePresent } from '../../context/PresentContext';
 
 const sections = [
   {
@@ -80,7 +79,6 @@ export { sections };
 export const allModules = sections.flatMap((s) => s.modules);
 
 export default function Navigation({ active, setActive, onClose, visited }) {
-  const { presenting, toggle: togglePresent } = usePresent();
   const [filter, setFilter] = useState('');
   const activeSection = sections.find((s) => s.modules.some((m) => m.id === active));
   const q = filter.toLowerCase().trim();
@@ -181,20 +179,9 @@ export default function Navigation({ active, setActive, onClose, visited }) {
         )}
       </div>
 
-      {/* Theme toggle, present toggle + keyboard hint */}
+      {/* Theme toggle + keyboard hint */}
       <div className="px-3 pb-4 pt-1 border-t border-[var(--color-border-subtle)]">
         <ThemeToggle />
-        <button
-          onClick={togglePresent}
-          className={'flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] cursor-pointer transition-colors duration-150 hover:bg-[var(--color-sidebar-hover)] ' + (presenting ? 'text-[var(--color-accent)]' : 'text-[var(--svg-text)] hover:text-[var(--color-text-primary)]')}
-          title={presenting ? 'Exit present mode' : 'Enter present mode (hides Q&A, notes, insights)'}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <path d="M8 21h8M12 17v4" />
-          </svg>
-          <span>{presenting ? 'Exit Present' : 'Present'}</span>
-        </button>
         <div className="hidden md:flex items-center justify-center gap-1.5 mt-2 text-[10px] text-[var(--svg-text-faint)]">
           <kbd className="bg-app-glass px-1.5 py-0.5 rounded ring-1 ring-[var(--color-border-subtle)]">{navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}K</kbd>
           <span>search</span>
