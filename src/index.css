@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Structural — light mode defaults (Tailwind utility registration) */
@@ -8,28 +8,28 @@
   --color-app-glass: rgba(0, 0, 0, 0.04);
   --color-sidebar: #f8fafc;
   --color-sidebar-hover: #f1f5f9;
-  --color-sidebar-active: rgba(99, 102, 241, 0.10);
+  --color-sidebar-active: rgba(99, 102, 241, 0.1);
   --color-border: rgba(0, 0, 0, 0.08);
   --color-border-subtle: rgba(0, 0, 0, 0.05);
 }
 
 /* Light mode defaults — MUST come before .dark */
 :root {
-  --fill-red: rgba(239,68,68, 0.18);
-  --fill-amber: rgba(245,158,11, 0.16);
-  --fill-emerald: rgba(16,185,129, 0.16);
-  --fill-indigo: rgba(99,102,241, 0.16);
-  --fill-overlap: rgba(120,100,200, 0.12);
+  --fill-red: rgba(239, 68, 68, 0.18);
+  --fill-amber: rgba(245, 158, 11, 0.16);
+  --fill-emerald: rgba(16, 185, 129, 0.16);
+  --fill-indigo: rgba(99, 102, 241, 0.16);
+  --fill-overlap: rgba(120, 100, 200, 0.12);
 
-  --fill-red-subtle: rgba(239,68,68, 0.07);
-  --fill-emerald-subtle: rgba(16,185,129, 0.07);
-  --fill-indigo-subtle: rgba(99,102,241, 0.07);
-  --fill-amber-subtle: rgba(245,158,11, 0.07);
+  --fill-red-subtle: rgba(239, 68, 68, 0.07);
+  --fill-emerald-subtle: rgba(16, 185, 129, 0.07);
+  --fill-indigo-subtle: rgba(99, 102, 241, 0.07);
+  --fill-amber-subtle: rgba(245, 158, 11, 0.07);
 
-  --border-red: rgba(239,68,68, 0.20);
-  --border-emerald: rgba(16,185,129, 0.20);
-  --border-indigo: rgba(99,102,241, 0.20);
-  --border-amber: rgba(245,158,11, 0.20);
+  --border-red: rgba(239, 68, 68, 0.2);
+  --border-emerald: rgba(16, 185, 129, 0.2);
+  --border-indigo: rgba(99, 102, 241, 0.2);
+  --border-amber: rgba(245, 158, 11, 0.2);
 
   --svg-text: #334155;
   --svg-text-faint: #64748b;
@@ -60,24 +60,24 @@
   --color-sidebar: #0c1019;
   --color-sidebar-hover: #1a2035;
   --color-sidebar-active: rgba(129, 140, 248, 0.12);
-  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border: rgba(255, 255, 255, 0.1);
   --color-border-subtle: rgba(255, 255, 255, 0.06);
 
-  --fill-red: rgba(248,113,113, 0.28);
-  --fill-amber: rgba(250,204,21, 0.20);
-  --fill-emerald: rgba(52,211,153, 0.18);
-  --fill-indigo: rgba(129,140,248, 0.18);
-  --fill-overlap: rgba(200,200,255, 0.08);
+  --fill-red: rgba(248, 113, 113, 0.28);
+  --fill-amber: rgba(250, 204, 21, 0.2);
+  --fill-emerald: rgba(52, 211, 153, 0.18);
+  --fill-indigo: rgba(129, 140, 248, 0.18);
+  --fill-overlap: rgba(200, 200, 255, 0.08);
 
-  --fill-red-subtle: rgba(248,113,113, 0.08);
-  --fill-emerald-subtle: rgba(52,211,153, 0.08);
-  --fill-indigo-subtle: rgba(129,140,248, 0.08);
-  --fill-amber-subtle: rgba(250,204,21, 0.08);
+  --fill-red-subtle: rgba(248, 113, 113, 0.08);
+  --fill-emerald-subtle: rgba(52, 211, 153, 0.08);
+  --fill-indigo-subtle: rgba(129, 140, 248, 0.08);
+  --fill-amber-subtle: rgba(250, 204, 21, 0.08);
 
-  --border-red: rgba(248,113,113, 0.25);
-  --border-emerald: rgba(52,211,153, 0.22);
-  --border-indigo: rgba(129,140,248, 0.22);
-  --border-amber: rgba(250,204,21, 0.22);
+  --border-red: rgba(248, 113, 113, 0.25);
+  --border-emerald: rgba(52, 211, 153, 0.22);
+  --border-indigo: rgba(129, 140, 248, 0.22);
+  --border-amber: rgba(250, 204, 21, 0.22);
 
   --svg-text: #e2e8f0;
   --svg-text-faint: #cbd5e1;
@@ -93,15 +93,24 @@
   --color-accent: #a5b4fc;
   --color-accent-faint: rgba(165, 180, 252, 0.6);
   --color-accent-bg: rgba(129, 140, 248, 0.06);
-  --color-accent-ring: rgba(129, 140, 248, 0.10);
+  --color-accent-ring: rgba(129, 140, 248, 0.1);
 
   --color-emerald-text: #34d399;
   --color-red-text: #fca5a5;
 }
 
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(128,128,128,0.15) transparent;
+  scrollbar-color: rgba(128, 128, 128, 0.15) transparent;
 }
 
 body {
@@ -112,7 +121,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-input[type="range"] {
+input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -121,13 +130,13 @@ input[type="range"] {
   height: 28px;
 }
 
-input[type="range"]::-webkit-slider-runnable-track {
+input[type='range']::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 99px;
   background: var(--color-border);
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 24px;
@@ -135,22 +144,28 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--thumb-color, #818cf8);
   margin-top: -9px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(0,0,0,0.08);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.25),
+    0 0 0 3px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
+input[type='range']::-webkit-slider-thumb:hover {
   transform: scale(1.12);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(0,0,0,0.12);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(0, 0, 0, 0.12);
 }
 
-input[type="range"]::-moz-range-track {
+input[type='range']::-moz-range-track {
   height: 6px;
   border-radius: 99px;
   background: var(--color-border);
 }
 
-input[type="range"]::-moz-range-thumb {
+input[type='range']::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -194,21 +209,21 @@ input[type="range"]::-moz-range-thumb {
 
 /* Touch-optimized sliders */
 @media (pointer: coarse) {
-  input[type="range"] {
+  input[type='range'] {
     height: 40px;
   }
-  input[type="range"]::-webkit-slider-runnable-track {
+  input[type='range']::-webkit-slider-runnable-track {
     height: 8px;
   }
-  input[type="range"]::-webkit-slider-thumb {
+  input[type='range']::-webkit-slider-thumb {
     width: 32px;
     height: 32px;
     margin-top: -12px;
   }
-  input[type="range"]::-moz-range-track {
+  input[type='range']::-moz-range-track {
     height: 8px;
   }
-  input[type="range"]::-moz-range-thumb {
+  input[type='range']::-moz-range-thumb {
     width: 32px;
     height: 32px;
   }
