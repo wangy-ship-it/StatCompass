@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 function calibrate(p, calType, strength) {
@@ -59,6 +59,31 @@ export default function M24Calibration() {
   const W = 600, H = 260, pl = 48, pr = 20, pt = 20, pb = 36;
   const toX = (v) => pl + v * (W - pl - pr);
   const toY = (v) => H - pb - v * (H - pt - pb);
+
+  const tooltipLookup = useCallback((vbX, vbY) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    // Find nearest bin by midpoint
+    let best = null, bestDist = Infinity;
+    for (const b of data.bins) {
+      const mid = (b.lo + b.hi) / 2;
+      const d = Math.abs(vbX - toX(mid));
+      if (d < bestDist) { bestDist = d; best = b; }
+    }
+    if (!best || bestDist > 40) return null;
+    const mid = (best.lo + best.hi) / 2;
+    const gapColor = best.gap > 0.15 ? colors.red : best.gap > 0.08 ? colors.amber : colors.indigo;
+    return {
+      x: toX(mid),
+      y: toY(best.actualRate),
+      markers: [{ y: toY(best.actualRate), color: gapColor }],
+      lines: [
+        { label: 'Predicted', value: (best.meanPred * 100).toFixed(1) + '%', color: colors.amber },
+        { label: 'Actual', value: (best.actualRate * 100).toFixed(1) + '%', color: colors.emerald },
+        { label: 'Gap', value: (best.gap * 100).toFixed(1) + ' pp', color: gapColor },
+        { label: 'Count', value: best.count + '', color: colors.indigo },
+      ],
+    };
+  }, [data.bins, pl, pr, W]);
 
   return (
     <div>
@@ -123,11 +148,10 @@ export default function M24Calibration() {
       {/* ── Reliability Diagram ── */}
       <Sl label="Number of Bins" value={nBins} min={5} max={20} step={1} onChange={setNBins} color={colors.indigo} />
 
-      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
-        <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
-          Reliability Diagram
-        </div>
-        <svg viewBox={'0 0 ' + W + ' ' + H} width="100%" style={{ maxHeight: H, display: 'block' }}>
+      <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
+        Reliability Diagram
+      </div>
+      <ChartBox h={H} tooltipLookup={tooltipLookup}>
           {/* Grid */}
           {[0, 0.25, 0.5, 0.75, 1.0].map((v) => (
             <g key={v}>
@@ -202,8 +226,7 @@ export default function M24Calibration() {
           <text x={W / 2} y={H - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">Model's Predicted Probability</text>
           <text x={14} y={(H - pt - pb) / 2 + pt} fill={sv.textFaint} fontSize={9} textAnchor="middle"
             transform={'rotate(-90,14,' + ((H - pt - pb) / 2 + pt) + ')'}>What Actually Happened</text>
-        </svg>
-      </div>
+      </ChartBox>
 
       <div className="flex gap-3 flex-wrap mb-5">
         <StatBox label="Brier Score" value={data.brier.toFixed(3)} color={data.brier > 0.2 ? colors.red : colors.indigo} />

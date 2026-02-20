@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
@@ -79,6 +79,26 @@ export default function M29ModelDrift() {
   const trainFill = makeFill(0);
   const currentFill = makeFill(driftOffset);
 
+  const perfTooltipLookup = useCallback((vbX, vbY) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    // Snap to nearest month
+    const rawMonth = ((vbX - pl) / (W - pl - pr)) * months;
+    const m = Math.round(Math.max(0, Math.min(months, rawMonth)));
+    const pt_ = data.points[m];
+    if (!pt_) return null;
+    const degradation = ((basePerf - pt_.perf) / basePerf * 100);
+    return {
+      x: toX(m),
+      y: toY(pt_.perf),
+      markers: [{ y: toY(pt_.perf), color: colors.indigo }],
+      lines: [
+        { label: 'Month', value: m + '', color: colors.indigo },
+        { label: 'AUC', value: pt_.perf.toFixed(3), color: colors.indigo },
+        { label: 'Degradation', value: degradation.toFixed(1) + '%', color: degradation > 10 ? colors.red : colors.amber },
+      ],
+    };
+  }, [data.points, pl, pr, W, months, basePerf]);
+
   return (
     <div>
       <Hdr sub="Model & Evaluate">Model Drift & Monitoring</Hdr>
@@ -94,11 +114,10 @@ export default function M29ModelDrift() {
         fmt={(v) => v === 0 ? 'Never' : 'Every ' + v + ' months'} color={colors.emerald} />
 
       {/* Performance over time */}
-      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
-        <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
-          Model Performance Over Time
-        </div>
-        <svg viewBox={'0 0 ' + W + ' ' + H} width="100%" style={{ maxHeight: H, display: 'block' }}>
+      <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
+        Model Performance Over Time
+      </div>
+      <ChartBox h={H} tooltipLookup={perfTooltipLookup}>
           {/* Grid */}
           {[0.5, 0.6, 0.7, 0.8, 0.9, 1.0].map((v) => (
             <g key={v}>
@@ -138,15 +157,13 @@ export default function M29ModelDrift() {
           <text x={W / 2} y={H - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">Months since deployment</text>
           <text x={14} y={(H - pt - pb) / 2 + pt} fill={sv.textFaint} fontSize={9} textAnchor="middle"
             transform={'rotate(-90,14,' + ((H - pt - pb) / 2 + pt) + ')'}>AUC</text>
-        </svg>
-      </div>
+      </ChartBox>
 
       {/* Distribution shift */}
-      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
-        <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
-          Data Distribution Shift
-        </div>
-        <svg viewBox={'0 0 ' + DW + ' ' + DH} width="100%" style={{ maxHeight: DH, display: 'block' }}>
+      <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
+        Data Distribution Shift
+      </div>
+      <ChartBox h={DH}>
           <line x1={dpl} y1={DH - dpb} x2={DW - dpr} y2={DH - dpb} stroke={sv.axis} />
 
           {/* Training distribution */}
@@ -161,8 +178,7 @@ export default function M29ModelDrift() {
           <text x={dToX(0)} y={dpt + 4} fill={colors.indigo} fontSize={9} textAnchor="middle" fontWeight="600">Training</text>
           <text x={dToX(driftOffset)} y={dpt + 4} fill={colors.red} fontSize={9} textAnchor="middle" fontWeight="600">Current</text>
           <text x={DW / 2} y={DH - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">Feature distribution</text>
-        </svg>
-      </div>
+      </ChartBox>
 
       <div className="flex gap-3 flex-wrap mb-5">
         <StatBox label="Deploy AUC" value={basePerf.toFixed(2)} color={colors.emerald} />

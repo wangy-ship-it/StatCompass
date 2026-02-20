@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, StatBox, Sl, QA, TechNote, Insight } from '../ui';
+import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { thr: 0.5 };
@@ -47,11 +47,32 @@ export default function M23ModelMetrics() {
     };
   }, [thr]);
 
-  const RW = 270, RH = 200, rpl = 32, rpr = 12, rpt = 12, rpb = 28;
+  const RW = 600, RH = 300, rpl = 48, rpr = 20, rpt = 20, rpb = 36;
   const rToX = (v) => rpl + v * (RW - rpl - rpr);
   const rToY = (v) => RH - rpb - v * (RH - rpt - rpb);
   const rocP = data.roc.map((p, i) => (i === 0 ? 'M' : 'L') + rToX(p.fpr) + ',' + rToY(p.tpr)).join('');
   const rocFill = rocP + 'L' + rToX(data.roc[data.roc.length - 1].fpr) + ',' + rToY(0) + 'L' + rToX(0) + ',' + rToY(0) + 'Z';
+
+  const rocTooltipLookup = useCallback((vbX, vbY) => {
+    if (vbX < rpl || vbX > RW - rpr) return null;
+    // Snap to nearest ROC point by FPR
+    const fpr = (vbX - rpl) / (RW - rpl - rpr);
+    let best = null, bestDist = Infinity;
+    for (const pt of data.roc) {
+      const d = Math.abs(pt.fpr - fpr);
+      if (d < bestDist) { bestDist = d; best = pt; }
+    }
+    if (!best) return null;
+    return {
+      x: rToX(best.fpr),
+      y: rToY(best.tpr),
+      markers: [{ y: rToY(best.tpr), color: colors.indigo }],
+      lines: [
+        { label: 'FPR', value: best.fpr.toFixed(3), color: colors.red },
+        { label: 'TPR', value: best.tpr.toFixed(3), color: colors.emerald },
+      ],
+    };
+  }, [data.roc, rpl, rpr, RW]);
 
   return (
     <div>
@@ -101,11 +122,11 @@ export default function M23ModelMetrics() {
         </div>
 
         {/* ROC Curve */}
-        <div className="flex-1 min-w-[240px] bg-app-surface rounded-2xl p-6 ring-1 ring-[var(--color-border-subtle)]">
+        <div className="flex-1 min-w-[240px]">
           <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
             ROC Curve
           </div>
-          <svg viewBox={'0 0 ' + RW + ' ' + RH} width="100%" style={{ maxHeight: RH }}>
+          <ChartBox h={RH} className="bg-app-surface rounded-2xl p-6 ring-1 ring-[var(--color-border-subtle)]" tooltipLookup={rocTooltipLookup}>
             <defs>
               <linearGradient id="m23-roc-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />
@@ -132,7 +153,7 @@ export default function M23ModelMetrics() {
             <text x={RW / 2} y={RH - 4} fill={sv.text} fontSize={8} textAnchor="middle">False Positive Rate</text>
             <text x={6} y={RH / 2} fill={sv.text} fontSize={8} textAnchor="middle" transform={'rotate(-90,6,' + RH / 2 + ')'}>True Positive Rate</text>
             <text x={rToX(0.55)} y={rToY(0.25)} fill={colors.indigo} fontSize={14} fontWeight="800" opacity={0.6}>{'AUC = ' + data.auc.toFixed(2)}</text>
-          </svg>
+          </ChartBox>
         </div>
       </div>
 

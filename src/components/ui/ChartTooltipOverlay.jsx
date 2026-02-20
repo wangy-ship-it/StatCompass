@@ -6,7 +6,7 @@
  *   tip: { x, y, lines: [{ label, value, color }], markers?: [{ y, color }] }
  *   h: chart height
  */
-export default function ChartTooltipOverlay({ tip, h }) {
+export default function ChartTooltipOverlay({ tip, h, w }) {
   if (!tip) return null;
 
   const { x, lines, markers } = tip;
@@ -17,7 +17,7 @@ export default function ChartTooltipOverlay({ tip, h }) {
   const boxH = padY * 2 + lines.length * lineH;
 
   // Position box: flip to left side if too close to right edge
-  const boxX = x + 12 + boxW > 600 ? x - boxW - 12 : x + 12;
+  const boxX = x + 12 + boxW > (w || 600) ? x - boxW - 12 : x + 12;
   // Position box: keep within vertical bounds
   let boxY = Math.max(4, Math.min((tip.y || 40) - boxH / 2, (h || 260) - boxH - 4));
 

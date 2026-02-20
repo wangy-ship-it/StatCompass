@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const featureDefs = [
@@ -85,6 +85,36 @@ export default function M26FeatureImportance() {
   const wfMax = Math.max(...wfVals) + 0.06;
   const wfToX = (v) => pl + ((v - wfMin) / (wfMax - wfMin)) * (W - pl - pr);
 
+  const tooltipLookup = useCallback((vbX, vbY) => {
+    if (vbY < pt || vbY > H - pb) return null;
+    const rowIdx = Math.floor((vbY - pt) / rowH);
+    if (view === 'global') {
+      if (rowIdx < 0 || rowIdx >= data.global.length) return null;
+      const g = data.global[rowIdx];
+      const y = pt + rowIdx * rowH + rowH / 2;
+      return {
+        x: vbX,
+        y,
+        lines: [
+          { label: 'Feature', value: g.name, color: colors.indigo },
+          { label: 'Importance', value: g.importance.toFixed(3), color: g.positive ? colors.emerald : colors.red },
+        ],
+      };
+    } else {
+      if (rowIdx < 0 || rowIdx >= data.waterfall.length) return null;
+      const w = data.waterfall[rowIdx];
+      const y = pt + rowIdx * rowH + rowH / 2;
+      const lines = [{ label: w.name, value: '', color: colors.indigo }];
+      if (w.type !== 'base' && w.type !== 'result') {
+        lines.push({ label: 'Contribution', value: (w.value >= 0 ? '+' : '') + w.value.toFixed(3), color: w.value >= 0 ? colors.emerald : colors.red });
+        lines.push({ label: 'Running total', value: w.runAfter.toFixed(3), color: colors.indigo });
+      } else if (w.type === 'result') {
+        lines.push({ label: 'Prediction', value: (data.prediction * 100).toFixed(1) + '%', color: colors.indigo });
+      }
+      return { x: vbX, y, lines };
+    }
+  }, [view, data, pt, pb, H, rowH]);
+
   return (
     <div>
       <Hdr sub="Model & Evaluate">Feature Importance & Interpretability</Hdr>
@@ -104,8 +134,7 @@ export default function M26FeatureImportance() {
         <Sl label="Data Point" value={dataPoint} min={1} max={20} step={1} onChange={setDataPoint} fmt={(v) => 'Customer #' + v} color={colors.amber} />
       )}
 
-      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
-        <svg viewBox={'0 0 ' + W + ' ' + H} width="100%" style={{ maxHeight: H, display: 'block' }}>
+      <ChartBox h={H} tooltipLookup={tooltipLookup}>
           {view === 'global' ? (
             <>
               {data.global.map((g, i) => {
@@ -181,8 +210,7 @@ export default function M26FeatureImportance() {
               </text>
             </>
           )}
-        </svg>
-      </div>
+      </ChartBox>
 
       <div className="flex gap-3 flex-wrap mb-5">
         <StatBox label="Top Feature" value={data.topFeature.name} color={colors.indigo} />
