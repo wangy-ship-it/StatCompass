@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { effectA: 5, effectB: 3, interactionPct: 0, interType: 'none' };
 
 export default function M15InteractionEffects() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { effectA, effectB, interactionPct, interType } = p;
   const setEffectA = (v) => set('effectA', v);
   const setEffectB = (v) => set('effectB', v);
@@ -50,6 +50,31 @@ export default function M15InteractionEffects() {
   // 2x2 grid dimensions
   const gridW = 240, gridH = 160;
   const cellW = gridW / 2, cellH = gridH / 2;
+
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const labels = ['Control', 'A only', 'B only', 'A+B'];
+    // Find which bar index we're closest to
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < 4; i++) {
+      const cx = pl + i * (barW + gap) + barW / 2;
+      const dist = Math.abs(vbX - cx);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    const v = barValues[bestIdx];
+    const cx = pl + bestIdx * (barW + gap) + barW / 2;
+    const cy = H - pb - ((v + maxBar) / (2 * maxBar)) * (H - pt - pb);
+    return {
+      x: cx,
+      y: cy,
+      lines: [
+        { label: labels[bestIdx], value: (v === 0 ? '0' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'), color: barColors[bestIdx] },
+        ...(bestIdx === 3 ? [{ label: 'Expected', value: '+' + data.expectedCombined.toFixed(1) + '%', color: colors.red }] : []),
+      ],
+      markers: [{ y: cy, color: barColors[bestIdx] }],
+    };
+  }, [barValues, barColors, data.expectedCombined, barW, gap, maxBar]);
 
   return (
     <div>
@@ -113,7 +138,7 @@ export default function M15InteractionEffects() {
       </div>
 
       {/* Bar chart */}
-      <ChartBox h={H} label="Interaction effects between simultaneous experiments, showing how treatments can amplify, cancel, or reverse each other">
+      <ChartBox h={H} label="Interaction effects between simultaneous experiments, showing how treatments can amplify, cancel, or reverse each other" tooltipLookup={tooltipLookup}>
         {/* Zero line */}
         <line x1={pl} y1={zeroY} x2={W - pr} y2={zeroY} stroke={sv.axis} strokeWidth={1} />
 

@@ -7,3 +7,4 @@ export { default as Desc } from './Desc';
 export { default as Insight } from './Insight';
 export { default as QA } from './QA';
 export { default as TechNote } from './TechNote';
+export { default as ConceptLink } from './ConceptLink';

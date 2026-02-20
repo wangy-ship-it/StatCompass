@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 function calibrate(p, calType, strength) {
   if (calType === 'well') return p;
@@ -14,7 +14,7 @@ function calibrate(p, calType, strength) {
 const paramDefaults = { calType: 'over', strength: 0.5, nBins: 10, probe: 0.8 };
 
 export default function M24Calibration() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { calType, strength, nBins, probe } = p;
   const setCalType = (v) => set('calType', v);
   const setStrength = (v) => set('strength', v);

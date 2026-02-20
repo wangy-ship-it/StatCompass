@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { nSims: 500, alpha: 0.05 };
 
 export default function M11AATesting() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { nSims, alpha } = p;
   const setNSims = (v) => set('nSims', v);
   const setAlpha = (v) => set('alpha', v);
@@ -53,6 +53,26 @@ export default function M11AATesting() {
   const toX = (binIdx) => pl + binIdx * (barW + barGap);
   const toY = (count) => H - pb - (count / maxCount) * (H - pt - pb);
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const bIdx = Math.floor((vbX - pl) / (barW + barGap));
+    if (bIdx < 0 || bIdx >= nBins) return null;
+    const count = data.bins[bIdx];
+    const binStart = bIdx * binWidth;
+    const isBelow = binStart + binWidth <= alpha + 1e-9;
+    const cx = pl + bIdx * (barW + barGap) + barW / 2;
+    const cy = H - pb - (count / maxCount) * (H - pt - pb);
+    return {
+      x: cx,
+      y: cy,
+      lines: [
+        { label: 'p-value', value: binStart.toFixed(2) + '\u2013' + (binStart + binWidth).toFixed(2), color: isBelow ? colors.red : colors.indigo },
+        { label: 'Count', value: count.toString(), color: isBelow ? colors.red : colors.indigo },
+      ],
+      markers: [{ y: cy, color: isBelow ? colors.red : colors.indigo }],
+    };
+  }, [data.bins, alpha, barW, barGap, maxCount]);
+
   return (
     <div>
       <Hdr sub="Validate & Run">A/A Testing</Hdr>
@@ -62,7 +82,7 @@ export default function M11AATesting() {
         of tests should appear "significant." This is the sanity check before running real experiments.
       </Desc>
 
-      <ChartBox h={H} label="A/A test results showing distribution of p-values across simulated tests to verify the testing system produces expected false positive rates">
+      <ChartBox h={H} label="A/A test results showing distribution of p-values across simulated tests to verify the testing system produces expected false positive rates" tooltipLookup={tooltipLookup}>
         {/* Expected frequency dashed line */}
         <line
           x1={pl}

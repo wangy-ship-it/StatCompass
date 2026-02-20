@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR, polyFit, polyEval } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { degree: 3, noise: 0.3, showTrue: true };
 
 export default function M27BiasVariance() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { degree, noise, showTrue } = p;
   const setDegree = (v) => set('degree', v);
   const setNoise = (v) => set('noise', v);
@@ -88,6 +88,55 @@ export default function M27BiasVariance() {
     testErrPath += (i === 0 ? 'M' : 'L') + eToX(e.d) + ',' + eToY(e.test);
   });
 
+  const fitTooltipLookup = useCallback((vbX) => {
+    const W2 = 600, pl2 = 36, pr2 = 20, pt2 = 16, pb2 = 28, H2 = 220;
+    if (vbX < pl2 || vbX > W2 - pr2) return null;
+    const xVal = -Math.PI + (vbX - pl2) / (W2 - pl2 - pr2) * (2 * Math.PI);
+    const yTrue = Math.sin(xVal * 2);
+    const yFit = Math.max(-2, Math.min(2, polyEval(data.coeffs, xVal)));
+    const toX2 = (v) => pl2 + ((v - (-Math.PI)) / (2 * Math.PI)) * (W2 - pl2 - pr2);
+    const toY2 = (v) => H2 - pb2 - ((v - (-2)) / 4) * (H2 - pt2 - pb2);
+    return {
+      x: toX2(xVal),
+      y: Math.min(toY2(yTrue), toY2(yFit)),
+      lines: [
+        { label: 'x', value: xVal.toFixed(2), color: colors.amber },
+        { label: 'True', value: yTrue.toFixed(3), color: sv.text },
+        { label: 'Model', value: yFit.toFixed(3), color: colors.indigo },
+        { label: 'Error', value: Math.abs(yTrue - yFit).toFixed(3), color: colors.red },
+      ],
+      markers: [
+        { y: toY2(Math.max(-2, Math.min(2, yTrue))), color: sv.text },
+        { y: toY2(yFit), color: colors.indigo },
+      ],
+    };
+  }, [data.coeffs]);
+
+  const errTooltipLookup = useCallback((vbX) => {
+    const W2 = 600, pl2 = 36, pr2 = 20, pt2 = 16, pb2 = 28, H2 = 180;
+    if (vbX < pl2 || vbX > W2 - pr2) return null;
+    const dVal = 1 + (vbX - pl2) / (W2 - pl2 - pr2) * 14;
+    const dIdx = Math.max(0, Math.min(14, Math.round(dVal - 1)));
+    const ec = data.errCurves[dIdx];
+    if (!ec) return null;
+    const maxE = Math.max(...data.errCurves.map((e) => Math.max(e.train, e.test)), 0.5);
+    const eToX2 = (d) => pl2 + ((d - 1) / 14) * (W2 - pl2 - pr2);
+    const eToY2 = (v) => H2 - pb2 - (v / maxE) * (H2 - pt2 - pb2);
+    return {
+      x: eToX2(ec.d),
+      y: Math.min(eToY2(ec.train), eToY2(ec.test)),
+      lines: [
+        { label: 'Degree', value: String(ec.d), color: colors.amber },
+        { label: 'Train Error', value: ec.train.toFixed(4), color: colors.indigo },
+        { label: 'Test Error', value: ec.test.toFixed(4), color: colors.red },
+      ],
+      markers: [
+        { y: eToY2(ec.train), color: colors.indigo },
+        { y: eToY2(ec.test), color: colors.red },
+      ],
+    };
+  }, [data.errCurves]);
+
   const errRatio = data.trainErr > 0 ? data.testErr / data.trainErr : 1;
   const fitLabel = errRatio > 3 ? 'Overfitting' : data.testErr > 0.5 ? 'Underfitting' : 'Good Fit';
   const fitColor = fitLabel === 'Underfitting' ? colors.amber : fitLabel === 'Good Fit' ? colors.emerald : colors.red;
@@ -102,7 +151,7 @@ export default function M27BiasVariance() {
       </Desc>
 
       {/* Chart 1: Scatter + Fit */}
-      <ChartBox h={H1} label="Scatter plot showing model predictions with bias and variance, demonstrating the tradeoff between underfitting and overfitting">
+      <ChartBox h={H1} tooltipLookup={fitTooltipLookup} label="Scatter plot showing model predictions with bias and variance, demonstrating the tradeoff between underfitting and overfitting">
           {showTrue && <path d={truePath} fill="none" stroke={sv.text} strokeWidth={1.5} strokeDasharray="6,4" />}
           <path d={fitPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
           {data.trainX.map((x, i) => (
@@ -120,7 +169,7 @@ export default function M27BiasVariance() {
       </ChartBox>
 
       {/* Chart 2: Error curves */}
-      <ChartBox h={H2} label="Error decomposition showing how total error is composed of bias squared plus variance as model complexity changes">
+      <ChartBox h={H2} tooltipLookup={errTooltipLookup} label="Error decomposition showing how total error is composed of bias squared plus variance as model complexity changes">
           <path d={trainErrPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
           <path d={testErrPath} fill="none" stroke={colors.red} strokeWidth={2.5} />
           <line x1={eToX(degree)} y1={pt} x2={eToX(degree)} y2={H2 - pb} stroke={sv.text} strokeWidth={1.5} strokeDasharray="4,3" />

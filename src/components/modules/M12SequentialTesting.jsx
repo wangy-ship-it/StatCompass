@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR, nCDF, obfBounds, pocockBounds, alphaSpend } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { maxN: 50000, nLooks: 5, trueEffect: 0.5, method: 'obf' };
 
 export default function M12SequentialTesting() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { maxN, nLooks, trueEffect, method } = p;
   const setMaxN = (v) => set('maxN', v);
   const setNLooks = (v) => set('nLooks', v);
@@ -156,6 +156,28 @@ export default function M12SequentialTesting() {
   // Format maxN as compact string
   const fmtN = (v) => (v >= 1000 ? (v / 1000) + 'K' : v);
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > pl + cw) return null;
+    // Convert vbX to nearest stage (1-indexed)
+    const stageFloat = nLooks === 1 ? 1 : 1 + ((vbX - pl) / cw) * (nLooks - 1);
+    const stage = Math.max(1, Math.min(data.stoppedAt, Math.round(stageFloat)));
+    const z = data.zPath[stage - 1];
+    if (z === undefined) return null;
+    const bound = data.bounds[stage - 1];
+    const sx = nLooks === 1 ? pl : pl + ((stage - 1) / (nLooks - 1)) * cw;
+    const sy = pt + ((yMax - z) / (yMax - yMin)) * ch;
+    return {
+      x: sx,
+      y: sy,
+      lines: [
+        { label: 'Stage', value: stage.toString(), color: colors.indigo },
+        { label: 'Z-score', value: z.toFixed(3), color: colors.indigo },
+        { label: 'Boundary', value: '\u00B1' + bound.toFixed(3), color: sv.text },
+      ],
+      markers: [{ y: sy, color: colors.indigo }],
+    };
+  }, [data.zPath, data.bounds, data.stoppedAt, nLooks, cw]);
+
   return (
     <div>
       <Hdr sub="Validate & Run">Sequential Testing</Hdr>
@@ -166,7 +188,7 @@ export default function M12SequentialTesting() {
         valid conclusion.
       </Desc>
 
-      <ChartBox h={H} label="Sequential testing chart showing test statistic path, decision boundaries, and rejection regions across interim analysis stages">
+      <ChartBox h={H} label="Sequential testing chart showing test statistic path, decision boundaries, and rejection regions across interim analysis stages" tooltipLookup={tooltipLookup}>
         {/* Rejection region fills */}
         <path d={buildUpperFill()} fill={sv.fillRed} />
         <path d={buildLowerFill()} fill={sv.fillRed} />

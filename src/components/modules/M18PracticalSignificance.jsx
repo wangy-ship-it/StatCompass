@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { effect: 0.5, sampleSize: 10000, mwe: 0.5 };
 
 export default function M18PracticalSignificance() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { effect, sampleSize, mwe } = p;
   const setEffect = (v) => set('effect', v);
   const setSampleSize = (v) => set('sampleSize', v);
@@ -57,6 +57,24 @@ export default function M18PracticalSignificance() {
   const quadrantColors = [colors.emerald, colors.amber, colors.indigo, colors.red];
   const quadrantLabels = ['Significant & Practical', 'Significant but Trivial', 'Not Significant, Promising', 'Not Significant & Trivial'];
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const v = ((vbX - pl) / (W - pl - pr)) * 2 * range - range;
+    const sx = pl + ((v + range) / (2 * range)) * (W - pl - pr);
+    const qColor = quadrantColors[data.quadrant];
+    return {
+      x: sx,
+      y: cy,
+      lines: [
+        { label: 'Position', value: (v * 100).toFixed(2) + '%', color: qColor },
+        { label: 'Effect', value: (data.effectFrac * 100).toFixed(2) + '%', color: colors.indigo },
+        { label: 'MWE', value: (data.mweFrac * 100).toFixed(2) + '%', color: colors.emerald },
+        { label: 'Verdict', value: data.verdict, color: qColor },
+      ],
+      markers: [{ y: cy, color: qColor }],
+    };
+  }, [data, range, cy, quadrantColors]);
+
   return (
     <div>
       <Hdr sub="Analyze">Practical vs Statistical Significance</Hdr>
@@ -66,7 +84,7 @@ export default function M18PracticalSignificance() {
         current data. Always define a Minimum Worthwhile Effect (MWE) before running a test.
       </Desc>
 
-      <ChartBox h={H} label="Comparison of statistical significance versus practical significance, showing minimum detectable effect against business-meaningful threshold">
+      <ChartBox h={H} label="Comparison of statistical significance versus practical significance, showing minimum detectable effect against business-meaningful threshold" tooltipLookup={tooltipLookup}>
         {/* Zero line */}
         <line x1={zeroX} y1={pt - 10} x2={zeroX} y2={H - pb + 10} stroke={sv.axis} strokeWidth={1.5} />
         <text x={zeroX} y={pt - 16} fill={sv.text} fontSize={10} textAnchor="middle">0</text>

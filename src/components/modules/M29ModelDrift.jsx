@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { driftRate: 0.5, retrainFreq: 0 };
 
 export default function M29ModelDrift() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { driftRate, retrainFreq } = p;
   const setDriftRate = (v) => set('driftRate', v);
   const setRetrainFreq = (v) => set('retrainFreq', v);

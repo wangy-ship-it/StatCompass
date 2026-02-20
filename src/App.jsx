@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import Navigation, { allModules, sections } from './components/nav/Navigation';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { ModuleProvider } from './context/ModuleContext';
 
 const modules = {
   home: lazy(() => import('./components/modules/Landing')),
@@ -199,7 +200,7 @@ export default function App() {
         <div className="max-w-[800px] mx-auto px-6 md:px-10 py-8 md:py-12 pb-20">
           <ErrorBoundary key={active}>
             <Suspense fallback={<LoadingFallback />}>
-              {Comp && <Comp navigate={navigate} visited={visited} resetVisited={() => { localStorage.removeItem('sc-visited'); setVisited(new Set()); }} />}
+              {Comp && <ModuleProvider moduleId={active}><Comp navigate={navigate} visited={visited} resetVisited={() => { localStorage.removeItem('sc-visited'); setVisited(new Set()); }} /></ModuleProvider>}
             </Suspense>
           </ErrorBoundary>
 

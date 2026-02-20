@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const featureDefs = [
   { name: 'Purchase History', w: 0.32 },
@@ -22,7 +22,7 @@ const featureDefs = [
 const paramDefaults = { view: 'global', nFeatures: 8, dataPoint: 1 };
 
 export default function M26FeatureImportance() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { view, nFeatures, dataPoint } = p;
   const setView = (v) => set('view', v);
   const setNFeatures = (v) => set('nFeatures', v);

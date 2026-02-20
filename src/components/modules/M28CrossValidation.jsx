@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR, polyFit, polyEval, kFoldSplit } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { kFolds: 5, complexity: 3 };
 
 export default function M28CrossValidation() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { kFolds, complexity } = p;
   const setKFolds = (v) => set('kFolds', v);
   const setComplexity = (v) => set('complexity', v);
@@ -182,6 +182,34 @@ export default function M28CrossValidation() {
   const yTickCount = 5;
   const yTicks2 = Array.from({ length: yTickCount + 1 }, (_, i) => (maxErr * i) / yTickCount);
 
+  const errTooltipLookup = useCallback((vbX) => {
+    if (vbX < pl2 || vbX > pl2 + cw2) return null;
+    const dVal = 1 + ((vbX - pl2) / cw2) * 14;
+    const dIdx = Math.max(0, Math.min(14, Math.round(dVal - 1)));
+    const trainE = data.trainErrors[dIdx];
+    const cvE = data.cvErrors[dIdx];
+    const testE = data.trueTestErrors[dIdx];
+    if (trainE === undefined) return null;
+    const maxE = Math.min(5, Math.max(...data.cvErrors.map((e) => Math.min(e, 5)), ...data.trainErrors.map((e) => Math.min(e, 5)), ...data.trueTestErrors.map((e) => Math.min(e, 5)), 0.5));
+    const eToX2 = (d) => pl2 + ((d - 1) / 14) * cw2;
+    const eToY2 = (v) => pt2 + ((maxE - Math.min(v, maxE)) / maxE) * ch2;
+    return {
+      x: eToX2(dIdx + 1),
+      y: Math.min(eToY2(trainE), eToY2(cvE), eToY2(testE)),
+      lines: [
+        { label: 'Degree', value: String(dIdx + 1), color: colors.amber },
+        { label: 'Training', value: trainE.toFixed(4), color: colors.indigo },
+        { label: 'CV Error', value: cvE.toFixed(4), color: colors.amber },
+        { label: 'True Test', value: testE.toFixed(4), color: colors.emerald },
+      ],
+      markers: [
+        { y: eToY2(trainE), color: colors.indigo },
+        { y: eToY2(cvE), color: colors.amber },
+        { y: eToY2(testE), color: colors.emerald },
+      ],
+    };
+  }, [data.trainErrors, data.cvErrors, data.trueTestErrors, pl2, cw2, pt2, ch2]);
+
   return (
     <div>
       <Hdr sub="Model & Evaluate">Cross-Validation</Hdr>
@@ -250,7 +278,7 @@ export default function M28CrossValidation() {
       </ChartBox>
 
       {/* Visual 2: CV error curve */}
-      <ChartBox h={H2} label="Cross-validation results showing training vs test error across folds to assess model generalization">
+      <ChartBox h={H2} tooltipLookup={errTooltipLookup} label="Cross-validation results showing training vs test error across folds to assess model generalization">
         {/* Grid lines */}
         {yTicks2.map((t, i) => (
           <line

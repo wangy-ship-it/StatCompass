@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { betaPDF, nPDF, nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const priors = {
   uninformative: { label: 'Uninformative', a: 1, b: 1 },
@@ -13,7 +13,7 @@ const priors = {
 const defaults = { priorKey: 'uninformative', observed: 100 };
 
 export default function M4BayesianFrequentist() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { priorKey, observed } = p;
   const setPriorKey = (v) => set('priorKey', v);
   const setObserved = (v) => set('observed', v);

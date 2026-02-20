@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { thr: 0.5 };
 
 export default function M23ModelMetrics() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { thr } = p;
   const setThr = (v) => set('thr', v);
 

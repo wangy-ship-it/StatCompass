@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { nUnits: 30, noise: 0.5 };
 
 export default function M22RegressionToMean() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { nUnits, noise } = p;
   const setNUnits = (v) => set('nUnits', v);
   const setNoise = (v) => set('noise', v);
@@ -43,6 +43,38 @@ export default function M22RegressionToMean() {
   const toX = (v) => pl + ((v - mn) / (mx - mn)) * (W - pl - pr);
   const toY = (v) => H - pb - ((v - mn) / (mx - mn)) * (H - pt - pb);
 
+  const tooltipLookup = useCallback((vbX) => {
+    const W2 = 600, pl2 = 50, pr2 = 30;
+    if (vbX < pl2 || vbX > W2 - pr2) return null;
+    const allV = [...data.m1, ...data.m2];
+    const mn2 = Math.min(...allV) - 5;
+    const mx2 = Math.max(...allV) + 5;
+    const toX2 = (v) => pl2 + ((v - mn2) / (mx2 - mn2)) * (W2 - pl2 - pr2);
+    const toY2 = (v) => 340 - 44 - ((v - mn2) / (mx2 - mn2)) * (340 - 30 - 44);
+    let bestIdx = 0, bestDist = Infinity;
+    for (let i = 0; i < data.m1.length; i++) {
+      const dist = Math.abs(toX2(data.m1[i]) - vbX);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    const isBottom = data.bottomIndices.has(bestIdx);
+    const m1Val = data.m1[bestIdx];
+    const m2Val = data.m2[bestIdx];
+    const pointColor = isBottom ? colors.red : colors.indigo;
+    return {
+      x: toX2(m1Val),
+      y: toY2(m2Val),
+      lines: [
+        { label: 'Unit', value: '#' + (bestIdx + 1) + (isBottom ? ' (bottom 20%)' : ''), color: pointColor },
+        { label: 'Measure 1', value: m1Val.toFixed(1), color: colors.indigo },
+        { label: 'Measure 2', value: m2Val.toFixed(1), color: colors.amber },
+        { label: 'Change', value: (m2Val - m1Val > 0 ? '+' : '') + (m2Val - m1Val).toFixed(1), color: m2Val > m1Val ? colors.emerald : colors.red },
+      ],
+      markers: [
+        { y: toY2(m2Val), color: pointColor },
+      ],
+    };
+  }, [data]);
+
   return (
     <div>
       <Hdr sub="Interpret & Decide">Regression to the Mean</Hdr>
@@ -52,7 +84,7 @@ export default function M22RegressionToMean() {
         re-measuring them will almost always show improvement, even with zero treatment effect.
       </Desc>
 
-      <ChartBox h={H} label="Scatter plot demonstrating regression to the mean, showing how extreme initial measurements tend to move toward the average on retest">
+      <ChartBox h={H} tooltipLookup={tooltipLookup} label="Scatter plot demonstrating regression to the mean, showing how extreme initial measurements tend to move toward the average on retest">
         {/* Identity line */}
         <line x1={toX(mn)} y1={toY(mn)} x2={toX(mx)} y2={toY(mx)} stroke={sv.axis} strokeWidth={1} strokeDasharray="6,4" opacity={0.5} />
 

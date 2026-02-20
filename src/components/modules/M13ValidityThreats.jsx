@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const BIAS_TYPES = [
   { key: 'clean', label: 'Clean Experiment' },
@@ -67,7 +67,7 @@ function biasExplanation(biasType, mag) {
 const paramDefaults = { biasType: 'clean', mag: 0 };
 
 export default function M13ValidityThreats() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { biasType, mag } = p;
   const setBiasType = (v) => set('biasType', v);
   const setMag = (v) => set('mag', v);
@@ -151,6 +151,27 @@ export default function M13ValidityThreats() {
         : biasType === 'novelty'
           ? colors.amber
           : colors.indigo;
+
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl2 || vbX > W - pr2) return null;
+    const m = ((vbX - pl2) / plotW) * 100;
+    const mClamped = Math.max(0, Math.min(100, m));
+    const closest = curvePoints.reduce((best, pt2) =>
+      Math.abs(pt2.m - mClamped) < Math.abs(best.m - mClamped) ? pt2 : best
+    );
+    const sx = pl2 + (closest.m / 100) * plotW;
+    const sy = pt2 + plotH - ((closest.lift - liftMin) / (liftMax - liftMin)) * plotH;
+    return {
+      x: sx,
+      y: sy,
+      lines: [
+        { label: 'Magnitude', value: closest.m + '%', color: curveColor },
+        { label: 'Observed Lift', value: (closest.lift >= 0 ? '+' : '') + closest.lift.toFixed(2) + 'pp', color: curveColor },
+        { label: 'True Lift', value: '+' + TRUE_LIFT.toFixed(2) + 'pp', color: colors.emerald },
+      ],
+      markers: [{ y: sy, color: curveColor }],
+    };
+  }, [curvePoints, curveColor, liftMin, liftMax, plotW, plotH]);
 
   return (
     <div>
@@ -310,7 +331,7 @@ export default function M13ValidityThreats() {
       </ChartBox>
 
       {/* Chart 2: Divergence chart — Lift vs Magnitude */}
-      <ChartBox h={H2} label="Visualization of survivorship and spillover biases showing how they threaten experiment validity">
+      <ChartBox h={H2} label="Visualization of survivorship and spillover biases showing how they threaten experiment validity" tooltipLookup={tooltipLookup}>
         {/* Title */}
         <text x={W / 2} y={14} fill={sv.text} fontSize={11} textAnchor="middle" fontWeight="600">
           Observed Lift vs Bias Magnitude

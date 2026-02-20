@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { nCDF, zInv, sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { effectSize: 2.0, threshold: 2.0, nGuardrails: 3 };
 
 export default function M6MetricsGuardrails() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { effectSize, threshold, nGuardrails } = p;
   const setEffectSize = (v) => set('effectSize', v);
   const setThreshold = (v) => set('threshold', v);
@@ -87,6 +87,43 @@ export default function M6MetricsGuardrails() {
   const guardrailStartY = primaryY + barH + 36;
   const guardrailRowH = 34;
 
+  const tooltipLookup = useCallback((vbX, vbY) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const xVal = ((vbX - pl) / chartW) * 2 * xRange - xRange;
+    // Determine if hovering over the primary metric or a guardrail row
+    if (vbY < guardrailStartY - 14) {
+      // Primary metric area
+      return {
+        x: toX(xVal),
+        y: primaryY + barH / 2,
+        lines: [
+          { label: 'Effect', value: xVal.toFixed(2) + '%', color: data.primaryColor },
+          { label: 'Primary', value: data.effectSize.toFixed(1) + '% [' + data.ciLo.toFixed(1) + ', ' + data.ciHi.toFixed(1) + ']', color: data.primaryColor },
+          { label: 'Status', value: data.primaryLabel, color: data.primaryColor },
+        ],
+        markers: [{ y: primaryY + barH / 2, color: data.primaryColor }],
+      };
+    }
+    // Guardrail area - find nearest row
+    let gIdx = Math.round((vbY - guardrailStartY - 8 - 7) / guardrailRowH);
+    gIdx = Math.max(0, Math.min(gIdx, data.guardrails.length - 1));
+    const g = data.guardrails[gIdx];
+    const rowY = guardrailStartY + gIdx * guardrailRowH + 8;
+    const gBarH = 14;
+    const barColor = g.tripped ? colors.red : colors.emerald;
+    return {
+      x: toX(xVal),
+      y: rowY + gBarH / 2,
+      lines: [
+        { label: 'x', value: xVal.toFixed(2) + '%', color: colors.indigo },
+        { label: 'Guardrail ' + (gIdx + 1), value: g.observed.toFixed(2) + '%', color: barColor },
+        { label: 'Threshold', value: '\u00B1' + data.threshold.toFixed(1) + '%', color: colors.amber },
+        { label: 'Status', value: g.tripped ? 'TRIPPED' : 'OK', color: barColor },
+      ],
+      markers: [{ y: rowY + gBarH / 2, color: barColor }],
+    };
+  }, [data]);
+
   return (
     <div>
       <Hdr sub="Design">Metrics & Guardrails</Hdr>
@@ -97,7 +134,7 @@ export default function M6MetricsGuardrails() {
         of guardrails and threshold width interact with the multiple testing problem.
       </Desc>
 
-      <ChartBox h={H} label="Metrics dashboard showing primary metric, secondary metrics, and guardrail metrics with their current values and thresholds">
+      <ChartBox h={H} label="Metrics dashboard showing primary metric, secondary metrics, and guardrail metrics with their current values and thresholds" tooltipLookup={tooltipLookup}>
         {/* Center line (zero reference) */}
         <line
           x1={centerX} y1={pt} x2={centerX} y2={H - pb}

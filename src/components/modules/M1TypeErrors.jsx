@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { nPDF, nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { alp: 0.05, eff: 2.0, ss: 30 };
 
 export default function M1TypeErrors() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { alp, eff, ss } = p;
   const setAlp = (v) => set('alp', v);
   const setEff = (v) => set('eff', v);
@@ -50,8 +50,30 @@ export default function M1TypeErrors() {
       pts.forEach((p) => (dd += 'L' + p.x + ',' + p.y));
       return dd + 'L' + pts[pts.length - 1].x + ',' + pts[pts.length - 1].b + 'Z';
     };
-    return { h0, h1, ap: fp(af), bp: fp(bf), pp: fp(pf), cx: tX(cv), by: tY(0), beta: beta.toFixed(3), pow: pow.toFixed(3), W, H };
+    return { h0, h1, ap: fp(af), bp: fp(bf), pp: fp(pf), cx: tX(cv), by: tY(0), beta: beta.toFixed(3), pow: pow.toFixed(3), W, H, std, m1, xMn, xMx, mxY };
   }, [alp, eff, ss]);
+
+  const tooltipLookup = useCallback((vbX) => {
+    const pl = 36, pr = 36, ppt = 16, ppb = 34;
+    if (vbX < pl || vbX > d.W - pr) return null;
+    const xVal = d.xMn + (vbX - pl) / (d.W - pl - pr) * (d.xMx - d.xMn);
+    const y0 = nPDF(xVal, 0, d.std);
+    const y1 = nPDF(xVal, d.m1, d.std);
+    const tX2 = (v) => pl + ((v - d.xMn) / (d.xMx - d.xMn)) * (d.W - pl - pr);
+    const tY2 = (v) => d.H - ppb - (v / d.mxY) * (d.H - ppt - ppb);
+    return {
+      x: tX2(xVal),
+      y: Math.min(tY2(y0), tY2(y1)),
+      lines: [
+        { label: 'H\u2080', value: y0.toFixed(4), color: colors.indigo },
+        { label: 'H\u2081', value: y1.toFixed(4), color: colors.emerald },
+      ],
+      markers: [
+        { y: tY2(y0), color: colors.indigo },
+        { y: tY2(y1), color: colors.emerald },
+      ],
+    };
+  }, [d]);
 
   return (
     <div>
@@ -62,7 +84,7 @@ export default function M1TypeErrors() {
         sensitive and it beeps at toast; too lenient and it misses a fire.
       </Desc>
 
-      <ChartBox h={d.H}>
+      <ChartBox h={d.H} tooltipLookup={tooltipLookup}>
         <defs>
           <linearGradient id="grad-alpha" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.35" />

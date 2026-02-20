@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, Sl, PillBtn, QA, TechNote, Insight, ChartBox, StatBox } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { split: 50, rand: false, N: 60 };
 
 export default function M5ExperimentStructure() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { split, rand, N } = p;
   const setSplit = (v) => set('split', v);
   const setRand = (v) => set('rand', v);
@@ -41,6 +41,24 @@ export default function M5ExperimentStructure() {
   const toY = (v) => PH - pB - v * (PH - pT - pB);
   const powerLine = powerPts.map((pt, i) => (i === 0 ? 'M' : 'L') + toX(pt.p) + ',' + toY(pt.power)).join('');
   const powerArea = powerLine + 'L' + toX(90) + ',' + toY(0) + 'L' + toX(10) + ',' + toY(0) + 'Z';
+
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pL || vbX > PW - pR) return null;
+    const pct = 10 + ((vbX - pL) / (PW - pL - pR)) * 80;
+    const closest = powerPts.reduce((best, pt2) =>
+      Math.abs(pt2.p - pct) < Math.abs(best.p - pct) ? pt2 : best
+    );
+    return {
+      x: toX(closest.p),
+      y: toY(closest.power),
+      lines: [
+        { label: 'Control', value: closest.p + '%', color: colors.indigo },
+        { label: 'Treatment', value: (100 - closest.p) + '%', color: colors.emerald },
+        { label: 'Rel. Power', value: closest.power.toFixed(2), color: colors.indigo },
+      ],
+      markers: [{ y: toY(closest.power), color: colors.indigo }],
+    };
+  }, [powerPts]);
 
   // ── SRM check ──
   const nAExpected = N * split / 100;
@@ -141,7 +159,7 @@ export default function M5ExperimentStructure() {
       </div>
 
       {/* ── Power Mini-Chart ── */}
-      <ChartBox h={PH} label="Relative statistical power vs control allocation percentage, showing how unequal splits reduce power">
+      <ChartBox h={PH} label="Relative statistical power vs control allocation percentage, showing how unequal splits reduce power" tooltipLookup={tooltipLookup}>
         {[0.25, 0.5, 0.75, 1].map((v) => (
           <g key={v}>
             <line x1={pL} y1={toY(v)} x2={PW - pR} y2={toY(v)} stroke={sv.grid} />

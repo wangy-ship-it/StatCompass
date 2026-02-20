@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { nCDF, zInv, mdeFromN, nFromMDE, cohensD } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const fmtN = (n) => {
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
@@ -13,7 +13,7 @@ const fmtN = (n) => {
 const defaults = { baseline: 10, sampleSize: 10000, power: 80 };
 
 export default function M8EffectSizeMDE() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { baseline, sampleSize, power } = p;
   const setBaseline = (v) => set('baseline', v);
   const setSampleSize = (v) => set('sampleSize', v);
@@ -106,6 +106,25 @@ export default function M8EffectSizeMDE() {
     ? xTicks.filter((_, i) => i % Math.ceil(xTicks.length / 7) === 0 || i === xTicks.length - 1)
     : xTicks;
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < v2pl || vbX > V2W - v2pr) return null;
+    const delta = ((vbX - v2pl) / (V2W - v2pl - v2pr)) * maxDelta;
+    const closest = curvePoints.reduce((best, pt2) =>
+      Math.abs(pt2.delta - delta) < Math.abs(best.delta - delta) ? pt2 : best
+    );
+    const sx = v2pl + (closest.delta / maxDelta) * (V2W - v2pl - v2pr);
+    const sy = V2H - v2pb - closest.pw * (V2H - v2pt - v2pb);
+    return {
+      x: sx,
+      y: sy,
+      lines: [
+        { label: 'Effect', value: (closest.delta * 100).toFixed(2) + '%', color: colors.indigo },
+        { label: 'Power', value: (closest.pw * 100).toFixed(1) + '%', color: colors.amber },
+      ],
+      markers: [{ y: sy, color: colors.indigo }],
+    };
+  }, [curvePoints, maxDelta]);
+
   return (
     <div>
       <Hdr sub="Design">Effect Size &amp; MDE</Hdr>
@@ -165,7 +184,7 @@ export default function M8EffectSizeMDE() {
       </ChartBox>
 
       {/* Visual 2: Power curve */}
-      <ChartBox h={V2H} label="Minimum detectable effect curve showing the tradeoff between sample size and the smallest effect that can be reliably detected">
+      <ChartBox h={V2H} label="Minimum detectable effect curve showing the tradeoff between sample size and the smallest effect that can be reliably detected" tooltipLookup={tooltipLookup}>
         <defs>
           <linearGradient id="underGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.18" />

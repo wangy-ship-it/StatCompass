@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { modelQuality: 0.8, targetPct: 20, baseRate: 10 };
 
 export default function M25CumulativeGains() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { modelQuality, targetPct, baseRate } = p;
   const setModelQuality = (v) => set('modelQuality', v);
   const setTargetPct = (v) => set('targetPct', v);
@@ -89,6 +89,36 @@ export default function M25CumulativeGains() {
   const perfectTurnPct = Math.min(100, baseRate);
   const perfectPath = 'M' + toX(0) + ',' + toY(0) + 'L' + toX(perfectTurnPct) + ',' + toY(100) + 'L' + toX(100) + ',' + toY(100);
 
+  const tooltipLookup = useCallback((vbX) => {
+    const W2 = 600, pl2 = 48, pr2 = 20, pt2 = 20, pb2 = 36, H2 = 300;
+    if (vbX < pl2 || vbX > W2 - pr2) return null;
+    const pct = ((vbX - pl2) / (W2 - pl2 - pr2)) * 100;
+    const toX2 = (p) => pl2 + (p / 100) * (W2 - pl2 - pr2);
+    const toY2 = (p) => H2 - pb2 - (p / 100) * (H2 - pt2 - pb2);
+    // Find nearest gains point
+    let best = data.gains[0], bestDist = Infinity;
+    for (const g of data.gains) {
+      const d = Math.abs(g.pct - pct);
+      if (d < bestDist) { bestDist = d; best = g; }
+    }
+    const modelY = toY2(best.captured);
+    const randomY = toY2(best.pct);
+    return {
+      x: toX2(best.pct),
+      y: modelY,
+      lines: [
+        { label: '% Targeted', value: best.pct.toFixed(0) + '%', color: colors.amber },
+        { label: 'Model', value: best.captured.toFixed(1) + '%', color: colors.indigo },
+        { label: 'Random', value: best.pct.toFixed(1) + '%', color: sv.textFaint },
+        { label: 'Lift', value: (best.pct > 0 ? (best.captured / best.pct).toFixed(1) : '—') + 'x', color: colors.emerald },
+      ],
+      markers: [
+        { y: modelY, color: colors.indigo },
+        { y: randomY, color: sv.textFaint },
+      ],
+    };
+  }, [data.gains]);
+
   return (
     <div>
       <Hdr sub="Model & Evaluate">Cumulative Gains</Hdr>
@@ -146,7 +176,7 @@ export default function M25CumulativeGains() {
       </div>
 
       {/* ── Cumulative Gains Chart ── */}
-      <ChartBox h={H} label="Cumulative gains curve showing what fraction of positive outcomes is captured at each targeting level compared to random and perfect models">
+      <ChartBox h={H} tooltipLookup={tooltipLookup} label="Cumulative gains curve showing what fraction of positive outcomes is captured at each targeting level compared to random and perfect models">
         <defs>
           <linearGradient id="m25-adv" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />

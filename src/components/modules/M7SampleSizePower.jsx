@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { nCDF, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { eff: 0.5, alp: 0.05 };
 
 export default function M7SampleSizePower() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { eff, alp } = p;
   const setEff = (v) => set('eff', v);
   const setAlp = (v) => set('alp', v);
@@ -27,6 +27,23 @@ export default function M7SampleSizePower() {
   const area = line + 'L' + toX(500) + ',' + toY(0) + 'L' + toX(10) + ',' + toY(0) + 'Z';
   const n80 = pts.find((p) => p.p >= 0.8);
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const n = 10 + (vbX - pl) / (W - pl - pr) * 490;
+    const closest = pts.reduce((best, pt2) =>
+      Math.abs(pt2.n - n) < Math.abs(best.n - n) ? pt2 : best
+    );
+    return {
+      x: toX(closest.n),
+      y: toY(closest.p),
+      lines: [
+        { label: 'n', value: closest.n.toString(), color: colors.emerald },
+        { label: 'Power', value: (closest.p * 100).toFixed(1) + '%', color: colors.emerald },
+      ],
+      markers: [{ y: toY(closest.p), color: colors.emerald }],
+    };
+  }, [pts]);
+
   return (
     <div>
       <Hdr sub="Design">Sample Size and Statistical Power</Hdr>
@@ -36,7 +53,7 @@ export default function M7SampleSizePower() {
         more data.
       </Desc>
 
-      <ChartBox h={H} label="Power curve showing how statistical power increases with sample size for the selected effect size and significance level">
+      <ChartBox h={H} label="Power curve showing how statistical power increases with sample size for the selected effect size and significance level" tooltipLookup={tooltipLookup}>
         {[0.2, 0.4, 0.6, 0.8, 1].map((v) => (
           <g key={v}>
             <line x1={pl} y1={toY(v)} x2={W - pr} y2={toY(v)} stroke={sv.grid} />

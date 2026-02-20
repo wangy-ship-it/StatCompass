@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { sR, nCDF, bonferroni, benjaminiHochberg } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { nTests: 20, trueEffects: 3, correction: 'none' };
 
 export default function M16MultipleTesting() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { nTests, trueEffects, correction } = p;
   const setNTests = (v) => set('nTests', v);
   const setTrueEffects = (v) => set('trueEffects', v);
@@ -91,6 +91,30 @@ export default function M16MultipleTesting() {
     ? sorted.filter((s) => s.wouldBeSig && !s.sig && !s.isTrue).length
     : 0;
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const rank = Math.floor(((vbX - pl) / (W - pl - pr)) * sorted.length);
+    const idx = Math.max(0, Math.min(sorted.length - 1, rank));
+    const s = sorted[idx];
+    if (!s) return null;
+    const nlp = -Math.log10(Math.max(s.p, 1e-8));
+    const cx = pl + ((idx + 0.5) / sorted.length) * (W - pl - pr);
+    const cy = H - pb - (nlp / yMax) * (H - pt - pb);
+    const barColorVal = s.sig
+      ? (s.isTrue ? colors.emerald : colors.red)
+      : sv.textFaint;
+    return {
+      x: cx,
+      y: cy,
+      lines: [
+        { label: 'p-value', value: s.p < 0.0001 ? '<0.0001' : s.p.toFixed(4), color: barColorVal },
+        { label: 'Status', value: s.sig ? (s.isTrue ? 'True Positive' : 'False Positive') : 'Not Sig.', color: barColorVal },
+        { label: 'True Effect', value: s.isTrue ? 'Yes' : 'No', color: s.isTrue ? colors.emerald : sv.textFaint },
+      ],
+      markers: [{ y: cy, color: barColorVal }],
+    };
+  }, [sorted, yMax]);
+
   return (
     <div>
       <Hdr sub="Analyze">Multiple Testing & Corrections</Hdr>
@@ -110,8 +134,7 @@ export default function M16MultipleTesting() {
         <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>Re-simulate</PillBtn>
       </div>
 
-      <div className="bg-app-surface rounded-2xl p-6 mb-5 ring-1 ring-[var(--color-border-subtle)]">
-        <svg viewBox={'0 0 ' + W + ' ' + H} width="100%" style={{ maxHeight: H, display: 'block', overflow: 'visible' }}>
+      <ChartBox h={H} label="Multiple testing results showing p-values sorted by significance with correction thresholds" tooltipLookup={tooltipLookup}>
           {/* Y-axis gridlines with p-value labels */}
           {Array.from({ length: yMax }, (_, k) => k + 1).map((v) => (
             <g key={v}>
@@ -253,10 +276,10 @@ export default function M16MultipleTesting() {
               ? (data.tp + data.fp) + ' significant: ' + data.tp + ' true, ' + data.fp + ' false'
               : 'No significant results'}
           </text>
-        </svg>
+      </ChartBox>
 
         {/* Legend below chart */}
-        <div className="flex items-center justify-end gap-4 mt-2">
+        <div className="flex items-center justify-end gap-4 mt-2 mb-5">
           <span className="flex items-center gap-1.5">
             <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: colors.emerald, opacity: 0.8 }} />
             <span className="text-[11px]" style={{ color: sv.text }}>True Positive</span>
@@ -272,7 +295,6 @@ export default function M16MultipleTesting() {
             </span>
           )}
         </div>
-      </div>
 
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox label="True Positives" value={data.tp} color={colors.emerald} />

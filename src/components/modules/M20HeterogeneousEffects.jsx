@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { overallATE: 0.8, heterogeneity: 0.3, nGroups: 5 };
 
 export default function M20HeterogeneousEffects() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { overallATE, heterogeneity, nGroups } = p;
   const setOverallATE = (v) => set('overallATE', v);
   const setHeterogeneity = (v) => set('heterogeneity', v);
@@ -79,6 +79,28 @@ export default function M20HeterogeneousEffects() {
   // Alternating colors for subgroups
   const subColor = (i) => (i % 2 === 0 ? colors.indigo : colors.emerald);
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const xVal = xMin + (vbX - pl) / (W - pl - pr) * (xMax - xMin);
+    const svgX = pl + ((xVal - xMin) / (xMax - xMin)) * cw;
+    const lines = [
+      { label: 'Effect', value: xVal.toFixed(2), color: colors.amber },
+    ];
+    const markers = [];
+    data.subgroups.forEach((sg, i) => {
+      const col = i % 2 === 0 ? colors.indigo : colors.emerald;
+      if (xVal >= sg.ciLo && xVal <= sg.ciHi) {
+        lines.push({ label: 'Subgroup ' + (i + 1), value: sg.effect.toFixed(2), color: col });
+        markers.push({ y: toY(i), color: col });
+      }
+    });
+    if (xVal >= data.pooledCILo && xVal <= data.pooledCIHi) {
+      lines.push({ label: 'Overall', value: overallATE.toFixed(2), color: colors.amber });
+      markers.push({ y: toY(nGroups), color: colors.amber });
+    }
+    return { x: svgX, y: pt + ch / 2, lines, markers };
+  }, [data, overallATE, nGroups, xMin, xMax, pl, pr, W, cw, pt, ch]);
+
   return (
     <div>
       <Hdr sub="Interpret & Decide">Heterogeneous Treatment Effects</Hdr>
@@ -90,7 +112,7 @@ export default function M20HeterogeneousEffects() {
         real rather than due to chance.
       </Desc>
 
-      <ChartBox h={H} label="Heterogeneous treatment effects showing how the experiment impact varies across different user segments">
+      <ChartBox h={H} tooltipLookup={tooltipLookup} label="Heterogeneous treatment effects showing how the experiment impact varies across different user segments">
         {/* Zero reference line */}
         <line
           x1={toX(0)}

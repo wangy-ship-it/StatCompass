@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { nPDF, nCDF, zInv, sePropDiff } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const presets = [
   { label: 'Significant +', controlRate: 5.0, treatmentRate: 5.8, sampleSize: 50000 },
@@ -14,7 +14,7 @@ const presets = [
 const paramDefaults = { controlRate: 5.0, treatmentRate: 5.8, sampleSize: 50000 };
 
 export default function M19ResultInterpreter() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { controlRate, treatmentRate, sampleSize } = p;
   const setControlRate = (v) => set('controlRate', v);
   const setTreatmentRate = (v) => set('treatmentRate', v);
@@ -157,6 +157,38 @@ export default function M19ResultInterpreter() {
     };
   }, [controlRate, treatmentRate, stats.se]);
 
+  const tooltipLookup = useCallback((vbX) => {
+    const W = 600, pl = 36, pr = 36, pt = 16, pb = 34, H = 240;
+    if (vbX < pl || vbX > W - pr) return null;
+    const se = sePropDiff(controlRate / 100, treatmentRate / 100, sampleSize) * 100;
+    const safeStd = Math.max(se, 0.01);
+    const xMin = Math.min(controlRate, treatmentRate) - 4 * safeStd;
+    const xMax = Math.max(controlRate, treatmentRate) + 4 * safeStd;
+    const xVal = xMin + (vbX - pl) / (W - pl - pr) * (xMax - xMin);
+    const yC = nPDF(xVal, controlRate, safeStd);
+    const yT = nPDF(xVal, treatmentRate, safeStd);
+    let mxY = 0;
+    for (let i = 0; i <= 220; i++) {
+      const x = xMin + i * ((xMax - xMin) / 220);
+      mxY = Math.max(mxY, nPDF(x, controlRate, safeStd), nPDF(x, treatmentRate, safeStd));
+    }
+    const toSvgX = (v) => pl + ((v - xMin) / (xMax - xMin)) * (W - pl - pr);
+    const toSvgY = (v) => H - pb - (v / mxY) * (H - pt - pb);
+    return {
+      x: toSvgX(xVal),
+      y: Math.min(toSvgY(yC), toSvgY(yT)),
+      lines: [
+        { label: 'Rate', value: xVal.toFixed(2) + '%', color: colors.amber },
+        { label: 'Control', value: yC.toFixed(4), color: colors.indigo },
+        { label: 'Treatment', value: yT.toFixed(4), color: colors.emerald },
+      ],
+      markers: [
+        { y: toSvgY(yC), color: colors.indigo },
+        { y: toSvgY(yT), color: colors.emerald },
+      ],
+    };
+  }, [controlRate, treatmentRate, sampleSize]);
+
   // ── Active preset detection ──
   const activePreset = presets.findIndex(
     (p) => p.controlRate === controlRate && p.treatmentRate === treatmentRate && p.sampleSize === sampleSize
@@ -219,7 +251,7 @@ export default function M19ResultInterpreter() {
       />
 
       {/* ── Overlapping distributions chart ── */}
-      <ChartBox h={chart.H} label="Experiment result visualization showing confidence interval, point estimate, and significance assessment">
+      <ChartBox h={chart.H} tooltipLookup={tooltipLookup} label="Experiment result visualization showing confidence interval, point estimate, and significance assessment">
         <defs>
           <linearGradient id="grad-ctrl" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.28" />

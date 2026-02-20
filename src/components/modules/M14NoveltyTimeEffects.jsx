@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const effectTypes = {
   novelty: { label: 'Novelty Decay', desc: 'Initial spike, then decay' },
@@ -30,7 +30,7 @@ function effectCurve(type, magnitude, decayRate, week) {
 const paramDefaults = { effectType: 'novelty', magnitude: 15, decayRate: 0.3, window: 8 };
 
 export default function M14NoveltyTimeEffects() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { effectType, magnitude, decayRate, window } = p;
   const setEffectType = (v) => set('effectType', v);
   const setMagnitude = (v) => set('magnitude', v);
@@ -91,6 +91,26 @@ export default function M14NoveltyTimeEffects() {
 
   const curveColor = effectType === 'novelty' ? colors.amber : effectType === 'primacy' ? colors.indigo : colors.emerald;
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const w = ((vbX - pl) / (W - pl - pr)) * 12;
+    const closest = data.points.reduce((best, pt2) =>
+      Math.abs(pt2.week - w) < Math.abs(best.week - w) ? pt2 : best
+    );
+    const sx = pl + (closest.week / 12) * (W - pl - pr);
+    const sy = H - pb - (closest.effect / maxEffect) * (H - pt - pb);
+    return {
+      x: sx,
+      y: sy,
+      lines: [
+        { label: 'Week', value: closest.week.toFixed(1), color: curveColor },
+        { label: 'Effect', value: closest.effect.toFixed(1) + '%', color: curveColor },
+        { label: 'Steady-State', value: data.steadyState.toFixed(1) + '%', color: colors.emerald },
+      ],
+      markers: [{ y: sy, color: curveColor }],
+    };
+  }, [data.points, data.steadyState, curveColor, maxEffect]);
+
   return (
     <div>
       <Hdr sub="Validate & Run">Novelty & Time Effects</Hdr>
@@ -106,7 +126,7 @@ export default function M14NoveltyTimeEffects() {
         ))}
       </div>
 
-      <ChartBox h={H} label="Time series showing how novelty and primacy effects cause treatment impact to change over the experiment duration">
+      <ChartBox h={H} label="Time series showing how novelty and primacy effects cause treatment impact to change over the experiment duration" tooltipLookup={tooltipLookup}>
         <defs>
           <linearGradient id="grad-time-13" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={curveColor} stopOpacity="0.25" />

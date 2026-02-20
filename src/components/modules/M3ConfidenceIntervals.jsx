@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { zInv, sR } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { cl: 0.95, ss: 30 };
 
 export default function M3ConfidenceIntervals() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { cl, ss } = p;
   const setCl = (v) => set('cl', v);
   const setSs = (v) => set('ss', v);
@@ -28,6 +28,28 @@ export default function M3ConfidenceIntervals() {
   const toX = (v) => pl + ((v - 32) / 36) * (W - pl - pr);
   const rH = (H - pt - ppb) / 25;
 
+  const tooltipLookup = useCallback((vbX, vbY) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const xVal = 32 + ((vbX - pl) / (W - pl - pr)) * 36;
+    // Find the nearest CI bar by vertical position
+    let bestIdx = Math.round((vbY - pt - rH / 2) / rH);
+    bestIdx = Math.max(0, Math.min(bestIdx, ivs.length - 1));
+    const ci = ivs[bestIdx];
+    const ciY = pt + bestIdx * rH + rH / 2;
+    const c = ci.cap ? colors.indigo : colors.red;
+    return {
+      x: toX(xVal),
+      y: ciY,
+      lines: [
+        { label: 'Value', value: xVal.toFixed(1), color: colors.indigo },
+        { label: 'CI #' + (bestIdx + 1), value: '[' + ci.lo.toFixed(1) + ', ' + ci.hi.toFixed(1) + ']', color: c },
+        { label: 'Mean', value: ci.m.toFixed(1), color: c },
+        { label: 'Captures true', value: ci.cap ? 'Yes' : 'No', color: ci.cap ? colors.emerald : colors.red },
+      ],
+      markers: [{ y: ciY, color: c }],
+    };
+  }, [ivs]);
+
   return (
     <div>
       <Hdr sub="Foundations">Confidence Intervals</Hdr>
@@ -37,7 +59,7 @@ export default function M3ConfidenceIntervals() {
         Wider bars = more uncertainty; narrower = more precision.
       </Desc>
 
-      <ChartBox h={H} label="Twenty-five confidence intervals from repeated samples, showing how most capture the true value while some miss">
+      <ChartBox h={H} label="Twenty-five confidence intervals from repeated samples, showing how most capture the true value while some miss" tooltipLookup={tooltipLookup}>
         <line x1={toX(truM)} y1={pt} x2={toX(truM)} y2={H - ppb} stroke={colors.amber} strokeWidth={2} strokeDasharray="6,4" />
         <text x={toX(truM)} y={pt - 4} fill={colors.amber} fontSize={11} textAnchor="middle" fontWeight="700">
           {'True Value = ' + truM}

@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const presets = {
   medical:    { label: 'Medical',    segRatio: 75, seg1RateA: 80, seg1RateB: 78, seg2RateA: 70, seg2RateB: 65 },
@@ -14,7 +14,7 @@ const N = 400;
 const paramDefaults = { segRatio: 75, seg1RateA: 80, seg1RateB: 78, seg2RateA: 70, seg2RateB: 65 };
 
 export default function M21SimpsonsParadox() {
-  const [p, set] = useModuleParams(paramDefaults);
+  const [p, set] = useAnimatedParams(paramDefaults);
   const { segRatio, seg1RateA, seg1RateB, seg2RateA, seg2RateB } = p;
   const setSegRatio = (v) => set('segRatio', v);
   const setSeg1RateA = (v) => set('seg1RateA', v);
@@ -112,6 +112,40 @@ export default function M21SimpsonsParadox() {
   const seg1Y = 36;
   const seg2Y = 110;
 
+  const aggTooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const aggMax2 = Math.max(overallA, overallB, 0.01) * 1.25;
+    const rate = ((vbX - pl) / (W - pl - pr)) * aggMax2;
+    const lines = [
+      { label: 'Rate', value: (rate * 100).toFixed(1) + '%', color: colors.amber },
+      { label: 'Group A', value: (overallA * 100).toFixed(1) + '%', color: colors.indigo },
+      { label: 'Group B', value: (overallB * 100).toFixed(1) + '%', color: colors.emerald },
+    ];
+    const markers = [];
+    const aggToX2 = (v) => pl + (v / aggMax2) * (W - pl - pr);
+    if (Math.abs(vbX - aggToX2(overallA)) < 30) markers.push({ y: 42 + 12, color: colors.indigo });
+    if (Math.abs(vbX - aggToX2(overallB)) < 30) markers.push({ y: 42 + 24 + 20 + 12, color: colors.emerald });
+    return { x: vbX, y: 60, lines, markers };
+  }, [overallA, overallB, pl, pr, W]);
+
+  const segTooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const segMax2 = Math.max(s1A, s1B, s2A, s2B, 0.01) * 1.25;
+    const rate = ((vbX - pl) / (W - pl - pr)) * segMax2;
+    return {
+      x: vbX,
+      y: 80,
+      lines: [
+        { label: 'Rate', value: (rate * 100).toFixed(1) + '%', color: colors.amber },
+        { label: 'A Easy', value: (s1A * 100).toFixed(0) + '%', color: colors.indigo },
+        { label: 'B Easy', value: (s1B * 100).toFixed(0) + '%', color: colors.emerald },
+        { label: 'A Hard', value: (s2A * 100).toFixed(0) + '%', color: colors.indigo },
+        { label: 'B Hard', value: (s2B * 100).toFixed(0) + '%', color: colors.emerald },
+      ],
+      markers: [],
+    };
+  }, [s1A, s1B, s2A, s2B, pl, pr, W]);
+
   return (
     <div>
       <Hdr sub="Interpret & Decide">Simpson's Paradox</Hdr>
@@ -192,7 +226,7 @@ export default function M21SimpsonsParadox() {
       <div className="text-[11px] uppercase tracking-widest mb-2 font-bold text-[var(--svg-text)] px-1">
         Aggregate View
       </div>
-      <ChartBox h={140} label="Aggregate view bar chart comparing overall success rates between Group A and Group B">
+      <ChartBox h={140} tooltipLookup={aggTooltipLookup} label="Aggregate view bar chart comparing overall success rates between Group A and Group B">
         <text x={W / 2} y={16} fill={aggWinColor} fontSize={11} textAnchor="middle" fontWeight="700">
           {aggWinLabel}
         </text>
@@ -226,7 +260,7 @@ export default function M21SimpsonsParadox() {
       <div className="text-[11px] uppercase tracking-widest mb-2 font-bold text-[var(--svg-text)] px-1">
         Segmented View
       </div>
-      <ChartBox h={180} label="Segmented view showing Group A vs Group B success rates within easy and hard segments separately, revealing the paradox">
+      <ChartBox h={180} tooltipLookup={segTooltipLookup} label="Segmented view showing Group A vs Group B success rates within easy and hard segments separately, revealing the paradox">
         {/* --- Segment 1: Easy --- */}
         <text x={pl / 2} y={seg1Y - 8} fill={sv.text} fontSize={10} textAnchor="middle" fontWeight="700">
           Easy Segment

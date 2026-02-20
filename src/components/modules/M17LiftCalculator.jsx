@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { liftCI } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { controlRate: 10, treatmentRate: 12, sampleSize: 5000 };
 
 export default function M17LiftCalculator() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { controlRate, treatmentRate, sampleSize } = p;
   const setControlRate = (v) => set('controlRate', v);
   const setTreatmentRate = (v) => set('treatmentRate', v);
@@ -29,6 +29,25 @@ export default function M17LiftCalculator() {
     ? (result.absLift > 0 ? colors.emerald : colors.red)
     : colors.indigo;
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const v = ((vbX - pl) / (W - pl - pr)) * 2 * range - range;
+    // Snap to the point estimate position
+    const sx = pl + ((v + range) / (2 * range)) * (W - pl - pr);
+    const withinCI = v >= result.ciLo && v <= result.ciHi;
+    return {
+      x: sx,
+      y: midY,
+      lines: [
+        { label: 'Position', value: (v * 100).toFixed(2) + 'pp', color: barColor },
+        { label: 'Lift', value: (result.absLift > 0 ? '+' : '') + (result.absLift * 100).toFixed(2) + 'pp', color: barColor },
+        { label: '95% CI', value: (result.ciLo * 100).toFixed(2) + ' to ' + (result.ciHi * 100).toFixed(2), color: barColor },
+        { label: 'In CI', value: withinCI ? 'Yes' : 'No', color: withinCI ? colors.emerald : colors.red },
+      ],
+      markers: [{ y: midY, color: barColor }],
+    };
+  }, [result, range, barColor, midY]);
+
   return (
     <div>
       <Hdr sub="Analyze">Lift Calculator</Hdr>
@@ -38,7 +57,7 @@ export default function M17LiftCalculator() {
         just the point estimate, but the range of plausible values.
       </Desc>
 
-      <ChartBox h={H} label="Lift estimate with confidence interval showing the absolute difference between treatment and control conversion rates">
+      <ChartBox h={H} label="Lift estimate with confidence interval showing the absolute difference between treatment and control conversion rates" tooltipLookup={tooltipLookup}>
           {/* Zero line */}
           <line x1={toX(0)} y1={pt - 10} x2={toX(0)} y2={H - pb + 10} stroke={sv.text} strokeWidth={1.5} strokeDasharray="6,4" />
           <text x={toX(0)} y={pt - 14} fill={sv.text} fontSize={9} textAnchor="middle">

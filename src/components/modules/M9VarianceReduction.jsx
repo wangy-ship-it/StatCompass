@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { nPDF, nCDF, zInv, cupedVariance, effectiveN } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { rho: 0.5, sampleSize: 5000, trueEffect: 5 };
 
 export default function M9VarianceReduction() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { rho, sampleSize, trueEffect } = p;
   const setRho = (v) => set('rho', v);
   const setSampleSize = (v) => set('sampleSize', v);
@@ -85,6 +85,53 @@ export default function M9VarianceReduction() {
     powAdjPath += `${cmd}${pToX(pt2.n)},${pToY(pt2.powAdj)}`;
   });
 
+  const tooltipDist = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const v = ((vbX - pl) / (W - pl - pr)) * 2 * distRange - distRange;
+    const yO = nPDF(v, 0, data.origSD);
+    const yA = nPDF(v, 0, data.adjSD);
+    const sx = pl + ((v + distRange) / (2 * distRange)) * (W - pl - pr);
+    const syO = H1 - pb - (yO / maxY) * (H1 - pt - pb);
+    const syA = H1 - pb - (yA / maxY) * (H1 - pt - pb);
+    return {
+      x: sx,
+      y: Math.min(syO, syA),
+      lines: [
+        { label: 'Original', value: yO.toFixed(4), color: colors.indigo },
+        { label: 'CUPED', value: yA.toFixed(4), color: colors.emerald },
+      ],
+      markers: [
+        { y: syO, color: colors.indigo },
+        { y: syA, color: colors.emerald },
+      ],
+    };
+  }, [data.origSD, data.adjSD, distRange, maxY]);
+
+  const tooltipPower = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const ppLast = data.powerPoints[data.powerPoints.length - 1];
+    const nVal = 500 + ((vbX - pl) / (W - pl - pr)) * (ppLast.n - 500);
+    const closest = data.powerPoints.reduce((best, pt2) =>
+      Math.abs(pt2.n - nVal) < Math.abs(best.n - nVal) ? pt2 : best
+    );
+    const sx = pl + ((closest.n - 500) / (ppLast.n - 500)) * (W - pl - pr);
+    const syO = H2 - pb - closest.powOrig * (H2 - pt - pb);
+    const syA = H2 - pb - closest.powAdj * (H2 - pt - pb);
+    return {
+      x: sx,
+      y: Math.min(syO, syA),
+      lines: [
+        { label: 'n', value: Math.round(closest.n).toLocaleString(), color: colors.indigo },
+        { label: 'Original', value: (closest.powOrig * 100).toFixed(1) + '%', color: colors.indigo },
+        { label: 'CUPED', value: (closest.powAdj * 100).toFixed(1) + '%', color: colors.emerald },
+      ],
+      markers: [
+        { y: syO, color: colors.indigo },
+        { y: syA, color: colors.emerald },
+      ],
+    };
+  }, [data.powerPoints]);
+
   return (
     <div>
       <Hdr sub="Design">Variance Reduction (CUPED)</Hdr>
@@ -105,7 +152,7 @@ export default function M9VarianceReduction() {
       </div>
 
       {/* Distribution comparison */}
-      <ChartBox h={H1} label="Distribution comparison showing how CUPED reduces variance by using pre-experiment covariate data">
+      <ChartBox h={H1} label="Distribution comparison showing how CUPED reduces variance by using pre-experiment covariate data" tooltipLookup={tooltipDist}>
         <defs>
           <linearGradient id="grad-orig-9" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.2" />
@@ -130,7 +177,7 @@ export default function M9VarianceReduction() {
       </ChartBox>
 
       {/* Power curve comparison */}
-      <ChartBox h={H2} label="Power curves comparing original and CUPED-adjusted experiments, showing how variance reduction increases power at every sample size">
+      <ChartBox h={H2} label="Power curves comparing original and CUPED-adjusted experiments, showing how variance reduction increases power at every sample size" tooltipLookup={tooltipPower}>
         {/* Grid lines */}
         {[0.2, 0.4, 0.6, 0.8].map((p) => (
           <g key={p}>

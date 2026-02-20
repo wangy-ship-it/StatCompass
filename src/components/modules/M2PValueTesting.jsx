@@ -1,12 +1,13 @@
+import { useCallback } from 'react';
 import { nPDF, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
-import useModuleParams from '../../hooks/useModuleParams';
+import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const defaults = { ts: 1.96, two: true };
 
 export default function M2PValueTesting() {
-  const [p, set] = useModuleParams(defaults);
+  const [p, set] = useAnimatedParams(defaults);
   const { ts, two } = p;
   const setTs = (v) => set('ts', v);
   const setTwo = (v) => set('two', v);
@@ -32,6 +33,23 @@ export default function M2PValueTesting() {
     shade += 'L' + shPts[shPts.length - 1].x + ',' + toY(0) + 'Z';
   }
 
+  const tooltipLookup = useCallback((vbX) => {
+    if (vbX < pl || vbX > W - pr) return null;
+    const xVal = -4 + ((vbX - pl) / (W - pl - pr)) * 8;
+    const yVal = nPDF(xVal, 0, 1);
+    const pAtX = two ? 2 * (1 - nCDF(Math.abs(xVal), 0, 1)) : 1 - nCDF(xVal, 0, 1);
+    return {
+      x: toX(xVal),
+      y: toY(yVal),
+      lines: [
+        { label: 'z', value: xVal.toFixed(2), color: colors.indigo },
+        { label: 'PDF', value: yVal.toFixed(4), color: colors.indigo },
+        { label: 'p-value', value: pAtX < 0.0001 ? '< 0.0001' : pAtX.toFixed(4), color: pAtX < 0.05 ? colors.red : colors.indigo },
+      ],
+      markers: [{ y: toY(yVal), color: colors.indigo }],
+    };
+  }, [two, ts]);
+
   return (
     <div>
       <Hdr sub="Foundations">P-Value and Hypothesis Testing</Hdr>
@@ -41,7 +59,7 @@ export default function M2PValueTesting() {
         under no-effect — strong evidence for a real change.
       </Desc>
 
-      <ChartBox h={H} label="Normal distribution with shaded p-value region showing probability of observing results as extreme as the test statistic">
+      <ChartBox h={H} label="Normal distribution with shaded p-value region showing probability of observing results as extreme as the test statistic" tooltipLookup={tooltipLookup}>
         <defs>
           <linearGradient id="grad-pshade-red" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.35" />
