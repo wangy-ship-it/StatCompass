@@ -36,6 +36,7 @@ const sections: NavSection[] = [
       { id: 'm8', label: 'Effect Size & MDE' },
       { id: 'm9', label: 'Variance Reduction (CUPED)' },
       { id: 'm10', label: 'Choosing the Right Test' },
+      { id: 'm33', label: 'Switchback & Cluster Experiments' },
     ],
   },
   {
@@ -58,6 +59,10 @@ const sections: NavSection[] = [
       { id: 'm16', label: 'Multiple Testing' },
       { id: 'm17', label: 'Lift Calculator' },
       { id: 'm18', label: 'Practical vs Statistical Significance' },
+      { id: 'm30', label: 'Bayesian A/B Testing' },
+      { id: 'm31', label: 'Ratio Metrics & Delta Method' },
+      { id: 'm34', label: 'Bootstrap & Permutation Tests' },
+      { id: 'm32', label: 'Multi-Armed Bandits' },
     ],
   },
   {
@@ -185,7 +190,7 @@ export default function Navigation({ active, setActive, onClose, visited }: Navi
       </div>
 
       {/* Module list */}
-      <div className="flex-1 overflow-y-auto sidebar-scroll px-3 pb-3">
+      <div className="flex-1 overflow-y-auto sidebar-scroll px-3 pb-3 pt-1">
         {filteredSections.map((s) => {
           const sectionVisited = visited ? s.modules.filter((m) => visited.has(m.id)).length : 0;
           const sectionTotal = s.modules.length;

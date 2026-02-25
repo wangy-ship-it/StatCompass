@@ -15,7 +15,7 @@ export default function M5ExperimentStructure() {
   const [seed, setSeed] = useState(1);
   const users = useMemo(
     () =>
-      Array.from({ length: N }, (_, i) => {
+      Array.from({ length: Math.round(N) }, (_, i) => {
         const r = sR(i * 13 + seed * 77);
         return { g: rand ? (r < split / 100 ? 'A' : 'B') : i < (N * split) / 100 ? 'A' : 'B' };
       }),
@@ -124,7 +124,7 @@ export default function M5ExperimentStructure() {
         max={200}
         step={10}
         onChange={setN}
-        fmt={(v: number) => v + ' users'}
+        fmt={(v: number) => Math.round(v) + ' users'}
       />
 
       <Sl
@@ -134,13 +134,13 @@ export default function M5ExperimentStructure() {
         max={90}
         step={5}
         onChange={setSplit}
-        fmt={(v: number) => v + '% Control / ' + (100 - v) + '% Treatment'}
+        fmt={(v: number) => Math.round(v) + '% Control / ' + (100 - Math.round(v)) + '% Treatment'}
       />
 
       <div className="bg-app-surface rounded-2xl p-6 mb-7 ring-1 ring-[var(--color-border-subtle)]">
         <svg viewBox={'0 0 600 ' + svgH} width="100%" style={{ maxHeight: svgH, display: 'block' }}>
           <text x={300} y={16} fill={sv.text} fontSize={11} textAnchor="middle" fontWeight="600">
-            {'All Users (n=' + N + ')'}
+            {'All Users (n=' + Math.round(N) + ')'}
           </text>
           <line x1={200} y1={24} x2={300} y2={38} stroke={sv.axis} />
           <line x1={400} y1={24} x2={300} y2={38} stroke={sv.axis} />
@@ -187,7 +187,7 @@ export default function M5ExperimentStructure() {
             textAnchor="middle"
             fontWeight="700"
           >
-            {'Treatment (B) n=' + (N - nA)}
+            {'Treatment (B) n=' + (Math.round(N) - nA)}
           </text>
           {(() => {
             const counters: Record<string, number> = { A: 0, B: 0 };
@@ -297,7 +297,7 @@ export default function M5ExperimentStructure() {
       {/* ── StatBoxes ── */}
       <div className="flex gap-3 mb-7 flex-wrap">
         <StatBox label="Group A Count" value={nA} color={colors.indigo} />
-        <StatBox label="Group B Count" value={N - nA} color={colors.emerald} />
+        <StatBox label="Group B Count" value={Math.round(N) - nA} color={colors.emerald} />
         <StatBox
           label={srmWarning ? 'SRM Warning' : 'SRM p-value'}
           value={srmP < 0.001 ? srmP.toExponential(1) : srmP.toFixed(3)}

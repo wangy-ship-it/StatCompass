@@ -16,9 +16,10 @@ export default function M29ModelDrift() {
   const months = 24;
 
   const data = useMemo(() => {
+    const rf = Math.max(0, Math.round(retrainFreq));
     const points: { month: number; perf: number; msr: number }[] = [];
     for (let m = 0; m <= months; m++) {
-      const msr = retrainFreq > 0 ? m % retrainFreq : m;
+      const msr = rf > 0 ? m % rf : m;
       const degradation = driftRate * 0.025 * Math.pow(msr, 1.3);
       const noise = (sR(m * 37 + 123) - 0.5) * 0.015;
       const perf = Math.max(0.5, basePerf - degradation + noise);
@@ -28,7 +29,7 @@ export default function M29ModelDrift() {
     const currentPerf = points[months].perf;
     const gap = basePerf - currentPerf;
     const gapPct = (gap / basePerf) * 100;
-    const lastRetrain = retrainFreq > 0 ? months - (months % retrainFreq) : 0;
+    const lastRetrain = rf > 0 ? months - (months % rf) : 0;
     const monthsSinceRetrain = months - lastRetrain;
 
     return { points, currentPerf, gap, gapPct, monthsSinceRetrain };
@@ -51,8 +52,9 @@ export default function M29ModelDrift() {
 
   // Retrain markers (where the sawtooth jumps back)
   const retrainMarkers: number[] = [];
-  if (retrainFreq > 0) {
-    for (let m = retrainFreq; m <= months; m += retrainFreq) {
+  const rfRound = Math.max(0, Math.round(retrainFreq));
+  if (rfRound > 0) {
+    for (let m = rfRound; m <= months; m += rfRound) {
       retrainMarkers.push(m);
     }
   }
@@ -144,7 +146,10 @@ export default function M29ModelDrift() {
         max={12}
         step={1}
         onChange={setRetrainFreq}
-        fmt={(v) => (v === 0 ? 'Never' : 'Every ' + v + ' months')}
+        fmt={(v) => {
+          const r = Math.round(v);
+          return r === 0 ? 'Never' : 'Every ' + r + ' months';
+        }}
         color={colors.emerald}
       />
 
@@ -152,7 +157,11 @@ export default function M29ModelDrift() {
       <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
         Model Performance Over Time
       </div>
-      <ChartBox h={H} tooltipLookup={perfTooltipLookup}>
+      <ChartBox
+        h={H}
+        tooltipLookup={perfTooltipLookup}
+        label="Model performance metrics over time showing potential drift"
+      >
         {/* Grid */}
         {[0.5, 0.6, 0.7, 0.8, 0.9, 1.0].map((v) => (
           <g key={v}>
@@ -266,7 +275,7 @@ export default function M29ModelDrift() {
       <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
         Data Distribution Shift
       </div>
-      <ChartBox h={DH}>
+      <ChartBox h={DH} label="Feature distribution shift between training and production data">
         <line x1={dpl} y1={DH - dpb} x2={DW - dpr} y2={DH - dpb} stroke={sv.axis} />
 
         {/* Training distribution */}

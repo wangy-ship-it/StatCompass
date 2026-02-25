@@ -289,7 +289,7 @@ export default function M4BayesianFrequentist() {
         max={1000}
         step={10}
         onChange={setObserved}
-        fmt={(v: number) => v + ' observations'}
+        fmt={(v: number) => Math.round(v) + ' observations'}
         color={colors.indigo}
       />
 

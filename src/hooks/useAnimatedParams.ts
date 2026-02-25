@@ -11,18 +11,11 @@ export default function useAnimatedParams<T extends Record<string, ParamValue>>(
   const animated = {} as Record<string, ParamValue>;
   for (const key of keys) {
     const val = raw[key];
-    // useSpring is called in a stable loop (keys derived from static defaults)
+    // Always call useSpring to maintain stable hook order (keys derived from static defaults).
+    // For non-numeric values, pass 0 as a dummy target and discard the result.
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    if (typeof val === 'number') {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      let springVal = useSpring(val);
-      if (Number.isInteger(defaults[key])) {
-        springVal = Math.round(springVal);
-      }
-      animated[key] = springVal;
-    } else {
-      animated[key] = val;
-    }
+    const springVal = useSpring(typeof val === 'number' ? val : 0);
+    animated[key] = typeof val === 'number' ? springVal : val;
   }
   return [animated as T, set];
 }

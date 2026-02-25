@@ -21,6 +21,24 @@ import {
   cupedVariance,
   effectiveN,
   kFoldSplit,
+  betaCDF,
+  betaQuantile,
+  probBBeatsA,
+  expectedLossOfB,
+  sRNormal,
+  deltaMethodVar,
+  ratioCI,
+  naiveRatioVar,
+  designEffect,
+  clusterAdjustedN,
+  clusterAdjustedSE,
+  switchbackPower,
+  bootstrapSample,
+  bootstrapCI,
+  permutationTest,
+  betaSample,
+  ucb1Score,
+  cumulativeRegret,
 } from '../math';
 
 // Helpers
@@ -400,5 +418,317 @@ describe('kFoldSplit', () => {
     const a = kFoldSplit(30, 3, 99);
     const b = kFoldSplit(30, 3, 99);
     expect(a).toEqual(b);
+  });
+});
+
+// ── M30: Bayesian A/B Testing functions ──
+
+describe('betaCDF – Regularized incomplete beta', () => {
+  it('betaCDF(0.5, 1, 1) = 0.5 (uniform)', () => {
+    expect(betaCDF(0.5, 1, 1)).toBeCloseTo(0.5, 4);
+  });
+
+  it('betaCDF(0, a, b) = 0', () => {
+    expect(betaCDF(0, 5, 5)).toBe(0);
+  });
+
+  it('betaCDF(1, a, b) = 1', () => {
+    expect(betaCDF(1, 5, 5)).toBe(1);
+  });
+
+  it('symmetric beta at 0.5 = 0.5', () => {
+    expect(betaCDF(0.5, 10, 10)).toBeCloseTo(0.5, 3);
+  });
+
+  it('monotonically increasing', () => {
+    const v1 = betaCDF(0.3, 5, 5);
+    const v2 = betaCDF(0.5, 5, 5);
+    const v3 = betaCDF(0.7, 5, 5);
+    expect(v1).toBeLessThan(v2);
+    expect(v2).toBeLessThan(v3);
+  });
+});
+
+describe('betaQuantile – Inverse beta CDF', () => {
+  it('round-trips with betaCDF', () => {
+    const x = 0.3;
+    const p = betaCDF(x, 5, 10);
+    const xBack = betaQuantile(p, 5, 10);
+    expect(xBack).toBeCloseTo(x, 3);
+  });
+
+  it('betaQuantile(0.5, 1, 1) = 0.5', () => {
+    expect(betaQuantile(0.5, 1, 1)).toBeCloseTo(0.5, 4);
+  });
+
+  it('betaQuantile(0) = 0 and betaQuantile(1) = 1', () => {
+    expect(betaQuantile(0, 5, 5)).toBe(0);
+    expect(betaQuantile(1, 5, 5)).toBe(1);
+  });
+});
+
+describe('probBBeatsA – P(B > A)', () => {
+  it('equal distributions → ~0.5', () => {
+    const p = probBBeatsA(50, 50, 50, 50);
+    expect(p).toBeCloseTo(0.5, 1);
+  });
+
+  it('B clearly better → high probability', () => {
+    const p = probBBeatsA(10, 90, 90, 10);
+    expect(p).toBeGreaterThan(0.99);
+  });
+
+  it('B clearly worse → low probability', () => {
+    const p = probBBeatsA(90, 10, 10, 90);
+    expect(p).toBeLessThan(0.01);
+  });
+});
+
+describe('expectedLossOfB – Expected loss', () => {
+  it('zero loss when B is clearly better', () => {
+    const loss = expectedLossOfB(10, 90, 90, 10);
+    expect(loss).toBeLessThan(0.01);
+  });
+
+  it('positive loss when A is clearly better', () => {
+    const loss = expectedLossOfB(90, 10, 10, 90);
+    expect(loss).toBeGreaterThan(0.1);
+  });
+
+  it('non-negative', () => {
+    const loss = expectedLossOfB(50, 50, 50, 50);
+    expect(loss).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ── M31: Ratio Metrics functions ──
+
+describe('sRNormal – Seeded normal random', () => {
+  it('deterministic for same seed', () => {
+    expect(sRNormal(42)).toBe(sRNormal(42));
+  });
+
+  it('different seeds give different values', () => {
+    expect(sRNormal(1)).not.toBe(sRNormal(2));
+  });
+
+  it('produces values roughly in normal range', () => {
+    const vals = Array.from({ length: 100 }, (_, i) => sRNormal(i));
+    const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+    expect(Math.abs(mean)).toBeLessThan(1); // loose check
+  });
+});
+
+describe('deltaMethodVar – Delta method variance', () => {
+  it('basic computation', () => {
+    // V(X/Y) ≈ (varX - 2*r*covXY + r^2*varY) / muY^2
+    const v = deltaMethodVar(10, 5, 4, 1, 0.5);
+    const r = 10 / 5;
+    const expected = (4 - 2 * r * 0.5 + r * r * 1) / 25;
+    expect(v).toBeCloseTo(expected, 6);
+  });
+
+  it('zero denominator returns Infinity', () => {
+    expect(deltaMethodVar(10, 0, 4, 1, 0.5)).toBe(Infinity);
+  });
+});
+
+describe('ratioCI – Ratio confidence interval', () => {
+  it('ratio is muX/muY', () => {
+    const result = ratioCI(10, 5, 4, 1, 0.5, 100);
+    expect(result.ratio).toBeCloseTo(2, 6);
+  });
+
+  it('CI contains the ratio', () => {
+    const result = ratioCI(10, 5, 4, 1, 0.5, 100);
+    expect(result.lo).toBeLessThan(result.ratio);
+    expect(result.hi).toBeGreaterThan(result.ratio);
+  });
+
+  it('larger n gives narrower CI', () => {
+    const small = ratioCI(10, 5, 4, 1, 0.5, 100);
+    const large = ratioCI(10, 5, 4, 1, 0.5, 10000);
+    expect(large.hi - large.lo).toBeLessThan(small.hi - small.lo);
+  });
+});
+
+describe('naiveRatioVar – Naive (incorrect) ratio variance', () => {
+  it('is positive', () => {
+    expect(naiveRatioVar(10, 5, 4, 1, 100)).toBeGreaterThan(0);
+  });
+
+  it('differs from delta method (ignores covariance and denominator var)', () => {
+    // Naive uses only varX / (muY^2 * n), delta method includes covXY and varY terms
+    const naive = naiveRatioVar(10, 5, 4, 1, 100);
+    const correct = deltaMethodVar(10, 5, 4, 1, 0.5) / 100;
+    // They should differ since naive ignores denominator variance and covariance
+    expect(naive).not.toBe(correct);
+  });
+});
+
+// ── M33: Cluster Experiments functions ──
+
+describe('designEffect', () => {
+  it('DEFF = 1 when ICC = 0', () => {
+    expect(designEffect(0, 50)).toBe(1);
+  });
+
+  it('DEFF increases with ICC', () => {
+    expect(designEffect(0.1, 50)).toBeCloseTo(5.9, 2);
+  });
+
+  it('DEFF increases with cluster size', () => {
+    const d1 = designEffect(0.05, 10);
+    const d2 = designEffect(0.05, 100);
+    expect(d2).toBeGreaterThan(d1);
+  });
+});
+
+describe('clusterAdjustedN', () => {
+  it('no adjustment when ICC = 0', () => {
+    expect(clusterAdjustedN(1000, 0, 50)).toBe(1000);
+  });
+
+  it('effective N decreases with ICC', () => {
+    expect(clusterAdjustedN(1000, 0.1, 50)).toBeLessThan(1000);
+  });
+});
+
+describe('clusterAdjustedSE', () => {
+  it('SE increases with ICC', () => {
+    const se0 = clusterAdjustedSE(1, 0, 50);
+    const se1 = clusterAdjustedSE(1, 0.1, 50);
+    expect(se1).toBeGreaterThan(se0);
+  });
+});
+
+describe('switchbackPower', () => {
+  it('power increases with more clusters', () => {
+    const p1 = switchbackPower(10, 5, 0.3, 0.05);
+    const p2 = switchbackPower(10, 20, 0.3, 0.05);
+    expect(p2).toBeGreaterThan(p1);
+  });
+
+  it('power decreases with higher ICC', () => {
+    const p1 = switchbackPower(10, 10, 0.3, 0.01);
+    const p2 = switchbackPower(10, 10, 0.3, 0.3);
+    expect(p2).toBeLessThan(p1);
+  });
+});
+
+// ── M34: Bootstrap & Permutation functions ──
+
+describe('bootstrapSample', () => {
+  it('returns same length as input', () => {
+    const data = [1, 2, 3, 4, 5];
+    const sample = bootstrapSample(data, 42);
+    expect(sample).toHaveLength(5);
+  });
+
+  it('deterministic with same seed', () => {
+    const data = [1, 2, 3, 4, 5];
+    expect(bootstrapSample(data, 42)).toEqual(bootstrapSample(data, 42));
+  });
+
+  it('values come from original data', () => {
+    const data = [10, 20, 30];
+    const sample = bootstrapSample(data, 42);
+    sample.forEach((v) => expect(data).toContain(v));
+  });
+});
+
+describe('bootstrapCI', () => {
+  it('CI contains the true mean for normal data', () => {
+    const data = Array.from({ length: 50 }, (_, i) => 100 + (i % 10) - 5);
+    const mean = (d: number[]) => d.reduce((s, v) => s + v, 0) / d.length;
+    const ci = bootstrapCI(data, mean, 200, 0.05, 42);
+    expect(ci.lo).toBeLessThan(100);
+    expect(ci.hi).toBeGreaterThan(99);
+  });
+
+  it('returns sorted distribution', () => {
+    const data = [1, 2, 3, 4, 5];
+    const mean = (d: number[]) => d.reduce((s, v) => s + v, 0) / d.length;
+    const ci = bootstrapCI(data, mean, 100, 0.05, 42);
+    for (let i = 1; i < ci.dist.length; i++) {
+      expect(ci.dist[i]).toBeGreaterThanOrEqual(ci.dist[i - 1]);
+    }
+  });
+});
+
+describe('permutationTest', () => {
+  it('detects a clear difference', () => {
+    const groupA = [1, 2, 3, 4, 5];
+    const groupB = [10, 11, 12, 13, 14];
+    const diffMeans = (a: number[], b: number[]) =>
+      b.reduce((s, v) => s + v, 0) / b.length - a.reduce((s, v) => s + v, 0) / a.length;
+    const result = permutationTest(groupA, groupB, diffMeans, 500, 42);
+    expect(result.pValue).toBeLessThan(0.05);
+  });
+
+  it('no difference → non-significant', () => {
+    const groupA = [5, 6, 5, 6, 5];
+    const groupB = [5, 6, 5, 6, 5];
+    const diffMeans = (a: number[], b: number[]) =>
+      b.reduce((s, v) => s + v, 0) / b.length - a.reduce((s, v) => s + v, 0) / a.length;
+    const result = permutationTest(groupA, groupB, diffMeans, 200, 42);
+    expect(result.pValue).toBeGreaterThan(0.05);
+  });
+});
+
+// ── M32: Multi-Armed Bandits functions ──
+
+describe('betaSample', () => {
+  it('returns value in [0, 1]', () => {
+    for (let s = 0; s < 20; s++) {
+      const v = betaSample(5, 5, s);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('deterministic with same seed', () => {
+    expect(betaSample(2, 8, 42)).toBe(betaSample(2, 8, 42));
+  });
+});
+
+describe('ucb1Score', () => {
+  it('infinite for untried arm', () => {
+    expect(ucb1Score(0, 0, 100)).toBe(Infinity);
+  });
+
+  it('decreases exploration bonus with more trials', () => {
+    const s1 = ucb1Score(5, 10, 100);
+    const s2 = ucb1Score(50, 100, 1000);
+    // Both have 50% win rate, but exploration bonus differs
+    expect(s1).not.toEqual(s2);
+  });
+
+  it('higher win rate gives higher base score', () => {
+    const s1 = ucb1Score(9, 10, 100); // 90% win rate
+    const s2 = ucb1Score(1, 10, 100); // 10% win rate
+    expect(s1).toBeGreaterThan(s2);
+  });
+});
+
+describe('cumulativeRegret', () => {
+  it('returns correct length', () => {
+    const rewards = [0.5, 0.3, 0.8, 0.4];
+    const regret = cumulativeRegret(rewards, 0.9);
+    expect(regret).toHaveLength(4);
+  });
+
+  it('monotonically non-decreasing', () => {
+    const rewards = [0.5, 0.3, 0.8, 0.4, 0.6];
+    const regret = cumulativeRegret(rewards, 0.9);
+    for (let i = 1; i < regret.length; i++) {
+      expect(regret[i]).toBeGreaterThanOrEqual(regret[i - 1]);
+    }
+  });
+
+  it('zero regret when rewards equal optimal', () => {
+    const rewards = [0.5, 0.5, 0.5];
+    const regret = cumulativeRegret(rewards, 0.5);
+    regret.forEach((r) => expect(r).toBeCloseTo(0, 10));
   });
 });

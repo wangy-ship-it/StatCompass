@@ -38,10 +38,10 @@ describe('useAnimatedParams', () => {
     expect(result.current[0].show).toBe(true);
   });
 
-  it('rounds integer params', () => {
+  it('passes integer params through without rounding', () => {
     const { result } = renderHook(() => useAnimatedParams({ n: 100 }));
-    // With mocked useSpring returning exact value, round(100) = 100
-    expect(Number.isInteger(result.current[0].n)).toBe(true);
+    // With mocked useSpring returning exact value, the raw spring value passes through
+    expect(result.current[0].n).toBe(100);
   });
 
   it('set() updates state and URL', () => {

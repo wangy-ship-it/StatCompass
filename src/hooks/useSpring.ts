@@ -16,7 +16,7 @@ export default function useSpring(target: number): number {
     const cur = currentRef.current;
     const tgt = targetRef.current;
     const diff = tgt - cur;
-    if (Math.abs(diff) < EPSILON) {
+    if (Math.abs(diff) < EPSILON * Math.max(1, Math.abs(tgt))) {
       currentRef.current = tgt;
       setValue(tgt);
       rafRef.current = null;
@@ -42,7 +42,10 @@ export default function useSpring(target: number): number {
 
   useEffect(() => {
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
   }, []);
 

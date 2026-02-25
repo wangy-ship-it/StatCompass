@@ -227,6 +227,260 @@ export const cupedVariance = (originalVar: number, rho: number): number =>
 
 export const effectiveN = (n: number, rho: number): number => n / (1 - rho * rho);
 
+// ── M30: Bayesian A/B Testing ──
+
+/** Regularized incomplete beta function via continued fraction (Lentz's method) */
+export const betaCDF = (x: number, a: number, b: number): number => {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  // Use the symmetry relation when x > (a+1)/(a+b+2) for convergence
+  if (x > (a + 1) / (a + b + 2)) {
+    return 1 - betaCDF(1 - x, b, a);
+  }
+  const lnBeta = logGamma(a) + logGamma(b) - logGamma(a + b);
+  const front = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lnBeta) / a;
+  // Continued fraction (Lentz's method)
+  const maxIter = 200;
+  const eps = 1e-14;
+  let f = 1,
+    c = 1,
+    d = 0;
+  for (let m = 0; m <= maxIter; m++) {
+    let numerator: number;
+    if (m === 0) {
+      numerator = 1;
+    } else if (m % 2 === 0) {
+      const k = m / 2;
+      numerator = (k * (b - k) * x) / ((a + 2 * k - 1) * (a + 2 * k));
+    } else {
+      const k = (m - 1) / 2;
+      numerator = -((a + k) * (a + b + k) * x) / ((a + 2 * k) * (a + 2 * k + 1));
+    }
+    d = 1 + numerator * d;
+    if (Math.abs(d) < eps) d = eps;
+    d = 1 / d;
+    c = 1 + numerator / c;
+    if (Math.abs(c) < eps) c = eps;
+    f *= c * d;
+    if (Math.abs(c * d - 1) < eps) break;
+  }
+  return front * (f - 1);
+};
+
+/** Inverse beta CDF via bisection */
+export const betaQuantile = (p: number, a: number, b: number): number => {
+  if (p <= 0) return 0;
+  if (p >= 1) return 1;
+  let lo = 0,
+    hi = 1;
+  for (let i = 0; i < 100; i++) {
+    const mid = (lo + hi) / 2;
+    if (betaCDF(mid, a, b) < p) lo = mid;
+    else hi = mid;
+    if (hi - lo < 1e-12) break;
+  }
+  return (lo + hi) / 2;
+};
+
+/** P(B > A) for two Beta distributions via numerical integration */
+export const probBBeatsA = (aA: number, bA: number, aB: number, bB: number): number => {
+  const steps = 500;
+  let sum = 0;
+  const dx = 1 / steps;
+  for (let i = 0; i < steps; i++) {
+    const x = (i + 0.5) * dx;
+    sum += betaPDF(x, aB, bB) * betaCDF(x, aA, bA) * dx;
+  }
+  return Math.min(1, Math.max(0, sum));
+};
+
+/** Expected loss of choosing B when A might be better */
+export const expectedLossOfB = (aA: number, bA: number, aB: number, bB: number): number => {
+  // E[max(θ_A - θ_B, 0)] via Monte Carlo-like numerical integration
+  const steps = 200;
+  const dx = 1 / steps;
+  let loss = 0;
+  for (let i = 0; i < steps; i++) {
+    const xa = (i + 0.5) * dx;
+    const pdfA = betaPDF(xa, aA, bA);
+    // E[max(xa - θ_B, 0)] = integral from 0 to xa of (xa - xb) * betaPDF(xb, aB, bB) dxb
+    let inner = 0;
+    for (let j = 0; j < steps; j++) {
+      const xb = (j + 0.5) * dx;
+      if (xb < xa) {
+        inner += (xa - xb) * betaPDF(xb, aB, bB) * dx;
+      }
+    }
+    loss += pdfA * inner * dx;
+  }
+  return loss;
+};
+
+// ── M31: Ratio Metrics & Delta Method ──
+
+/** Seeded normal random via Box-Muller */
+export const sRNormal = (seed: number): number => {
+  const u1 = sR(seed);
+  const u2 = sR(seed + 1);
+  return Math.sqrt(-2 * Math.log(Math.max(u1, 1e-15))) * Math.cos(2 * Math.PI * u2);
+};
+
+/** Delta method variance for ratio X/Y */
+export const deltaMethodVar = (
+  muX: number,
+  muY: number,
+  varX: number,
+  varY: number,
+  covXY: number,
+): number => {
+  if (muY === 0) return Infinity;
+  const r = muX / muY;
+  return (varX - 2 * r * covXY + r * r * varY) / (muY * muY);
+};
+
+/** CI for ratio metric using delta method */
+export const ratioCI = (
+  muX: number,
+  muY: number,
+  varX: number,
+  varY: number,
+  covXY: number,
+  n: number,
+  alpha = 0.05,
+): { ratio: number; se: number; lo: number; hi: number } => {
+  const ratio = muY !== 0 ? muX / muY : 0;
+  const v = deltaMethodVar(muX, muY, varX, varY, covXY);
+  const se = Math.sqrt(Math.max(0, v) / n);
+  const z = zInv(alpha);
+  return { ratio, se, lo: ratio - z * se, hi: ratio + z * se };
+};
+
+/** Naive (incorrect) variance for ratio, ignoring covariance */
+export const naiveRatioVar = (
+  _muX: number,
+  muY: number,
+  varX: number,
+  _varY: number,
+  n: number,
+): number => {
+  if (muY === 0) return Infinity;
+  // Incorrectly treats ratio variance as varX/muY^2 only
+  return varX / (muY * muY * n);
+};
+
+// ── M33: Switchback & Cluster Experiments ──
+
+/** Design effect: DEFF = 1 + (clusterSize - 1) * ICC */
+export const designEffect = (icc: number, clusterSize: number): number =>
+  1 + (clusterSize - 1) * icc;
+
+/** Cluster-adjusted effective N */
+export const clusterAdjustedN = (n: number, icc: number, clusterSize: number): number =>
+  n / designEffect(icc, clusterSize);
+
+/** Cluster-adjusted standard error */
+export const clusterAdjustedSE = (se: number, icc: number, clusterSize: number): number =>
+  se * Math.sqrt(designEffect(icc, clusterSize));
+
+/** Switchback power calculation */
+export const switchbackPower = (
+  nPeriods: number,
+  nClusters: number,
+  effectSize: number,
+  icc: number,
+  alpha = 0.05,
+): number => {
+  const totalN = nPeriods * nClusters;
+  const deff = designEffect(icc, nPeriods);
+  const effectiveN = totalN / deff;
+  const se = 1 / Math.sqrt(effectiveN / 2);
+  const za = zInv(alpha);
+  const zBeta = effectSize / se - za;
+  return nCDF(zBeta, 0, 1);
+};
+
+// ── M34: Bootstrap & Permutation Tests ──
+
+/** Resample with replacement (seeded) */
+export const bootstrapSample = (data: number[], seed: number): number[] => {
+  const n = data.length;
+  return Array.from({ length: n }, (_, i) => data[Math.floor(sR(seed + i * 7) * n)]);
+};
+
+/** Percentile bootstrap CI */
+export const bootstrapCI = (
+  data: number[],
+  statFn: (d: number[]) => number,
+  nBoot: number,
+  alpha = 0.05,
+  seed = 42,
+): { lo: number; hi: number; dist: number[] } => {
+  const dist: number[] = [];
+  for (let b = 0; b < nBoot; b++) {
+    const sample = bootstrapSample(data, seed + b * 13);
+    dist.push(statFn(sample));
+  }
+  dist.sort((a, b) => a - b);
+  const loIdx = Math.floor((alpha / 2) * nBoot);
+  const hiIdx = Math.floor((1 - alpha / 2) * nBoot);
+  return { lo: dist[loIdx], hi: dist[Math.min(hiIdx, nBoot - 1)], dist };
+};
+
+/** Permutation test p-value */
+export const permutationTest = (
+  groupA: number[],
+  groupB: number[],
+  statFn: (a: number[], b: number[]) => number,
+  nPerms: number,
+  seed = 42,
+): { pValue: number; nullDist: number[] } => {
+  const observed = statFn(groupA, groupB);
+  const combined = [...groupA, ...groupB];
+  const nA = groupA.length;
+  const nullDist: number[] = [];
+  let count = 0;
+  for (let p = 0; p < nPerms; p++) {
+    // Fisher-Yates shuffle (partial — just take first nA)
+    const shuffled = [...combined];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(sR(seed + p * 100 + i) * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const permA = shuffled.slice(0, nA);
+    const permB = shuffled.slice(nA);
+    const permStat = statFn(permA, permB);
+    nullDist.push(permStat);
+    if (Math.abs(permStat) >= Math.abs(observed)) count++;
+  }
+  return { pValue: count / nPerms, nullDist };
+};
+
+// ── M32: Multi-Armed Bandits ──
+
+/** Sample from Beta distribution using Joehnk's method (a,b<1) or gamma ratio */
+export const betaSample = (a: number, b: number, seed: number): number => {
+  // Using inverse CDF approach for simplicity and determinism
+  const u = sR(seed);
+  return betaQuantile(u, a, b);
+};
+
+/** UCB1 score */
+export const ucb1Score = (wins: number, trials: number, totalTrials: number): number => {
+  if (trials === 0) return Infinity;
+  return wins / trials + Math.sqrt((2 * Math.log(totalTrials)) / trials);
+};
+
+/** Cumulative regret */
+export const cumulativeRegret = (rewards: number[], optimalRate: number): number[] => {
+  const regret: number[] = [];
+  let total = 0;
+  for (let i = 0; i < rewards.length; i++) {
+    total += optimalRate - rewards[i];
+    regret.push(total);
+  }
+  return regret;
+};
+
 // ── M20: Cross-validation ──
 
 export interface KFoldSplit {

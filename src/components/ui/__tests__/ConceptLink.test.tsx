@@ -102,7 +102,8 @@ describe('ConceptLink', () => {
     expect(container.textContent).not.toContain('The probability');
   });
 
-  it('click sets window.location.hash', () => {
+  it('click sets window.location.hash and scrolls to top', () => {
+    window.scrollTo = vi.fn();
     const { container } = render(
       <ConceptLink moduleId="m5" display="Experiment" desc="Testing">
         randomization
@@ -115,5 +116,6 @@ describe('ConceptLink', () => {
     });
 
     expect(window.location.hash).toBe('#m5');
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
   });
 });

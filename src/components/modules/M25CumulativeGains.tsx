@@ -195,7 +195,7 @@ export default function M25CumulativeGains() {
         max={100}
         step={5}
         onChange={setTargetPct}
-        fmt={(v) => 'Top ' + v + '% of customers'}
+        fmt={(v) => 'Top ' + Math.round(v) + '% of customers'}
         color={colors.amber}
       />
       <Sl
@@ -205,7 +205,7 @@ export default function M25CumulativeGains() {
         max={30}
         step={1}
         onChange={setBaseRate}
-        fmt={(v) => v + '%'}
+        fmt={(v) => Math.round(v) + '%'}
         color={colors.emerald}
       />
 
@@ -221,7 +221,7 @@ export default function M25CumulativeGains() {
                 Random targeting
               </span>
               <span className="text-[13px] font-bold" style={{ color: sv.textFaint }}>
-                captures {targetPct}%
+                captures {Math.round(targetPct)}%
               </span>
             </div>
             <div
@@ -360,7 +360,7 @@ export default function M25CumulativeGains() {
           textAnchor="middle"
           fontWeight="600"
         >
-          Top {targetPct}%
+          Top {Math.round(targetPct)}%
         </text>
 
         {/* Horizontal guide from model capture point to y-axis */}
@@ -463,7 +463,7 @@ export default function M25CumulativeGains() {
           color={colors.indigo}
         />
         <StatBox
-          label={'Lift @ ' + targetPct + '%'}
+          label={'Lift @ ' + Math.round(targetPct) + '%'}
           value={data.liftAtTarget.toFixed(1) + 'x'}
           color={colors.amber}
         />

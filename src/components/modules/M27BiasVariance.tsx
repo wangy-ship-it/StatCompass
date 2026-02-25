@@ -37,7 +37,7 @@ export default function M27BiasVariance() {
       testY.push(y);
     }
 
-    const coeffs = polyFit(trainX, trainY, degree);
+    const coeffs = polyFit(trainX, trainY, Math.round(degree));
 
     let trainErr = 0,
       testErr = 0;
@@ -216,7 +216,7 @@ export default function M27BiasVariance() {
           textAnchor="end"
           fontWeight="700"
         >
-          {fitLabel + ' (degree ' + degree + ')'}
+          {fitLabel + ' (degree ' + Math.round(degree) + ')'}
         </text>
         {showTrue && (
           <text x={pl + 4} y={pt + 10} fill={sv.text} fontSize={9}>
@@ -244,13 +244,13 @@ export default function M27BiasVariance() {
         />
         <circle
           cx={eToX(degree)}
-          cy={eToY(data.errCurves[degree - 1]?.train || 0)}
+          cy={eToY(data.errCurves[Math.max(0, Math.min(14, Math.round(degree) - 1))]?.train || 0)}
           r={4}
           fill={colors.indigo}
         />
         <circle
           cx={eToX(degree)}
-          cy={eToY(data.errCurves[degree - 1]?.test || 0)}
+          cy={eToY(data.errCurves[Math.max(0, Math.min(14, Math.round(degree) - 1))]?.test || 0)}
           r={4}
           fill={colors.red}
         />
@@ -305,7 +305,7 @@ export default function M27BiasVariance() {
         <StatBox label="Training Error" value={data.trainErr.toFixed(3)} color={colors.indigo} />
         <StatBox label="Test Error" value={data.testErr.toFixed(3)} color={colors.red} />
         <StatBox label="Fit Quality" value={fitLabel} color={fitColor} />
-        <StatBox label="Degree" value={degree} color={colors.indigo} />
+        <StatBox label="Degree" value={Math.round(degree)} color={colors.indigo} />
       </div>
 
       <Sl
@@ -315,7 +315,7 @@ export default function M27BiasVariance() {
         max={15}
         step={1}
         onChange={setDegree}
-        fmt={(v) => String(v)}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
       <Sl

@@ -59,7 +59,7 @@ export default function M2PValueTesting() {
         markers: [{ y: toY(yVal), color: colors.indigo }],
       };
     },
-    [two, ts],
+    [two],
   );
 
   return (

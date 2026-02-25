@@ -43,8 +43,11 @@ export default function M15InteractionEffects() {
     pr = 40,
     pt = 30,
     pb = 50;
-  const barValues = [0, data.a, data.b, data.actualCombined];
-  const barColors = [sv.textFaint, colors.indigo, colors.emerald, colors.amber];
+  const barValues = useMemo(
+    () => [0, data.a, data.b, data.actualCombined],
+    [data.a, data.b, data.actualCombined],
+  );
+  const barColors = useMemo(() => [sv.textFaint, colors.indigo, colors.emerald, colors.amber], []);
   const maxBar = Math.max(...barValues.map(Math.abs), Math.abs(data.expectedCombined)) * 1.3;
   const barW = (W - pl - pr) / 5;
   const gap = barW * 0.3;
@@ -295,7 +298,10 @@ export default function M15InteractionEffects() {
           setInteractionPct(v);
           setInterType(v > 0 ? 'synergistic' : v < 0 ? 'antagonistic' : 'none');
         }}
-        fmt={(v) => (v > 0 ? '+' : '') + v + '%'}
+        fmt={(v) => {
+          const r = Math.round(v);
+          return (r > 0 ? '+' : '') + r + '%';
+        }}
         color={colors.amber}
       />
 

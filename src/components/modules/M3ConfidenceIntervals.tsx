@@ -32,7 +32,7 @@ export default function M3ConfidenceIntervals() {
     pt = 20,
     ppb = 20;
   const toX = (v: number) => pl + ((v - 32) / 36) * (W - pl - pr);
-  const rH = (H - pt - ppb) / 25;
+  const rH = useMemo(() => (H - pt - ppb) / 25, []);
 
   const tooltipLookup = useCallback(
     (vbX: number, vbY: number) => {
@@ -64,7 +64,7 @@ export default function M3ConfidenceIntervals() {
         markers: [{ y: ciY, color: c }],
       };
     },
-    [ivs],
+    [ivs, rH],
   );
 
   return (
@@ -155,6 +155,7 @@ export default function M3ConfidenceIntervals() {
         max={200}
         step={1}
         onChange={setSs}
+        fmt={(v) => String(Math.round(v))}
         color={colors.emerald}
       />
 

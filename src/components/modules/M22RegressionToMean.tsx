@@ -15,7 +15,7 @@ export default function M22RegressionToMean() {
 
   const data = useMemo(() => {
     const trueMeans = [];
-    for (let i = 0; i < nUnits; i++) {
+    for (let i = 0; i < Math.round(nUnits); i++) {
       trueMeans.push(50 + (sR(i * 17 + 3) - 0.5) * 30);
     }
 
@@ -25,7 +25,7 @@ export default function M22RegressionToMean() {
 
     // Find bottom 20%
     const sortedIndices = m1.map((v, i) => ({ v, i })).sort((a, b) => a.v - b.v);
-    const bottomCount = Math.max(2, Math.floor(nUnits * 0.2));
+    const bottomCount = Math.max(2, Math.floor(Math.round(nUnits) * 0.2));
     const bottomIndices = new Set(sortedIndices.slice(0, bottomCount).map((d) => d.i));
 
     const bottomM1Avg =
@@ -180,6 +180,7 @@ export default function M22RegressionToMean() {
         max={50}
         step={1}
         onChange={setNUnits}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
       <Sl

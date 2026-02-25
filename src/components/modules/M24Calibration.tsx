@@ -31,7 +31,7 @@ export default function M24Calibration() {
       sR(i * 53 + 456) < calibrate(p, calType, strength) ? 1 : 0,
     );
 
-    const binWidth = 1 / nBins;
+    const binWidth = 1 / Math.round(nBins);
     const bins: {
       lo: number;
       hi: number;
@@ -40,12 +40,12 @@ export default function M24Calibration() {
       count: number;
       gap: number;
     }[] = [];
-    for (let b = 0; b < nBins; b++) {
+    for (let b = 0; b < Math.round(nBins); b++) {
       const lo = b * binWidth;
       const hi = (b + 1) * binWidth;
       const items: { p: number; y: number }[] = [];
       predictions.forEach((p, i) => {
-        if (p >= lo && (b === nBins - 1 ? p <= hi : p < hi)) {
+        if (p >= lo && (b === Math.round(nBins) - 1 ? p <= hi : p < hi)) {
           items.push({ p, y: outcomes[i] });
         }
       });
@@ -242,13 +242,18 @@ export default function M24Calibration() {
         max={20}
         step={1}
         onChange={setNBins}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
 
       <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
         Reliability Diagram
       </div>
-      <ChartBox h={H} tooltipLookup={tooltipLookup}>
+      <ChartBox
+        h={H}
+        tooltipLookup={tooltipLookup}
+        label="Reliability diagram showing predicted vs actual probability calibration"
+      >
         {/* Grid */}
         {[0, 0.25, 0.5, 0.75, 1.0].map((v) => (
           <g key={v}>

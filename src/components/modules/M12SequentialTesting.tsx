@@ -17,20 +17,24 @@ export default function M12SequentialTesting() {
 
   const data = useMemo(() => {
     // Compute boundaries
-    const bounds = method === 'obf' ? obfBounds(nLooks, 0.05) : pocockBounds(nLooks, 0.05);
+    const bounds =
+      method === 'obf'
+        ? obfBounds(Math.round(nLooks), 0.05)
+        : pocockBounds(Math.round(nLooks), 0.05);
 
     // Generate test statistic path
     const noises: number[] = [];
     const zPath: number[] = [];
     let cumNoise = 0;
-    let stoppedAt = nLooks;
+    let stoppedAt = Math.round(nLooks);
     let crossed: 'upper' | 'lower' | null = null;
 
-    for (let k = 1; k <= nLooks; k++) {
+    for (let k = 1; k <= Math.round(nLooks); k++) {
       const noise = (sR(seed * 100 + k * 41) - 0.5) * 1.2;
       noises.push(noise);
       cumNoise += noise;
-      const zk = trueEffect * Math.sqrt((k * maxN) / (nLooks * 10000)) + cumNoise / Math.sqrt(k);
+      const zk =
+        trueEffect * Math.sqrt((k * maxN) / (Math.round(nLooks) * 10000)) + cumNoise / Math.sqrt(k);
       zPath.push(zk);
 
       if (crossed === null) {
@@ -47,10 +51,10 @@ export default function M12SequentialTesting() {
     // Cumulative alpha spent up to current stage
     let cumAlpha = 0;
     for (let k = 1; k <= stoppedAt; k++) {
-      cumAlpha = alphaSpend(k, nLooks, 0.05, method === 'obf' ? 'obf' : 'pocock');
+      cumAlpha = alphaSpend(k, Math.round(nLooks), 0.05, method === 'obf' ? 'obf' : 'pocock');
     }
 
-    const earlyStop = stoppedAt < nLooks;
+    const earlyStop = stoppedAt < Math.round(nLooks);
     const currentBound = bounds[stoppedAt - 1];
 
     return { bounds, zPath, stoppedAt, crossed, cumAlpha, earlyStop, currentBound };
@@ -64,21 +68,22 @@ export default function M12SequentialTesting() {
     pt = 24,
     pb = 36;
   const cw = W - pl - pr;
-  const ch = H - pt - pb;
+  const ch = useMemo(() => H - pt - pb, []);
+  const yMin = useMemo(() => -4, []);
 
   // Y-axis range: -4 to 4
-  const yMin = -4,
-    yMax = 4;
-  const toX = (stage: number) => pl + ((stage - 1) / (nLooks - 1)) * cw;
+  const yMax = 4;
+  const toX = (stage: number) => pl + ((stage - 1) / (Math.round(nLooks) - 1)) * cw;
   const toY = (z: number) => pt + ((yMax - z) / (yMax - yMin)) * ch;
 
   // Build upper boundary stepped path
   const buildBoundaryPath = (bounds: number[], sign: number) => {
     let d = '';
-    for (let k = 0; k < nLooks; k++) {
+    for (let k = 0; k < Math.round(nLooks); k++) {
       const bVal = sign * bounds[k];
-      const x0 = k === 0 ? pl : pl + ((k - 0.5) / (nLooks - 1)) * cw;
-      const x1 = k === nLooks - 1 ? pl + cw : pl + ((k + 0.5) / (nLooks - 1)) * cw;
+      const x0 = k === 0 ? pl : pl + ((k - 0.5) / (Math.round(nLooks) - 1)) * cw;
+      const x1 =
+        k === Math.round(nLooks) - 1 ? pl + cw : pl + ((k + 0.5) / (Math.round(nLooks) - 1)) * cw;
       const y = toY(bVal);
       d += (k === 0 ? 'M' : 'L') + x0.toFixed(1) + ',' + y.toFixed(1);
       d += 'L' + x1.toFixed(1) + ',' + y.toFixed(1);
@@ -98,14 +103,15 @@ export default function M12SequentialTesting() {
     // Across the top
     d += 'L' + (pl + cw) + ',' + pt;
     // Down to upper boundary at last stage
-    const lastBound = data.bounds[nLooks - 1];
-    const xLast = nLooks === 1 ? pl : pl + cw;
+    const lastBound = data.bounds[Math.round(nLooks) - 1];
+    const xLast = Math.round(nLooks) === 1 ? pl : pl + cw;
     d += 'L' + xLast + ',' + toY(lastBound).toFixed(1);
     // Trace upper boundary path backwards
-    for (let k = nLooks - 1; k >= 0; k--) {
+    for (let k = Math.round(nLooks) - 1; k >= 0; k--) {
       const bVal = data.bounds[k];
-      const x1 = k === nLooks - 1 ? pl + cw : pl + ((k + 0.5) / (nLooks - 1)) * cw;
-      const x0 = k === 0 ? pl : pl + ((k - 0.5) / (nLooks - 1)) * cw;
+      const x1 =
+        k === Math.round(nLooks) - 1 ? pl + cw : pl + ((k + 0.5) / (Math.round(nLooks) - 1)) * cw;
+      const x0 = k === 0 ? pl : pl + ((k - 0.5) / (Math.round(nLooks) - 1)) * cw;
       const y = toY(bVal);
       d += 'L' + x1.toFixed(1) + ',' + y.toFixed(1);
       d += 'L' + x0.toFixed(1) + ',' + y.toFixed(1);
@@ -121,14 +127,15 @@ export default function M12SequentialTesting() {
     // Across bottom
     d += 'L' + (pl + cw) + ',' + (pt + ch);
     // Up to lower boundary at last stage
-    const lastBound = -data.bounds[nLooks - 1];
-    const xLast = nLooks === 1 ? pl : pl + cw;
+    const lastBound = -data.bounds[Math.round(nLooks) - 1];
+    const xLast = Math.round(nLooks) === 1 ? pl : pl + cw;
     d += 'L' + xLast + ',' + toY(lastBound).toFixed(1);
     // Trace lower boundary backwards
-    for (let k = nLooks - 1; k >= 0; k--) {
+    for (let k = Math.round(nLooks) - 1; k >= 0; k--) {
       const bVal = -data.bounds[k];
-      const x1 = k === nLooks - 1 ? pl + cw : pl + ((k + 0.5) / (nLooks - 1)) * cw;
-      const x0 = k === 0 ? pl : pl + ((k - 0.5) / (nLooks - 1)) * cw;
+      const x1 =
+        k === Math.round(nLooks) - 1 ? pl + cw : pl + ((k + 0.5) / (Math.round(nLooks) - 1)) * cw;
+      const x0 = k === 0 ? pl : pl + ((k - 0.5) / (Math.round(nLooks) - 1)) * cw;
       const y = toY(bVal);
       d += 'L' + x1.toFixed(1) + ',' + y.toFixed(1);
       d += 'L' + x0.toFixed(1) + ',' + y.toFixed(1);
@@ -141,7 +148,7 @@ export default function M12SequentialTesting() {
   const buildZPath = () => {
     let d = '';
     for (let k = 0; k < data.stoppedAt; k++) {
-      const x = nLooks === 1 ? pl : toX(k + 1);
+      const x = Math.round(nLooks) === 1 ? pl : toX(k + 1);
       const y = toY(data.zPath[k]);
       d += (k === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
     }
@@ -149,7 +156,7 @@ export default function M12SequentialTesting() {
   };
 
   // Crossing point coordinates
-  const crossX = data.crossed ? (nLooks === 1 ? pl : toX(data.stoppedAt)) : undefined;
+  const crossX = data.crossed ? (Math.round(nLooks) === 1 ? pl : toX(data.stoppedAt)) : undefined;
   const crossY = data.crossed ? toY(data.zPath[data.stoppedAt - 1]) : undefined;
   const crossColor =
     data.crossed === 'upper' ? colors.emerald : data.crossed === 'lower' ? colors.red : undefined;
@@ -164,12 +171,13 @@ export default function M12SequentialTesting() {
     (vbX: number) => {
       if (vbX < pl || vbX > pl + cw) return null;
       // Convert vbX to nearest stage (1-indexed)
-      const stageFloat = nLooks === 1 ? 1 : 1 + ((vbX - pl) / cw) * (nLooks - 1);
+      const stageFloat =
+        Math.round(nLooks) === 1 ? 1 : 1 + ((vbX - pl) / cw) * (Math.round(nLooks) - 1);
       const stage = Math.max(1, Math.min(data.stoppedAt, Math.round(stageFloat)));
       const z = data.zPath[stage - 1];
       if (z === undefined) return null;
       const bound = data.bounds[stage - 1];
-      const sx = nLooks === 1 ? pl : pl + ((stage - 1) / (nLooks - 1)) * cw;
+      const sx = Math.round(nLooks) === 1 ? pl : pl + ((stage - 1) / (Math.round(nLooks) - 1)) * cw;
       const sy = pt + ((yMax - z) / (yMax - yMin)) * ch;
       return {
         x: sx,
@@ -182,7 +190,7 @@ export default function M12SequentialTesting() {
         markers: [{ y: sy, color: colors.indigo }],
       };
     },
-    [data.zPath, data.bounds, data.stoppedAt, nLooks, cw],
+    [data.zPath, data.bounds, data.stoppedAt, nLooks, cw, ch, yMin],
   );
 
   return (
@@ -240,7 +248,7 @@ export default function M12SequentialTesting() {
           return (
             <circle
               key={'dot-' + k}
-              cx={nLooks === 1 ? pl : toX(k + 1)}
+              cx={Math.round(nLooks) === 1 ? pl : toX(k + 1)}
               cy={toY(z)}
               r={3.5}
               fill={colors.indigo}
@@ -276,10 +284,10 @@ export default function M12SequentialTesting() {
         ))}
 
         {/* X-axis labels (stage numbers) */}
-        {Array.from({ length: nLooks }, (_, k) => (
+        {Array.from({ length: Math.round(nLooks) }, (_, k) => (
           <text
             key={'xtick-' + k}
-            x={nLooks === 1 ? pl : toX(k + 1)}
+            x={Math.round(nLooks) === 1 ? pl : toX(k + 1)}
             y={H - pb + 14}
             fill={sv.text}
             fontSize={9}
@@ -309,10 +317,20 @@ export default function M12SequentialTesting() {
         </text>
 
         {/* Boundary labels */}
-        <text x={pl + cw + 2} y={toY(data.bounds[nLooks - 1]) + 3} fill={sv.text} fontSize={8}>
+        <text
+          x={pl + cw + 2}
+          y={toY(data.bounds[Math.round(nLooks) - 1]) + 3}
+          fill={sv.text}
+          fontSize={8}
+        >
           +z
         </text>
-        <text x={pl + cw + 2} y={toY(-data.bounds[nLooks - 1]) + 3} fill={sv.text} fontSize={8}>
+        <text
+          x={pl + cw + 2}
+          y={toY(-data.bounds[Math.round(nLooks) - 1]) + 3}
+          fill={sv.text}
+          fontSize={8}
+        >
           -z
         </text>
 
@@ -337,7 +355,7 @@ export default function M12SequentialTesting() {
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox
           label="Current Stage"
-          value={data.stoppedAt + ' / ' + nLooks}
+          value={data.stoppedAt + ' / ' + Math.round(nLooks)}
           color={colors.indigo}
         />
         <StatBox label="Cumulative Alpha" value={data.cumAlpha.toFixed(4)} color={colors.amber} />
@@ -366,6 +384,7 @@ export default function M12SequentialTesting() {
         max={10}
         step={1}
         onChange={setNLooks}
+        fmt={(v) => String(Math.round(v))}
         color={colors.emerald}
       />
       <Sl

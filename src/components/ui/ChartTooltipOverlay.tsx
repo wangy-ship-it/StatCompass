@@ -17,7 +17,7 @@ export default function ChartTooltipOverlay({ tip, h, w }: ChartTooltipOverlayPr
   const boxH = padY * 2 + lines.length * lineH;
 
   const boxX = x + 12 + boxW > (w || 600) ? x - boxW - 12 : x + 12;
-  const boxY = Math.max(4, Math.min((tip.y || 40) - boxH / 2, (h || 260) - boxH - 4));
+  const boxY = Math.max(4, Math.min((tip.y ?? 40) - boxH / 2, (h ?? 260) - boxH - 4));
 
   return (
     <g className="pointer-events-none">

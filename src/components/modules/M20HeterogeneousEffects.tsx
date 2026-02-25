@@ -15,7 +15,7 @@ export default function M20HeterogeneousEffects() {
 
   const data = useMemo(() => {
     const subgroups = [];
-    for (let i = 0; i < nGroups; i++) {
+    for (let i = 0; i < Math.round(nGroups); i++) {
       const effect = overallATE + heterogeneity * ((sR(i * 47 + 123) - 0.5) * 4);
       const se = 0.3 + sR(i * 31 + 456) * 0.2;
       const ciLo = effect - 1.96 * se;
@@ -23,12 +23,17 @@ export default function M20HeterogeneousEffects() {
       subgroups.push({ effect, se, ciLo, ciHi });
     }
 
-    // Cochran's Q statistic
+    // Inverse-variance weighted mean (proper center for Cochran's Q)
+    const totalW = subgroups.reduce((sum, sg) => sum + 1 / (sg.se * sg.se), 0);
+    const weightedMean =
+      subgroups.reduce((sum, sg) => sum + sg.effect / (sg.se * sg.se), 0) / totalW;
+
+    // Cochran's Q statistic (centered on weighted mean, not slider value)
     const Q = subgroups.reduce((sum, sg) => {
-      return sum + Math.pow(sg.effect - overallATE, 2) / Math.pow(sg.se, 2);
+      return sum + Math.pow(sg.effect - weightedMean, 2) / Math.pow(sg.se, 2);
     }, 0);
 
-    const df = nGroups - 1;
+    const df = Math.round(nGroups) - 1;
 
     // I-squared
     const iSquared = df > 0 && Q > 0 ? Math.max(0, ((Q - df) / Q) * 100) : 0;
@@ -82,9 +87,9 @@ export default function M20HeterogeneousEffects() {
   const toX = (v: number) => pl + ((v - xMin) / (xMax - xMin)) * cw;
 
   // Row layout: subgroups + 1 gap + diamond row
-  const totalRows = nGroups + 1;
+  const totalRows = Math.round(nGroups) + 1;
   const rowH = ch / (totalRows + 0.5);
-  const toY = (row: number) => pt + (row + 0.5) * rowH;
+  const toY = useCallback((row: number) => pt + (row + 0.5) * rowH, [rowH]);
 
   // Alternating colors for subgroups
   const subColor = (i: number) => (i % 2 === 0 ? colors.indigo : colors.emerald);
@@ -107,11 +112,11 @@ export default function M20HeterogeneousEffects() {
       });
       if (xVal >= data.pooledCILo && xVal <= data.pooledCIHi) {
         lines.push({ label: 'Overall', value: overallATE.toFixed(2), color: colors.amber });
-        markers.push({ y: toY(nGroups), color: colors.amber });
+        markers.push({ y: toY(Math.round(nGroups)), color: colors.amber });
       }
       return { x: svgX, y: pt + ch / 2, lines, markers };
     },
-    [data, overallATE, nGroups, xMin, xMax, pl, pr, W, cw, pt, ch],
+    [data, overallATE, nGroups, xMin, xMax, pl, pr, W, cw, pt, ch, toY],
   );
 
   return (
@@ -236,9 +241,9 @@ export default function M20HeterogeneousEffects() {
         {/* Separator line before pooled estimate */}
         <line
           x1={pl}
-          y1={toY(nGroups - 1) + rowH * 0.5}
+          y1={toY(Math.round(nGroups) - 1) + rowH * 0.5}
           x2={pl + cw}
-          y2={toY(nGroups - 1) + rowH * 0.5}
+          y2={toY(Math.round(nGroups) - 1) + rowH * 0.5}
           stroke={sv.axis}
           strokeWidth={0.8}
           strokeDasharray="2,2"
@@ -247,7 +252,7 @@ export default function M20HeterogeneousEffects() {
 
         {/* Pooled overall diamond */}
         {(() => {
-          const dY = toY(nGroups);
+          const dY = toY(Math.round(nGroups));
           const dXCenter = toX(overallATE);
           const dXLo = toX(data.pooledCILo);
           const dXHi = toX(data.pooledCIHi);
@@ -391,13 +396,13 @@ export default function M20HeterogeneousEffects() {
       />
 
       <div className="flex gap-2 mb-4 flex-wrap">
-        <PillBtn on={nGroups === 3} onClick={() => setNGroups(3)}>
+        <PillBtn on={Math.round(nGroups) === 3} onClick={() => setNGroups(3)}>
           3 Subgroups
         </PillBtn>
-        <PillBtn on={nGroups === 5} onClick={() => setNGroups(5)}>
+        <PillBtn on={Math.round(nGroups) === 5} onClick={() => setNGroups(5)}>
           5 Subgroups
         </PillBtn>
-        <PillBtn on={nGroups === 8} onClick={() => setNGroups(8)}>
+        <PillBtn on={Math.round(nGroups) === 8} onClick={() => setNGroups(8)}>
           8 Subgroups
         </PillBtn>
       </div>

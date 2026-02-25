@@ -46,10 +46,10 @@ export default function M28CrossValidation() {
 
     for (let d = 1; d <= 15; d++) {
       // k-fold cross-validation
-      const folds = kFoldSplit(n, kFolds, seed);
+      const folds = kFoldSplit(n, Math.round(kFolds), seed);
       const foldErrors: number[] = [];
 
-      for (let f = 0; f < kFolds; f++) {
+      for (let f = 0; f < Math.round(kFolds); f++) {
         const { train, test } = folds[f];
         const trainXFold = train.map((idx) => xs[idx]);
         const trainYFold = train.map((idx) => ys[idx]);
@@ -66,8 +66,11 @@ export default function M28CrossValidation() {
         foldErrors.push(mse);
       }
 
-      const meanCV = foldErrors.reduce((a, b) => a + b, 0) / kFolds;
-      const stdCV = Math.sqrt(foldErrors.reduce((a, b) => a + (b - meanCV) ** 2, 0) / kFolds);
+      const kR = Math.round(kFolds);
+      const meanCV = foldErrors.reduce((a, b) => a + b, 0) / kR;
+      const stdCV = Math.sqrt(
+        foldErrors.reduce((a, b) => a + (b - meanCV) ** 2, 0) / Math.max(1, kR - 1),
+      );
       cvErrors.push(meanCV);
       cvStds.push(stdCV);
 
@@ -102,15 +105,15 @@ export default function M28CrossValidation() {
     }
 
     // Per-fold errors for the current complexity
-    const currentFolds = kFoldSplit(n, kFolds, seed);
+    const currentFolds = kFoldSplit(n, Math.round(kFolds), seed);
     const currentFoldErrors: number[] = [];
-    for (let f = 0; f < kFolds; f++) {
+    for (let f = 0; f < Math.round(kFolds); f++) {
       const { train, test } = currentFolds[f];
       const trainXFold = train.map((idx) => xs[idx]);
       const trainYFold = train.map((idx) => ys[idx]);
       const testXFold = test.map((idx) => xs[idx]);
       const testYFold = test.map((idx) => ys[idx]);
-      const coeffs = polyFit(trainXFold, trainYFold, complexity);
+      const coeffs = polyFit(trainXFold, trainYFold, Math.round(complexity));
       let mse = 0;
       for (let j = 0; j < testXFold.length; j++) {
         const pred = polyEval(coeffs, testXFold[j]);
@@ -130,8 +133,8 @@ export default function M28CrossValidation() {
     };
   }, [kFolds, complexity, seed]);
 
-  // Current complexity index (0-based)
-  const ci = complexity - 1;
+  // Current complexity index (0-based, rounded to prevent NaN from fractional animated values)
+  const ci = Math.max(0, Math.min(14, Math.round(complexity) - 1));
   const meanCVCurrent = data.cvErrors[ci];
   const stdCVCurrent = data.cvStds[ci];
   const trainErrCurrent = data.trainErrors[ci];
@@ -143,9 +146,12 @@ export default function M28CrossValidation() {
     pr1 = 60,
     pt1 = 16,
     pb1 = 12;
-  const rowH = Math.min(22, (H1 - pt1 - pb1) / Math.max(kFolds, 1));
-  const rowGap = Math.max(2, (H1 - pt1 - pb1 - rowH * kFolds) / Math.max(kFolds - 1, 1));
-  const segW = (W - pl1 - pr1) / kFolds;
+  const rowH = Math.min(22, (H1 - pt1 - pb1) / Math.max(Math.round(kFolds), 1));
+  const rowGap = Math.max(
+    2,
+    (H1 - pt1 - pb1 - rowH * Math.round(kFolds)) / Math.max(Math.round(kFolds) - 1, 1),
+  );
+  const segW = (W - pl1 - pr1) / Math.round(kFolds);
   const segGap = 2;
 
   // ── Visual 2: CV error curve ──
@@ -243,7 +249,7 @@ export default function M28CrossValidation() {
         label="K-fold cross-validation diagram showing how data is split into training and test folds across iterations"
       >
         {/* Fold rows */}
-        {Array.from({ length: kFolds }, (_, f) => {
+        {Array.from({ length: Math.round(kFolds) }, (_, f) => {
           const y = pt1 + f * (rowH + rowGap);
           return (
             <g key={'fold-' + f}>
@@ -252,7 +258,7 @@ export default function M28CrossValidation() {
                 Fold {f + 1}
               </text>
               {/* Segments */}
-              {Array.from({ length: kFolds }, (_, s) => {
+              {Array.from({ length: Math.round(kFolds) }, (_, s) => {
                 const isTest = s === f;
                 return (
                   <rect
@@ -472,7 +478,7 @@ export default function M28CrossValidation() {
         max={20}
         step={1}
         onChange={setKFolds}
-        fmt={(v) => String(v)}
+        fmt={(v) => String(Math.round(v))}
         color={colors.amber}
       />
       <Sl
@@ -482,7 +488,7 @@ export default function M28CrossValidation() {
         max={15}
         step={1}
         onChange={setComplexity}
-        fmt={(v) => String(v)}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
 

@@ -19,7 +19,7 @@ export default function M16MultipleTesting() {
     const pValues = [];
     const isTrue: boolean[] = [];
 
-    for (let i = 0; i < nTests; i++) {
+    for (let i = 0; i < Math.round(nTests); i++) {
       const hasEffect = i < trueEffects;
       isTrue.push(hasEffect);
       if (hasEffect) {
@@ -35,14 +35,14 @@ export default function M16MultipleTesting() {
     let bhThresholds: { rank: number; threshold: number; p: number; idx: number }[] | null = null;
 
     if (correction === 'bonferroni') {
-      threshold = bonferroni(alpha, nTests);
+      threshold = bonferroni(alpha, Math.round(nTests));
       significant = pValues.map((pv) => pv < threshold);
     } else if (correction === 'bh') {
       const bh = benjaminiHochberg(pValues, alpha);
       significant = bh.results;
       bhThresholds = bh.sortedPValues.map((sp, k) => ({
         rank: k + 1,
-        threshold: ((k + 1) / nTests) * alpha,
+        threshold: ((k + 1) / Math.round(nTests)) * alpha,
         p: sp.p,
         idx: sp.i,
       }));
@@ -148,15 +148,17 @@ export default function M16MultipleTesting() {
         max={50}
         step={1}
         onChange={setNTests}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
       <Sl
         label="True Effects"
         value={trueEffects}
         min={0}
-        max={Math.min(10, nTests)}
+        max={Math.min(10, Math.round(nTests))}
         step={1}
         onChange={setTrueEffects}
+        fmt={(v) => String(Math.round(v))}
         color={colors.emerald}
       />
 
@@ -235,7 +237,7 @@ export default function M16MultipleTesting() {
               fontWeight="600"
             >
               {correction === 'bonferroni'
-                ? 'Bonferroni: α/' + nTests + ' = ' + data.threshold.toFixed(4)
+                ? 'Bonferroni: α/' + Math.round(nTests) + ' = ' + data.threshold.toFixed(4)
                 : 'Significance threshold: α = ' + alpha}
             </text>
           </>
@@ -246,7 +248,7 @@ export default function M16MultipleTesting() {
           (() => {
             let bhPath = '';
             for (let k = 0; k < sorted.length; k++) {
-              const thr = -Math.log10(((k + 1) / nTests) * alpha);
+              const thr = -Math.log10(((k + 1) / Math.round(nTests)) * alpha);
               const x0 = pl + (k / sorted.length) * (W - pl - pr);
               const x1 = pl + ((k + 1) / sorted.length) * (W - pl - pr);
               bhPath += (k === 0 ? 'M' : 'L') + x0 + ',' + toY(thr) + 'L' + x1 + ',' + toY(thr);
@@ -262,7 +264,7 @@ export default function M16MultipleTesting() {
                 />
                 <text
                   x={pl + 4}
-                  y={toY(-Math.log10(alpha / nTests)) - 6}
+                  y={toY(-Math.log10(alpha / Math.round(nTests))) - 6}
                   fill={colors.amber}
                   fontSize={9}
                   fontWeight="600"

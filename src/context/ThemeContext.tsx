@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  type ReactNode,
+} from 'react';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -20,7 +27,7 @@ function getInitial(): ThemeMode {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(getInitial);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     if (mode === 'dark') {
       root.classList.add('dark');

@@ -31,7 +31,7 @@ export default function M26FeatureImportance() {
   const baseValue = 0.35;
 
   const data = useMemo(() => {
-    const features = featureDefs.slice(0, nFeatures);
+    const features = featureDefs.slice(0, Math.round(nFeatures));
     const nPts = 20;
 
     const allContribs = Array.from({ length: nPts }, (_, i) =>
@@ -51,7 +51,7 @@ export default function M26FeatureImportance() {
       .sort((a, b) => b.importance - a.importance);
 
     // Individual waterfall for selected data point
-    const ind = [...(allContribs[dataPoint - 1] || allContribs[0])].sort(
+    const ind = [...(allContribs[Math.round(dataPoint) - 1] || allContribs[0])].sort(
       (a, b) => Math.abs(b.value) - Math.abs(a.value),
     );
 
@@ -191,6 +191,7 @@ export default function M26FeatureImportance() {
         max={12}
         step={1}
         onChange={setNFeatures}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
       {view === 'individual' && (
@@ -201,12 +202,16 @@ export default function M26FeatureImportance() {
           max={20}
           step={1}
           onChange={setDataPoint}
-          fmt={(v) => 'Customer #' + v}
+          fmt={(v) => 'Customer #' + Math.round(v)}
           color={colors.amber}
         />
       )}
 
-      <ChartBox h={H} tooltipLookup={tooltipLookup}>
+      <ChartBox
+        h={H}
+        tooltipLookup={tooltipLookup}
+        label="Feature importance ranking with permutation importance scores"
+      >
         {view === 'global' ? (
           <>
             {data.global.map((g, i) => {
@@ -368,7 +373,7 @@ export default function M26FeatureImportance() {
             color={data.prediction > 0.5 ? colors.emerald : colors.red}
           />
         )}
-        <StatBox label="Features Used" value={nFeatures} color={sv.textFaint} />
+        <StatBox label="Features Used" value={Math.round(nFeatures)} color={sv.textFaint} />
       </div>
 
       <QA

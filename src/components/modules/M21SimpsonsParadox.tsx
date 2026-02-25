@@ -235,7 +235,7 @@ export default function M21SimpsonsParadox() {
           max={90}
           step={5}
           onChange={setSegRatio}
-          fmt={(v) => v + '% easy / ' + (100 - v) + '% hard'}
+          fmt={(v) => Math.round(v) + '% easy / ' + (100 - Math.round(v)) + '% hard'}
           color={sv.textFaint}
         />
         <div />
@@ -246,7 +246,7 @@ export default function M21SimpsonsParadox() {
           max={95}
           step={1}
           onChange={setSeg1RateA}
-          fmt={(v) => v + '%'}
+          fmt={(v) => Math.round(v) + '%'}
           color={colors.indigo}
         />
         <Sl
@@ -256,7 +256,7 @@ export default function M21SimpsonsParadox() {
           max={95}
           step={1}
           onChange={setSeg1RateB}
-          fmt={(v) => v + '%'}
+          fmt={(v) => Math.round(v) + '%'}
           color={colors.emerald}
         />
         <Sl
@@ -266,7 +266,7 @@ export default function M21SimpsonsParadox() {
           max={80}
           step={1}
           onChange={setSeg2RateA}
-          fmt={(v) => v + '%'}
+          fmt={(v) => Math.round(v) + '%'}
           color={colors.indigo}
         />
         <Sl
@@ -276,7 +276,7 @@ export default function M21SimpsonsParadox() {
           max={80}
           step={1}
           onChange={setSeg2RateB}
-          fmt={(v) => v + '%'}
+          fmt={(v) => Math.round(v) + '%'}
           color={colors.emerald}
         />
       </div>
@@ -440,7 +440,7 @@ export default function M21SimpsonsParadox() {
           fontSize={10}
           fontWeight="700"
         >
-          {seg1RateA + '%'}
+          {Math.round(seg1RateA) + '%'}
         </text>
         {aWinsSeg1 && (
           <text
@@ -480,7 +480,7 @@ export default function M21SimpsonsParadox() {
           fontSize={10}
           fontWeight="700"
         >
-          {seg1RateB + '%'}
+          {Math.round(seg1RateB) + '%'}
         </text>
         {!aWinsSeg1 && (
           <text
@@ -545,7 +545,7 @@ export default function M21SimpsonsParadox() {
           fontSize={10}
           fontWeight="700"
         >
-          {seg2RateA + '%'}
+          {Math.round(seg2RateA) + '%'}
         </text>
         {aWinsSeg2 && (
           <text
@@ -585,7 +585,7 @@ export default function M21SimpsonsParadox() {
           fontSize={10}
           fontWeight="700"
         >
-          {seg2RateB + '%'}
+          {Math.round(seg2RateB) + '%'}
         </text>
         {!aWinsSeg2 && (
           <text

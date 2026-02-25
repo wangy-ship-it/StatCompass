@@ -7,6 +7,7 @@ import {
   Suspense,
   type ComponentType,
   type LazyExoticComponent,
+  type RefObject,
 } from 'react';
 import Navigation, { allModules, sections } from './components/nav/Navigation';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -49,6 +50,11 @@ const modules: Record<string, LazyExoticComponent<ComponentType<ModuleProps>>> =
   m27: lazy(() => import('./components/modules/M27BiasVariance')),
   m28: lazy(() => import('./components/modules/M28CrossValidation')),
   m29: lazy(() => import('./components/modules/M29ModelDrift')),
+  m30: lazy(() => import('./components/modules/M30BayesianABTesting')),
+  m31: lazy(() => import('./components/modules/M31RatioMetrics')),
+  m32: lazy(() => import('./components/modules/M32MultiarmedBandits')),
+  m33: lazy(() => import('./components/modules/M33ClusterExperiments')),
+  m34: lazy(() => import('./components/modules/M34BootstrapPermutation')),
 };
 
 function getHashModule(): string {
@@ -59,7 +65,7 @@ function getHashModule(): string {
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center py-32">
-      <div className="text-[var(--svg-text-faint)] text-sm">Loading...</div>
+      <div className="text-[var(--svg-text-faint)] text-sm animate-pulse">Loading...</div>
     </div>
   );
 }
@@ -68,6 +74,7 @@ export default function App() {
   const [active, setActive] = useState(getHashModule);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const priorFocusRef = useRef<HTMLElement | null>(null) as RefObject<HTMLElement | null>;
   const Comp = modules[active];
 
   const [visited, setVisited] = useState<Set<string>>(() => {
@@ -98,9 +105,21 @@ export default function App() {
 
   const navigate = useCallback((id: string) => {
     window.location.hash = id;
-    setActive(id);
     window.scrollTo(0, 0);
   }, []);
+
+  // Issue 4: ESC to close mobile sidebar
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -109,9 +128,15 @@ export default function App() {
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen((o) => !o);
+        setSearchOpen((prev) => {
+          if (!prev) priorFocusRef.current = document.activeElement as HTMLElement;
+          return !prev;
+        });
         return;
       }
+
+      // Issue 3: guard arrow keys when search or sidebar is open
+      if (searchOpen || sidebarOpen) return;
 
       if (e.key === 'ArrowDown') {
         const idx = allModules.findIndex((m) => m.id === active);
@@ -130,7 +155,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, navigate]);
+  }, [active, navigate, searchOpen, sidebarOpen]);
 
   const activeIdx = allModules.findIndex((m) => m.id === active);
   const prevModule = activeIdx > 0 ? allModules[activeIdx - 1] : null;
@@ -155,7 +180,10 @@ export default function App() {
             navigate(id);
             setSearchOpen(false);
           }}
-          onClose={() => setSearchOpen(false)}
+          onClose={() => {
+            setSearchOpen(false);
+            requestAnimationFrame(() => priorFocusRef.current?.focus());
+          }}
         />
       )}
 
@@ -212,7 +240,10 @@ export default function App() {
           </button>
           <span className="text-sm font-medium text-[var(--svg-text)]">StatCompass</span>
           <button
-            onClick={() => setSearchOpen(true)}
+            onClick={() => {
+              priorFocusRef.current = document.activeElement as HTMLElement;
+              setSearchOpen(true);
+            }}
             className="ml-auto text-[var(--svg-text-faint)] hover:text-[var(--color-text-primary)] p-1 cursor-pointer"
             aria-label="Search modules"
           >

@@ -417,6 +417,107 @@ const concepts: ConceptEntry[] = [
     display: 'Model Drift & Monitoring',
     desc: 'When the relationship between features and target changes',
   },
+
+  // New modules (m30–m34)
+  {
+    term: 'Bayesian A/B testing',
+    moduleId: 'm30',
+    display: 'Bayesian A/B Testing',
+    desc: 'A/B testing using Bayesian posterior distributions instead of p-values',
+  },
+  {
+    term: 'credible interval',
+    moduleId: 'm30',
+    display: 'Bayesian A/B Testing',
+    desc: 'Bayesian analog of a confidence interval — range where the parameter likely lies',
+  },
+  {
+    term: 'expected loss',
+    moduleId: 'm30',
+    display: 'Bayesian A/B Testing',
+    desc: 'Expected cost of choosing the wrong variant in a Bayesian test',
+  },
+  {
+    term: 'ratio metric',
+    moduleId: 'm31',
+    display: 'Ratio Metrics & Delta Method',
+    desc: 'A metric defined as the ratio of two quantities (e.g., revenue per user)',
+  },
+  {
+    term: 'delta method',
+    moduleId: 'm31',
+    display: 'Ratio Metrics & Delta Method',
+    desc: 'Taylor expansion technique for computing variance of a function of random variables',
+  },
+  {
+    term: 'multi-armed bandit',
+    moduleId: 'm32',
+    display: 'Multi-Armed Bandits',
+    desc: 'Adaptive allocation algorithm that balances exploration and exploitation',
+  },
+  {
+    term: 'Thompson sampling',
+    moduleId: 'm32',
+    display: 'Multi-Armed Bandits',
+    desc: 'Bayesian bandit algorithm that samples from posterior distributions to select arms',
+  },
+  {
+    term: 'UCB1',
+    moduleId: 'm32',
+    display: 'Multi-Armed Bandits',
+    desc: 'Upper Confidence Bound algorithm for multi-armed bandits',
+    wordBoundary: true,
+  },
+  {
+    term: 'regret',
+    moduleId: 'm32',
+    display: 'Multi-Armed Bandits',
+    desc: 'Cumulative opportunity cost of not always choosing the optimal arm',
+    wordBoundary: true,
+  },
+  {
+    term: 'cluster randomization',
+    moduleId: 'm33',
+    display: 'Switchback & Cluster Experiments',
+    desc: 'Randomizing groups (clusters) rather than individuals to treatment',
+  },
+  {
+    term: 'intra-cluster correlation',
+    moduleId: 'm33',
+    display: 'Switchback & Cluster Experiments',
+    desc: 'Correlation between observations within the same cluster (ICC)',
+  },
+  {
+    term: 'design effect',
+    moduleId: 'm33',
+    display: 'Switchback & Cluster Experiments',
+    desc: 'Factor by which clustering inflates variance relative to individual randomization',
+  },
+  {
+    term: 'switchback experiment',
+    moduleId: 'm33',
+    display: 'Switchback & Cluster Experiments',
+    desc: 'Experiment where clusters alternate between treatment and control over time',
+  },
+  {
+    term: 'bootstrap',
+    moduleId: 'm34',
+    display: 'Bootstrap & Permutation Tests',
+    desc: 'Resampling with replacement to estimate the sampling distribution',
+    wordBoundary: true,
+  },
+  {
+    term: 'permutation test',
+    moduleId: 'm34',
+    display: 'Bootstrap & Permutation Tests',
+    desc: 'Non-parametric test that builds a null distribution by shuffling group labels',
+  },
+  {
+    term: 'resampling',
+    moduleId: 'm34',
+    display: 'Bootstrap & Permutation Tests',
+    desc: 'Statistical methods based on repeated sampling from the observed data',
+  },
 ];
 
 export default concepts;

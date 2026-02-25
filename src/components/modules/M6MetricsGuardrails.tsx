@@ -41,7 +41,7 @@ export default function M6MetricsGuardrails() {
     /* --- Guardrails --- */
     const guardrails: { index: number; observed: number; tripped: boolean }[] = [];
     let trippedCount = 0;
-    for (let i = 0; i < nGuardrails; i++) {
+    for (let i = 0; i < Math.round(nGuardrails); i++) {
       const observed = sR(i * 37 + 100 + seed * 73) * 4 - 2;
       const tripped = Math.abs(observed) > threshold;
       if (tripped) trippedCount++;
@@ -49,8 +49,8 @@ export default function M6MetricsGuardrails() {
     }
 
     /* --- Statistics --- */
-    const falseAlarmRate = 1 - Math.pow(1 - alpha, nGuardrails);
-    const bonferroniAlpha = alpha / nGuardrails;
+    const falseAlarmRate = 1 - Math.pow(1 - alpha, Math.round(nGuardrails));
+    const bonferroniAlpha = alpha / Math.round(nGuardrails);
 
     return {
       effectSize,
@@ -75,20 +75,20 @@ export default function M6MetricsGuardrails() {
     pr = 40,
     pt = 16,
     pb = 10;
-  const chartW = W - pl - pr;
+  const chartW = useMemo(() => W - pl - pr, []);
 
   /* --- Primary metric bar positioning --- */
   // Map percent values to x coordinates; center at 0, range roughly -6 to +6
   const xRange = 6;
-  const toX = (v: number) => pl + ((v + xRange) / (2 * xRange)) * chartW;
+  const toX = useCallback((v: number) => pl + ((v + xRange) / (2 * xRange)) * chartW, [chartW]);
   const centerX = toX(0);
 
   /* --- Primary metric row --- */
-  const primaryY = pt + 20;
+  const primaryY = useMemo(() => pt + 20, []);
   const barH = 18;
 
   /* --- Guardrail rows --- */
-  const guardrailStartY = primaryY + barH + 36;
+  const guardrailStartY = useMemo(() => primaryY + barH + 36, [primaryY]);
   const guardrailRowH = 34;
 
   const tooltipLookup = useCallback(
@@ -142,7 +142,7 @@ export default function M6MetricsGuardrails() {
         markers: [{ y: rowY + gBarH / 2, color: barColor }],
       };
     },
-    [data],
+    [data, chartW, guardrailStartY, primaryY, toX],
   );
 
   return (
@@ -413,7 +413,7 @@ export default function M6MetricsGuardrails() {
         />
         <StatBox
           label="Guardrails Tripped"
-          value={data.trippedCount + ' / ' + data.nGuardrails}
+          value={data.trippedCount + ' / ' + Math.round(data.nGuardrails)}
           color={data.trippedCount > 0 ? colors.red : colors.emerald}
         />
         <StatBox
@@ -456,6 +456,7 @@ export default function M6MetricsGuardrails() {
         max={5}
         step={1}
         onChange={setNGuardrails}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
 

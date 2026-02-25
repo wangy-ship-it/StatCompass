@@ -41,6 +41,11 @@ import M26 from '../M26FeatureImportance';
 import M27 from '../M27BiasVariance';
 import M28 from '../M28CrossValidation';
 import M29 from '../M29ModelDrift';
+import M30 from '../M30BayesianABTesting';
+import M31 from '../M31RatioMetrics';
+import M32 from '../M32MultiarmedBandits';
+import M33 from '../M33ClusterExperiments';
+import M34 from '../M34BootstrapPermutation';
 import Landing from '../Landing';
 
 const modules: [string, ComponentType][] = [
@@ -73,6 +78,11 @@ const modules: [string, ComponentType][] = [
   ['M27 – Bias-Variance Tradeoff', M27],
   ['M28 – Cross-Validation', M28],
   ['M29 – Model Drift', M29],
+  ['M30 – Bayesian A/B Testing', M30],
+  ['M31 – Ratio Metrics', M31],
+  ['M32 – Multi-Armed Bandits', M32],
+  ['M33 – Cluster Experiments', M33],
+  ['M34 – Bootstrap & Permutation', M34],
 ];
 
 describe('Module smoke tests', () => {
@@ -95,6 +105,6 @@ describe('Module smoke tests', () => {
     );
     expect(container.firstChild).toBeTruthy();
     expect(container.textContent).toContain('StatCompass');
-    expect(container.textContent).toContain('2 of 29');
+    expect(container.textContent).toContain('2 of 34');
   });
 });

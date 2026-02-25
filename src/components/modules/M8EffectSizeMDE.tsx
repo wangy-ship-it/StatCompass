@@ -326,7 +326,7 @@ export default function M8EffectSizeMDE() {
           textAnchor="end"
           fontWeight="600"
         >
-          {power + '% power'}
+          {Math.round(power) + '% power'}
         </text>
 
         {/* MDE vertical dashed line */}
@@ -419,7 +419,7 @@ export default function M8EffectSizeMDE() {
         max={99}
         step={1}
         onChange={setPower}
-        fmt={(v: number) => v + '%'}
+        fmt={(v: number) => Math.round(v) + '%'}
         color={colors.amber}
       />
 

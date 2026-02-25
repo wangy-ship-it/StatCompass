@@ -63,6 +63,18 @@ describe('useModuleParams', () => {
     expect(window.location.hash).toContain('show=1');
   });
 
+  it('re-parses params on hashchange', () => {
+    const { result } = renderHook(() => useModuleParams({ alpha: 0.05, n: 100 }));
+    expect(result.current[0].alpha).toBe(0.05);
+
+    act(() => {
+      window.location.hash = '#m1?alpha=0.1&n=500';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(result.current[0].alpha).toBe(0.1);
+    expect(result.current[0].n).toBe(500);
+  });
+
   it('parses string params', () => {
     window.location.hash = '#m4?method=bayesian';
     const { result } = renderHook(() => useModuleParams({ method: 'frequentist' }));

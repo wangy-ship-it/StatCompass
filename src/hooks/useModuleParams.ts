@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 type ParamValue = number | string | boolean;
 
@@ -25,25 +25,32 @@ export default function useModuleParams<T extends Record<string, ParamValue>>(
 
   const [params, setParams] = useState<T>(parseHash);
 
+  // Issue 9: sync slider params on browser back/forward
+  useEffect(() => {
+    const onHash = () => setParams(parseHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [parseHash]);
+
   const set = useCallback(
     (key: keyof T & string, value: T[keyof T & string]) => {
-      setParams((prev) => {
-        const next = { ...prev, [key]: value };
-        const hash = window.location.hash;
-        const moduleId = hash.replace('#', '').split('?')[0];
-        const searchParams = new URLSearchParams();
-        for (const [k, v] of Object.entries(next)) {
-          if (v !== defaults[k]) {
-            searchParams.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
-          }
+      setParams((prev) => ({ ...prev, [key]: value }));
+      // Sync URL synchronously but outside the setState updater to keep it pure.
+      const hash = window.location.hash;
+      const moduleId = hash.replace('#', '').split('?')[0];
+      const searchParams = new URLSearchParams();
+      const current = parseHash();
+      const merged = { ...current, [key]: value };
+      for (const [k, v] of Object.entries(merged)) {
+        if (v !== defaults[k]) {
+          searchParams.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
         }
-        const qs = searchParams.toString();
-        const newHash = qs ? moduleId + '?' + qs : moduleId;
-        window.history.replaceState(null, '', '#' + newHash);
-        return next;
-      });
+      }
+      const qs = searchParams.toString();
+      const newHash = qs ? moduleId + '?' + qs : moduleId;
+      window.history.replaceState(null, '', '#' + newHash);
     },
-    [defaults],
+    [defaults, parseHash],
   );
 
   return [params, set];

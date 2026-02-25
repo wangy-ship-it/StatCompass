@@ -20,15 +20,15 @@ export default function M11AATesting() {
     let falsePositives = 0;
 
     // Generate uniform p-values (A/A test: both groups identical)
-    for (let i = 0; i < nSims; i++) {
+    for (let i = 0; i < Math.round(nSims); i++) {
       const pValue = sR(seed * 1000 + i * 71 + 200);
       const binIdx = Math.min(Math.floor(pValue / binWidth), nBins - 1);
       bins[binIdx]++;
       if (pValue < alpha) falsePositives++;
     }
 
-    const expectedPerBin = nSims / nBins;
-    const observedFPR = falsePositives / nSims;
+    const expectedPerBin = Math.round(nSims) / nBins;
+    const observedFPR = falsePositives / Math.round(nSims);
 
     // Chi-square uniformity test
     let chiSq = 0;
@@ -49,7 +49,7 @@ export default function M11AATesting() {
     pt = 20,
     pb = 36;
   const nBins = 20;
-  const binWidth = 1 / nBins;
+  const binWidth = useMemo(() => 1 / nBins, []);
   const maxCount = Math.max(...data.bins, data.expectedPerBin * 1.5);
   const barGap = 2;
   const totalBarArea = W - pl - pr;
@@ -82,7 +82,7 @@ export default function M11AATesting() {
         markers: [{ y: cy, color: isBelow ? colors.red : colors.indigo }],
       };
     },
-    [data.bins, alpha, barW, barGap, maxCount],
+    [data.bins, alpha, barW, barGap, maxCount, binWidth],
   );
 
   return (

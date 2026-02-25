@@ -72,7 +72,10 @@ export default function M18PracticalSignificance() {
   const ciHiX = toX(data.ciHi);
   const effectX = toX(data.effectFrac);
 
-  const quadrantColors = [colors.emerald, colors.amber, colors.indigo, colors.red];
+  const quadrantColors = useMemo(
+    () => [colors.emerald, colors.amber, colors.indigo, colors.red],
+    [],
+  );
   const quadrantLabels = [
     'Significant & Practical',
     'Significant but Trivial',

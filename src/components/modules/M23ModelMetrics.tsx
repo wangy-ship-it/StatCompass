@@ -176,6 +176,7 @@ export default function M23ModelMetrics() {
             h={RH}
             className="bg-app-surface rounded-2xl p-6 ring-1 ring-[var(--color-border-subtle)]"
             tooltipLookup={rocTooltipLookup}
+            label="Confusion matrix and ROC curve showing model classification performance"
           >
             <defs>
               <linearGradient id="m23-roc-fill" x1="0" y1="0" x2="0" y2="1">

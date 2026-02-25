@@ -115,7 +115,11 @@ export default function M1TypeErrors() {
         sensitive and it beeps at toast; too lenient and it misses a fire.
       </Desc>
 
-      <ChartBox h={d.H} tooltipLookup={tooltipLookup}>
+      <ChartBox
+        h={d.H}
+        tooltipLookup={tooltipLookup}
+        label="Type I and Type II error regions under null and alternative distributions"
+      >
         <defs>
           <linearGradient id="grad-alpha" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.35" />
@@ -234,6 +238,7 @@ export default function M1TypeErrors() {
         max={200}
         step={1}
         onChange={setSs}
+        fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
 

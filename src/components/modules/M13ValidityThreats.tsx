@@ -128,8 +128,11 @@ export default function M13ValidityThreats() {
   const liftMin = Math.min(...allLifts, 0, TRUE_LIFT) - 0.2;
   const liftMax = Math.max(...allLifts, 0, TRUE_LIFT) + 0.2;
 
-  const toX2 = (m: number) => pl2 + (m / 100) * plotW;
-  const toY2 = (l: number) => pt2 + plotH - ((l - liftMin) / (liftMax - liftMin)) * plotH;
+  const toX2 = useCallback((m: number) => pl2 + (m / 100) * plotW, [plotW]);
+  const toY2 = useCallback(
+    (l: number) => pt2 + plotH - ((l - liftMin) / (liftMax - liftMin)) * plotH,
+    [plotH, liftMin, liftMax],
+  );
 
   // Build SVG path for the curve
   const curvePath = useMemo(() => {
@@ -138,7 +141,7 @@ export default function M13ValidityThreats() {
         (cp, i) => (i === 0 ? 'M' : 'L') + toX2(cp.m).toFixed(1) + ',' + toY2(cp.lift).toFixed(1),
       )
       .join(' ');
-  }, [curvePoints, liftMin, liftMax]);
+  }, [curvePoints, toX2, toY2]);
 
   // Current dot position
   const dotX = toX2(mag);
@@ -242,7 +245,7 @@ export default function M13ValidityThreats() {
         onChange={(v) => {
           if (!isClean) setMag(v);
         }}
-        fmt={(v) => (isClean ? '— (no effect)' : v + '%')}
+        fmt={(v) => (isClean ? '— (no effect)' : Math.round(v) + '%')}
         color={isClean ? sv.textFaint : curveColor}
       />
 

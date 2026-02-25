@@ -66,12 +66,12 @@ export default function Landing({
           StatCompass
         </h1>
         <p className="text-[15px] text-[var(--svg-text)] leading-[1.7] max-w-[600px]">
-          29 interactive modules covering experiment design, analysis, and interpretation. Each one
+          34 interactive modules covering experiment design, analysis, and interpretation. Each one
           turns a complex statistical concept into a visual you can share in a meeting.
         </p>
         {visitedCount > 0 && (
           <div className="mt-3 text-[13px] text-[var(--svg-text-faint)] flex items-center gap-2">
-            <span>{visitedCount} of 29 modules explored</span>
+            <span>{visitedCount} of 34 modules explored</span>
             <button
               onClick={resetVisited}
               className="text-[11px] text-[var(--svg-text-faint)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors"
