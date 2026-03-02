@@ -17,7 +17,7 @@ export default function M18PracticalSignificance() {
     const effectFrac = effect / 100;
     const mweFrac = mwe / 100;
     const baseRate = 0.1;
-    const se = Math.sqrt((2 * baseRate * (1 - baseRate)) / sampleSize);
+    const se = Math.sqrt((2 * baseRate * (1 - baseRate)) / Math.max(sampleSize, 1));
     const z = effectFrac / se;
     const pValue = 2 * (1 - nCDF(Math.abs(z), 0, 1));
     const significant = pValue < 0.05;

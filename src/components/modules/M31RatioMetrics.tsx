@@ -415,7 +415,7 @@ export default function M31RatioMetrics() {
         value={noiseLevel}
         min={10}
         max={100}
-        step={5}
+        step={1}
         onChange={setNoiseLevel}
         fmt={(v: number) => v.toFixed(0) + '%'}
         color={colors.amber}

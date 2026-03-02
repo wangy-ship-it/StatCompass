@@ -188,7 +188,7 @@ export default function M22RegressionToMean() {
         value={noise}
         min={0.05}
         max={1}
-        step={0.05}
+        step={0.01}
         onChange={setNoise}
         fmt={(v) => (v <= 0.3 ? 'Low' : v <= 0.6 ? 'Medium' : 'High')}
         color={colors.amber}

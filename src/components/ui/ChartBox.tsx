@@ -35,7 +35,7 @@ export default function ChartBox({
         style={{
           maxHeight: h || 260,
           display: 'block',
-          overflow: 'visible',
+          overflow: 'hidden',
           touchAction: tooltipLookup ? 'none' : undefined,
         }}
         role="img"

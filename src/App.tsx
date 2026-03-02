@@ -55,6 +55,10 @@ const modules: Record<string, LazyExoticComponent<ComponentType<ModuleProps>>> =
   m32: lazy(() => import('./components/modules/M32MultiarmedBandits')),
   m33: lazy(() => import('./components/modules/M33ClusterExperiments')),
   m34: lazy(() => import('./components/modules/M34BootstrapPermutation')),
+  m35: lazy(() => import('./components/modules/M35SRMDiagnostics')),
+  m36: lazy(() => import('./components/modules/M36CentralLimitTheorem')),
+  m37: lazy(() => import('./components/modules/M37DifferenceInDifferences')),
+  m38: lazy(() => import('./components/modules/M38MetricSensitivity')),
 };
 
 function getHashModule(): string {

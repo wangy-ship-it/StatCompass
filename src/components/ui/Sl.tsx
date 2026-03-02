@@ -16,6 +16,7 @@ export default function Sl({ label, value, min, max, step, onChange, fmt, color 
   const c = color || colors.indigo;
   const [localVal, setLocalVal] = useState(value);
   const active = useRef(false);
+  const settleRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Sync prop → local state only when user is not actively interacting.
   // This prevents spring-animated values from fighting the user's drag.
@@ -25,15 +26,29 @@ export default function Sl({ label, value, min, max, step, onChange, fmt, color 
     }
   }, [value]);
 
+  // Cleanup settle timer on unmount
+  useEffect(
+    () => () => {
+      if (settleRef.current) clearTimeout(settleRef.current);
+    },
+    [],
+  );
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = +e.target.value;
     active.current = true;
+    clearTimeout(settleRef.current);
     setLocalVal(v);
     onChange(v);
   };
 
   const handleEnd = () => {
-    active.current = false;
+    // Don't deactivate immediately — the spring animation needs time to
+    // catch up. Otherwise the slider snaps backwards on mouse release.
+    clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      active.current = false;
+    }, 500);
   };
 
   const displayValue = fmt ? fmt(localVal) : String(localVal);

@@ -263,7 +263,7 @@ export default function M11AATesting() {
         value={nSims}
         min={100}
         max={2000}
-        step={100}
+        step={20}
         onChange={setNSims}
         color={colors.indigo}
       />
@@ -272,7 +272,7 @@ export default function M11AATesting() {
         value={alpha}
         min={0.01}
         max={0.2}
-        step={0.01}
+        step={0.002}
         onChange={setAlpha}
         fmt={(v) => v.toFixed(2)}
         color={colors.amber}

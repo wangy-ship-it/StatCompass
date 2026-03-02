@@ -518,6 +518,113 @@ const concepts: ConceptEntry[] = [
     display: 'Bootstrap & Permutation Tests',
     desc: 'Statistical methods based on repeated sampling from the observed data',
   },
+
+  // New modules (m35–m38)
+  {
+    term: 'SRM',
+    moduleId: 'm35',
+    display: 'SRM Diagnostics',
+    desc: 'Sample Ratio Mismatch — detecting when observed traffic split deviates from expected',
+    wordBoundary: true,
+  },
+  {
+    term: 'sample ratio mismatch',
+    moduleId: 'm35',
+    display: 'SRM Diagnostics',
+    desc: 'When the observed traffic split does not match the expected allocation ratio',
+  },
+  {
+    term: 'central limit theorem',
+    moduleId: 'm36',
+    display: 'Central Limit Theorem',
+    desc: 'Sample means converge to a normal distribution as sample size grows',
+  },
+  {
+    term: 'CLT',
+    moduleId: 'm36',
+    display: 'Central Limit Theorem',
+    desc: 'Central Limit Theorem — foundation of normal-based inference',
+    wordBoundary: true,
+  },
+  {
+    term: 'difference-in-differences',
+    moduleId: 'm37',
+    display: 'Difference-in-Differences',
+    desc: 'Causal inference method comparing changes over time between treatment and control',
+  },
+  {
+    term: 'DiD',
+    moduleId: 'm37',
+    display: 'Difference-in-Differences',
+    desc: 'Difference-in-Differences — comparing changes over time between groups',
+    wordBoundary: true,
+  },
+  {
+    term: 'parallel trends',
+    moduleId: 'm37',
+    display: 'Difference-in-Differences',
+    desc: 'Key assumption that treatment and control groups would follow the same trend without intervention',
+  },
+  {
+    term: 'metric sensitivity',
+    moduleId: 'm38',
+    display: 'Metric Sensitivity Analysis',
+    desc: 'How different metric definitions respond to outliers and distribution shape',
+  },
+  {
+    term: 'trimmed mean',
+    moduleId: 'm38',
+    display: 'Metric Sensitivity Analysis',
+    desc: 'Mean computed after removing the most extreme observations',
+  },
+  {
+    term: 'winsorized mean',
+    moduleId: 'm38',
+    display: 'Metric Sensitivity Analysis',
+    desc: 'Mean computed after capping extreme values at a given percentile',
+  },
+
+  // Additional cross-links for existing modules
+  {
+    term: 'guardrail',
+    moduleId: 'm6',
+    display: 'Metrics & Guardrails',
+    desc: 'A safety metric that should not degrade during an experiment',
+    wordBoundary: true,
+  },
+  {
+    term: 'primacy effect',
+    moduleId: 'm14',
+    display: 'Novelty & Time Effects',
+    desc: 'When users stick with the familiar option due to habit rather than preference',
+  },
+  {
+    term: 'stratified sampling',
+    moduleId: 'm9',
+    display: 'Variance Reduction',
+    desc: 'Dividing the population into strata to reduce variance in estimates',
+  },
+  {
+    term: 'ICC',
+    moduleId: 'm33',
+    display: 'Switchback & Cluster Experiments',
+    desc: 'Intra-Cluster Correlation — correlation between observations within the same cluster',
+    wordBoundary: true,
+  },
+  {
+    term: 'lift',
+    moduleId: 'm17',
+    display: 'Lift Calculator',
+    desc: 'The relative improvement of treatment over control',
+    wordBoundary: true,
+  },
+  {
+    term: 'Holm',
+    moduleId: 'm16',
+    display: 'Multiple Testing',
+    desc: 'Step-down procedure for controlling family-wise error rate, more powerful than Bonferroni',
+    wordBoundary: true,
+  },
 ];
 
 export default concepts;

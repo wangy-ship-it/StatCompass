@@ -434,7 +434,7 @@ export default function M6MetricsGuardrails() {
         value={effectSize}
         min={0.5}
         max={5}
-        step={0.1}
+        step={0.02}
         onChange={setEffectSize}
         fmt={(v: number) => v.toFixed(1) + '%'}
         color={colors.emerald}
@@ -444,7 +444,7 @@ export default function M6MetricsGuardrails() {
         value={threshold}
         min={0.5}
         max={5}
-        step={0.1}
+        step={0.02}
         onChange={setThreshold}
         fmt={(v: number) => '\u00B1' + v.toFixed(1) + '%'}
         color={colors.amber}

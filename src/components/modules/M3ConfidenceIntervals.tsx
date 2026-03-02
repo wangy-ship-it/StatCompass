@@ -143,7 +143,7 @@ export default function M3ConfidenceIntervals() {
         value={cl}
         min={0.5}
         max={0.99}
-        step={0.01}
+        step={0.005}
         onChange={setCl}
         fmt={(v: number) => Math.round(v * 100) + '%'}
         color={colors.indigo}

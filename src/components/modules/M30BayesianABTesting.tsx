@@ -51,13 +51,17 @@ export default function M30BayesianABTesting() {
     // P(B > A)
     const pBbeatsA = probBBeatsA(ctrlA, ctrlB, treatA, treatB);
 
-    // Expected loss
-    const expLoss = expectedLossOfB(ctrlA, ctrlB, treatA, treatB);
+    // Expected loss of choosing B (when A might be better)
+    const expLossB = expectedLossOfB(ctrlA, ctrlB, treatA, treatB);
+    // Expected loss of choosing A (when B might be better)
+    const expLossA = expectedLossOfB(treatA, treatB, ctrlA, ctrlB);
+    const expLoss = expLossB;
 
-    // Decision
+    // Decision using loss threshold
+    const lossThreshold = 0.0005; // 0.05 percentage points
     let decision: string;
-    if (pBbeatsA > 0.95) decision = 'Ship B';
-    else if (pBbeatsA < 0.05) decision = 'Ship A';
+    if (expLossB < lossThreshold && pBbeatsA > 0.5) decision = 'Ship B';
+    else if (expLossA < lossThreshold && pBbeatsA < 0.5) decision = 'Ship A';
     else decision = 'Continue';
 
     // Build PDF curves for Chart 1
@@ -194,6 +198,9 @@ export default function M30BayesianABTesting() {
       treatCI,
       pBbeatsA,
       expLoss,
+      expLossA,
+      expLossB,
+      lossThreshold,
       decision,
       W1,
       H1,
@@ -487,20 +494,14 @@ export default function M30BayesianABTesting() {
           color={data.pBbeatsA >= 0.5 ? colors.emerald : colors.red}
         />
         <StatBox
-          label="Expected Loss"
-          value={(data.expLoss * 100).toFixed(3) + '%'}
+          label="Loss (ship B)"
+          value={(data.expLossB * 100).toFixed(3) + '%'}
           color={colors.amber}
         />
         <StatBox
-          label="Credible Interval"
-          value={
-            '[' +
-            (data.treatCI[0] * 100).toFixed(1) +
-            '%, ' +
-            (data.treatCI[1] * 100).toFixed(1) +
-            '%]'
-          }
-          color={colors.indigo}
+          label="Loss (ship A)"
+          value={(data.expLossA * 100).toFixed(3) + '%'}
+          color={colors.amber}
         />
         <StatBox
           label="Decision"
@@ -513,6 +514,55 @@ export default function M30BayesianABTesting() {
                 : colors.amber
           }
         />
+      </div>
+
+      {/* Decision Rule Visualization */}
+      <div className="bg-app-surface rounded-xl p-4 mb-5 ring-1 ring-[var(--color-border-subtle)]">
+        <div className="text-[11px] text-[var(--svg-text-faint)] uppercase tracking-widest mb-3 text-center font-semibold">
+          Expected Loss Decision Rule
+        </div>
+        <div className="flex items-center justify-center gap-6">
+          <div className="text-center">
+            <div className="text-[10px] text-[var(--svg-text-faint)] mb-1">Ship A</div>
+            <div
+              className="text-lg font-bold"
+              style={{
+                color:
+                  data.expLossA < data.lossThreshold && data.pBbeatsA < 0.5
+                    ? colors.emerald
+                    : sv.textFaint,
+              }}
+            >
+              {(data.expLossA * 100).toFixed(3) + '%'}
+            </div>
+            <div className="text-[9px] text-[var(--svg-text-faint)]">
+              {data.expLossA < data.lossThreshold ? '< threshold' : '> threshold'}
+            </div>
+          </div>
+          <div className="text-[var(--svg-text-faint)] text-xl font-light">vs</div>
+          <div className="text-center">
+            <div className="text-[10px] text-[var(--svg-text-faint)] mb-1">Ship B</div>
+            <div
+              className="text-lg font-bold"
+              style={{
+                color:
+                  data.expLossB < data.lossThreshold && data.pBbeatsA > 0.5
+                    ? colors.emerald
+                    : sv.textFaint,
+              }}
+            >
+              {(data.expLossB * 100).toFixed(3) + '%'}
+            </div>
+            <div className="text-[9px] text-[var(--svg-text-faint)]">
+              {data.expLossB < data.lossThreshold ? '< threshold' : '> threshold'}
+            </div>
+          </div>
+        </div>
+        <div className="text-center mt-2 text-[10px] text-[var(--svg-text-faint)]">
+          {'Loss threshold: ' +
+            (data.lossThreshold * 100).toFixed(2) +
+            '% — ship when expected loss < threshold'}
+        </div>
       </div>
 
       {/* Prior presets */}

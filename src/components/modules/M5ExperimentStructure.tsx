@@ -122,7 +122,7 @@ export default function M5ExperimentStructure() {
         value={N}
         min={20}
         max={200}
-        step={10}
+        step={2}
         onChange={setN}
         fmt={(v: number) => Math.round(v) + ' users'}
       />
@@ -132,7 +132,7 @@ export default function M5ExperimentStructure() {
         value={split}
         min={10}
         max={90}
-        step={5}
+        step={1}
         onChange={setSplit}
         fmt={(v: number) => Math.round(v) + '% Control / ' + (100 - Math.round(v)) + '% Treatment'}
       />

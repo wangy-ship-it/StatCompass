@@ -4,6 +4,8 @@ import {
   useState,
   useEffect,
   useLayoutEffect,
+  useCallback,
+  useMemo,
   type ReactNode,
 } from 'react';
 
@@ -46,15 +48,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => MQ.removeEventListener('change', onChange);
   }, []);
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     setMode((m) => {
       const next: ThemeMode = m === 'dark' ? 'light' : 'dark';
       localStorage.setItem('sc-theme', next);
       return next;
     });
-  };
+  }, []);
 
-  return <ThemeContext.Provider value={{ mode, toggle }}>{children}</ThemeContext.Provider>;
+  const value = useMemo(() => ({ mode, toggle }), [mode, toggle]);
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {

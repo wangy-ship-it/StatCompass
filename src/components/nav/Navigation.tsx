@@ -23,6 +23,7 @@ const sections: NavSection[] = [
       { id: 'm2', label: 'P-Value & Significance' },
       { id: 'm3', label: 'Confidence Intervals' },
       { id: 'm4', label: 'Bayesian vs Frequentist' },
+      { id: 'm36', label: 'Central Limit Theorem' },
     ],
   },
   {
@@ -37,6 +38,7 @@ const sections: NavSection[] = [
       { id: 'm9', label: 'Variance Reduction (CUPED)' },
       { id: 'm10', label: 'Choosing the Right Test' },
       { id: 'm33', label: 'Switchback & Cluster Experiments' },
+      { id: 'm38', label: 'Metric Sensitivity Analysis' },
     ],
   },
   {
@@ -61,6 +63,8 @@ const sections: NavSection[] = [
       { id: 'm18', label: 'Practical vs Statistical Significance' },
       { id: 'm30', label: 'Bayesian A/B Testing' },
       { id: 'm31', label: 'Ratio Metrics & Delta Method' },
+      { id: 'm35', label: 'SRM Diagnostics' },
+      { id: 'm37', label: 'Difference-in-Differences' },
       { id: 'm34', label: 'Bootstrap & Permutation Tests' },
       { id: 'm32', label: 'Multi-Armed Bandits' },
     ],

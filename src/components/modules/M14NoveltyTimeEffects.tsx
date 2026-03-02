@@ -245,7 +245,7 @@ export default function M14NoveltyTimeEffects() {
         value={magnitude}
         min={1}
         max={30}
-        step={0.5}
+        step={0.1}
         onChange={setMagnitude}
         fmt={(v) => v.toFixed(1) + '%'}
         color={curveColor}
@@ -255,7 +255,7 @@ export default function M14NoveltyTimeEffects() {
         value={decayRate}
         min={0.05}
         max={1}
-        step={0.05}
+        step={0.01}
         onChange={setDecayRate}
         fmt={(v) => v.toFixed(2)}
         color={colors.amber}
@@ -265,7 +265,7 @@ export default function M14NoveltyTimeEffects() {
         value={window}
         min={1}
         max={12}
-        step={0.5}
+        step={0.1}
         onChange={setWindow}
         fmt={(v) => v.toFixed(1) + ' wk'}
         color={colors.red}

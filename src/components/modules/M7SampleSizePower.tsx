@@ -134,7 +134,7 @@ export default function M7SampleSizePower() {
         value={eff}
         min={0.05}
         max={1.5}
-        step={0.05}
+        step={0.01}
         onChange={setEff}
         fmt={(v: number) => v.toFixed(2)}
         color={colors.emerald}
@@ -144,7 +144,7 @@ export default function M7SampleSizePower() {
         value={alp}
         min={0.01}
         max={0.1}
-        step={0.005}
+        step={0.001}
         onChange={setAlp}
         fmt={(v: number) => 'α = ' + v.toFixed(3)}
         color={colors.red}

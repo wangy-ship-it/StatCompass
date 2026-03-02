@@ -41,6 +41,9 @@ export default function useBanditSim(
     step: 0,
   }));
 
+  // Stable reference for trueProbs to use in dependency arrays
+  const trueProbsKey = trueProbs.join(',');
+
   const runningRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -101,12 +104,16 @@ export default function useBanditSim(
       const newArms = prev.arms.map((a, i) =>
         i === arm ? { wins: a.wins + reward, trials: a.trials + 1 } : a,
       );
+      const newRewards = prev.rewards.slice();
+      newRewards.push(reward);
+      const newSelectedArms = prev.selectedArms.slice();
+      newSelectedArms.push(arm);
       return {
         ...prev,
         arms: newArms,
         totalTrials: prev.totalTrials + 1,
-        rewards: [...prev.rewards, reward],
-        selectedArms: [...prev.selectedArms, arm],
+        rewards: newRewards,
+        selectedArms: newSelectedArms,
         step: prev.step + 1,
       };
     });
@@ -160,7 +167,7 @@ export default function useBanditSim(
   // Reset when parameters change
   useEffect(() => {
     reset();
-  }, [nArms, algorithm, reset]);
+  }, [nArms, algorithm, trueProbsKey, reset]);
 
   return { state, start, pause, reset, stepOnce };
 }

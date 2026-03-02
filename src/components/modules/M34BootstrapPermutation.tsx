@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react';
-import { sR, sRNormal, bootstrapCI, permutationTest, zInv } from '../../utils/math';
+import { sR, sRNormal, bootstrapSample, permutationTest, zInv } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
@@ -76,7 +76,6 @@ export default function M34BootstrapPermutation() {
   const data = useMemo(() => {
     const groupA = gen(1000, n);
     const groupB = gen(2000, n).map((v) => v + 5);
-    const combined = [...groupA, ...groupB];
 
     // Parametric CI of mean difference
     const meanA = mean(groupA);
@@ -89,17 +88,17 @@ export default function M34BootstrapPermutation() {
     const paramLo = diffMean - z * seDiff;
     const paramHi = diffMean + z * seDiff;
 
-    // Bootstrap CI for mean difference
-    const bootResult = bootstrapCI(
-      combined,
-      (d) => {
-        const half = Math.floor(d.length / 2);
-        return mean(d.slice(half)) - mean(d.slice(0, half));
-      },
-      nBoot,
-      0.05,
-      42,
-    );
+    // Bootstrap CI for mean difference (resample each group independently)
+    const bootDist: number[] = [];
+    for (let b = 0; b < nBoot; b++) {
+      const sA = bootstrapSample(groupA, 42 + b * 13);
+      const sB = bootstrapSample(groupB, 42 + b * 13 + 7);
+      bootDist.push(mean(sB) - mean(sA));
+    }
+    bootDist.sort((a, b) => a - b);
+    const loIdx = Math.floor(0.025 * nBoot);
+    const hiIdx = Math.min(Math.floor(0.975 * nBoot), nBoot - 1);
+    const bootResult = { lo: bootDist[loIdx], hi: bootDist[hiIdx], dist: bootDist };
 
     // Permutation test for mean difference
     const permResult = permutationTest(groupA, groupB, (a, b) => mean(b) - mean(a), nBoot, 99);

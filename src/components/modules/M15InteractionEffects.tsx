@@ -48,7 +48,7 @@ export default function M15InteractionEffects() {
     [data.a, data.b, data.actualCombined],
   );
   const barColors = useMemo(() => [sv.textFaint, colors.indigo, colors.emerald, colors.amber], []);
-  const maxBar = Math.max(...barValues.map(Math.abs), Math.abs(data.expectedCombined)) * 1.3;
+  const maxBar = Math.max(...barValues.map(Math.abs), Math.abs(data.expectedCombined), 0.1) * 1.3;
   const barW = (W - pl - pr) / 5;
   const gap = barW * 0.3;
   const toY = (v: number) => H - pb - ((v + maxBar) / (2 * maxBar)) * (H - pt - pb);

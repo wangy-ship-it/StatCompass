@@ -183,7 +183,7 @@ export default function M25CumulativeGains() {
         value={modelQuality}
         min={0.5}
         max={0.95}
-        step={0.01}
+        step={0.005}
         onChange={setModelQuality}
         fmt={(v) => (v * 100).toFixed(0) + '%'}
         color={colors.indigo}
@@ -193,7 +193,7 @@ export default function M25CumulativeGains() {
         value={targetPct}
         min={5}
         max={100}
-        step={5}
+        step={1}
         onChange={setTargetPct}
         fmt={(v) => 'Top ' + Math.round(v) + '% of customers'}
         color={colors.amber}
@@ -203,7 +203,7 @@ export default function M25CumulativeGains() {
         value={baseRate}
         min={1}
         max={30}
-        step={1}
+        step={0.5}
         onChange={setBaseRate}
         fmt={(v) => Math.round(v) + '%'}
         color={colors.emerald}

@@ -43,16 +43,16 @@ export default function M21SimpsonsParadox() {
   const setSeg2RateA = (v: number) => set('seg2RateA', v);
   const setSeg2RateB = (v: number) => set('seg2RateB', v);
 
-  // Derive preset from current slider values
+  // Derive preset from current slider values (round to handle spring animation)
   const preset =
     (Object.keys(presets) as (keyof typeof presets)[]).find((k) => {
       const pr = presets[k];
       return (
-        pr.segRatio === segRatio &&
-        pr.seg1RateA === seg1RateA &&
-        pr.seg1RateB === seg1RateB &&
-        pr.seg2RateA === seg2RateA &&
-        pr.seg2RateB === seg2RateB
+        pr.segRatio === Math.round(segRatio as number) &&
+        pr.seg1RateA === Math.round(seg1RateA as number) &&
+        pr.seg1RateB === Math.round(seg1RateB as number) &&
+        pr.seg2RateA === Math.round(seg2RateA as number) &&
+        pr.seg2RateB === Math.round(seg2RateB as number)
       );
     }) || 'custom';
 

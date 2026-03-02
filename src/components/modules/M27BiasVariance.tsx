@@ -323,7 +323,7 @@ export default function M27BiasVariance() {
         value={noise}
         min={0.05}
         max={1}
-        step={0.05}
+        step={0.01}
         onChange={setNoise}
         fmt={(v) => v.toFixed(2)}
         color={sv.textFaint}

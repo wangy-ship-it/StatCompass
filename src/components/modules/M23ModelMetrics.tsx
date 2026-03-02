@@ -42,6 +42,25 @@ export default function M23ModelMetrics() {
     let auc = 0;
     for (let i = 1; i < roc.length; i++)
       auc += ((roc[i].fpr - roc[i - 1].fpr) * (roc[i].tpr + roc[i - 1].tpr)) / 2;
+    // PR curve: walk sorted points, track precision and recall
+    const pr: { recall: number; precision: number }[] = [];
+    let tpC2 = 0,
+      fpC2 = 0;
+    for (let k = 0; k < sortedPts.length; k++) {
+      if (sortedPts[k].act === 1) tpC2++;
+      else fpC2++;
+      if (k === sortedPts.length - 1 || sortedPts[k].sc !== sortedPts[k + 1].sc) {
+        const recall = tpC2 / nPos;
+        const precision = tpC2 / (tpC2 + fpC2);
+        pr.push({ recall, precision });
+      }
+    }
+    let prAuc = 0;
+    for (let i = 1; i < pr.length; i++)
+      prAuc += ((pr[i].recall - pr[i - 1].recall) * (pr[i].precision + pr[i - 1].precision)) / 2;
+    // Current threshold's precision/recall on the PR curve
+    const curPrec = prec;
+    const curRec = rec;
     return {
       tp,
       fp,
@@ -52,6 +71,10 @@ export default function M23ModelMetrics() {
       f1,
       roc,
       auc,
+      pr,
+      prAuc,
+      curPrec,
+      curRec,
       curTPR: pts.filter((p) => p.act === 1 && p.sc >= thr).length / 100,
       curFPR: pts.filter((p) => p.act === 0 && p.sc >= thr).length / 100,
     };
@@ -108,6 +131,51 @@ export default function M23ModelMetrics() {
     [data.roc, rpl, rpr, RW],
   );
 
+  // PR curve geometry
+  const prP = data.pr
+    .map((pt, i) => (i === 0 ? 'M' : 'L') + rToX(pt.recall) + ',' + rToY(pt.precision))
+    .join('');
+  const prFill =
+    prP.length > 0
+      ? prP +
+        'L' +
+        rToX(data.pr[data.pr.length - 1].recall) +
+        ',' +
+        rToY(0) +
+        'L' +
+        rToX(0) +
+        ',' +
+        rToY(0) +
+        'Z'
+      : '';
+
+  const prTooltipLookup = useCallback(
+    (vbX: number) => {
+      if (vbX < rpl || vbX > RW - rpr) return null;
+      const recall = (vbX - rpl) / (RW - rpl - rpr);
+      let best = null as { recall: number; precision: number } | null,
+        bestDist = Infinity;
+      for (const pt of data.pr) {
+        const d = Math.abs(pt.recall - recall);
+        if (d < bestDist) {
+          bestDist = d;
+          best = pt;
+        }
+      }
+      if (!best) return null;
+      return {
+        x: rToX(best.recall),
+        y: rToY(best.precision),
+        markers: [{ y: rToY(best.precision), color: colors.emerald }],
+        lines: [
+          { label: 'Recall', value: best.recall.toFixed(3), color: colors.emerald },
+          { label: 'Precision', value: best.precision.toFixed(3), color: colors.indigo },
+        ],
+      };
+    },
+    [data.pr, rpl, rpr, RW],
+  );
+
   return (
     <div>
       <Hdr sub="Model & Evaluate">Precision, Recall, F1 and ROC/AUC</Hdr>
@@ -125,7 +193,8 @@ export default function M23ModelMetrics() {
         />
         <StatBox label="Recall" value={Math.round(data.rec * 100) + '%'} color={colors.emerald} />
         <StatBox label="F1" value={data.f1.toFixed(3)} color={colors.indigo} />
-        <StatBox label="AUC" value={data.auc.toFixed(3)} color={colors.amber} />
+        <StatBox label="ROC-AUC" value={data.auc.toFixed(3)} color={colors.amber} />
+        <StatBox label="PR-AUC" value={data.prAuc.toFixed(3)} color={colors.emerald} />
       </div>
 
       <div className="flex gap-4 flex-wrap mb-5">
@@ -259,6 +328,84 @@ export default function M23ModelMetrics() {
             </text>
           </ChartBox>
         </div>
+      </div>
+
+      {/* PR Curve */}
+      <div className="mb-5">
+        <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
+          Precision-Recall Curve
+        </div>
+        <ChartBox
+          h={RH}
+          tooltipLookup={prTooltipLookup}
+          label="Precision-Recall curve showing tradeoff between precision and recall at different thresholds"
+        >
+          <defs>
+            <linearGradient id="m23-pr-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={colors.emerald} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={colors.emerald} stopOpacity="0.03" />
+            </linearGradient>
+          </defs>
+          {[0, 0.25, 0.5, 0.75, 1].map((v) => (
+            <g key={v}>
+              <line
+                x1={rToX(v)}
+                y1={rToY(0) + 2}
+                x2={rToX(v)}
+                y2={rToY(1)}
+                stroke={sv.grid}
+                strokeWidth={0.5}
+              />
+              <text x={rToX(v)} y={RH - rpb + 12} fill={sv.text} fontSize={8} textAnchor="middle">
+                {v}
+              </text>
+              <line
+                x1={rToX(0)}
+                y1={rToY(v)}
+                x2={rToX(1)}
+                y2={rToY(v)}
+                stroke={sv.grid}
+                strokeWidth={0.5}
+              />
+              <text x={rpl - 3} y={rToY(v) + 3} fill={sv.text} fontSize={8} textAnchor="end">
+                {v}
+              </text>
+            </g>
+          ))}
+          {prFill && <path d={prFill} fill="url(#m23-pr-fill)" />}
+          {prP && <path d={prP} fill="none" stroke={colors.emerald} strokeWidth={2.5} />}
+          <circle
+            cx={rToX(data.curRec)}
+            cy={rToY(data.curPrec)}
+            r={5}
+            fill={colors.amber}
+            stroke={sv.appBg}
+            strokeWidth={2}
+          />
+          <text x={RW / 2} y={RH - 4} fill={sv.text} fontSize={8} textAnchor="middle">
+            Recall
+          </text>
+          <text
+            x={6}
+            y={RH / 2}
+            fill={sv.text}
+            fontSize={8}
+            textAnchor="middle"
+            transform={'rotate(-90,6,' + RH / 2 + ')'}
+          >
+            Precision
+          </text>
+          <text
+            x={rToX(0.55)}
+            y={rToY(0.25)}
+            fill={colors.emerald}
+            fontSize={14}
+            fontWeight="800"
+            opacity={0.6}
+          >
+            {'PR-AUC = ' + data.prAuc.toFixed(2)}
+          </text>
+        </ChartBox>
       </div>
 
       <Sl

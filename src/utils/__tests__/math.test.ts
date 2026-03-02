@@ -732,3 +732,80 @@ describe('cumulativeRegret', () => {
     regret.forEach((r) => expect(r).toBeCloseTo(0, 10));
   });
 });
+
+// ── Edge case guards (fixes) ──
+
+describe('nPDF – edge case: s <= 0', () => {
+  it('returns 0 when s = 0', () => {
+    expect(nPDF(0, 0, 0)).toBe(0);
+    expect(nPDF(5, 3, 0)).toBe(0);
+  });
+
+  it('returns 0 when s < 0', () => {
+    expect(nPDF(0, 0, -1)).toBe(0);
+  });
+
+  it('still works normally for positive s', () => {
+    expect(nPDF(0, 0, 1)).toBeCloseTo(0.3989, 3);
+  });
+});
+
+describe('nCDF – edge case: s <= 0', () => {
+  it('returns step function when s = 0', () => {
+    expect(nCDF(1, 0, 0)).toBe(1); // x > m
+    expect(nCDF(-1, 0, 0)).toBe(0); // x < m
+    expect(nCDF(0, 0, 0)).toBe(1); // x === m
+  });
+
+  it('returns step function for non-zero mean', () => {
+    expect(nCDF(10, 5, 0)).toBe(1);
+    expect(nCDF(3, 5, 0)).toBe(0);
+  });
+
+  it('still works normally for positive s', () => {
+    expect(nCDF(0, 0, 1)).toBeCloseTo(0.5, 4);
+  });
+});
+
+describe('zInv – edge case: extreme alpha values', () => {
+  it('handles a = 0 without returning Infinity/NaN', () => {
+    const result = zInv(0);
+    expect(isFinite(result)).toBe(true);
+    expect(result).toBeGreaterThan(5); // very large z
+  });
+
+  it('handles a = 2 without returning NaN', () => {
+    const result = zInv(2);
+    expect(isFinite(result)).toBe(true);
+  });
+
+  it('handles a very close to 0', () => {
+    const result = zInv(0.001);
+    expect(isFinite(result)).toBe(true);
+    expect(result).toBeGreaterThan(3);
+  });
+
+  it('normal values still work', () => {
+    expect(zInv(0.05)).toBeCloseTo(1.96, 1);
+    expect(zInv(0.01)).toBeCloseTo(2.576, 1);
+  });
+});
+
+describe('effectiveN – edge case: rho = ±1', () => {
+  it('returns Infinity when rho = 1', () => {
+    expect(effectiveN(100, 1)).toBe(Infinity);
+  });
+
+  it('returns Infinity when rho = -1', () => {
+    expect(effectiveN(100, -1)).toBe(Infinity);
+  });
+
+  it('returns Infinity when |rho| > 1', () => {
+    expect(effectiveN(100, 1.5)).toBe(Infinity);
+  });
+
+  it('normal values still work', () => {
+    expect(effectiveN(1000, 0)).toBe(1000);
+    expect(effectiveN(1000, 0.8)).toBeGreaterThan(2000);
+  });
+});

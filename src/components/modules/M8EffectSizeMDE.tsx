@@ -397,7 +397,7 @@ export default function M8EffectSizeMDE() {
         value={baseline}
         min={1}
         max={30}
-        step={0.5}
+        step={0.1}
         onChange={setBaseline}
         fmt={(v: number) => v.toFixed(1) + '%'}
         color={colors.indigo}
@@ -417,7 +417,7 @@ export default function M8EffectSizeMDE() {
         value={power}
         min={60}
         max={99}
-        step={1}
+        step={0.5}
         onChange={setPower}
         fmt={(v: number) => Math.round(v) + '%'}
         color={colors.amber}

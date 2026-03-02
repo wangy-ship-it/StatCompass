@@ -71,7 +71,7 @@ export default function Landing({
         </p>
         {visitedCount > 0 && (
           <div className="mt-3 text-[13px] text-[var(--svg-text-faint)] flex items-center gap-2">
-            <span>{visitedCount} of 34 modules explored</span>
+            <span>{visitedCount} of 38 modules explored</span>
             <button
               onClick={resetVisited}
               className="text-[11px] text-[var(--svg-text-faint)] hover:text-[var(--color-text-primary)] cursor-pointer transition-colors"

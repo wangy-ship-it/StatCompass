@@ -1,9 +1,12 @@
 // ── Core statistical functions ──
 
-export const nPDF = (x: number, m: number, s: number): number =>
-  (1 / (s * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - m) / s, 2));
+export const nPDF = (x: number, m: number, s: number): number => {
+  if (s <= 0) return 0;
+  return (1 / (s * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - m) / s, 2));
+};
 
 export const nCDF = (x: number, m: number, s: number): number => {
+  if (s <= 0) return x >= m ? 1 : 0;
   const z = (x - m) / s;
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const p =
@@ -14,7 +17,7 @@ export const nCDF = (x: number, m: number, s: number): number => {
 };
 
 export const zInv = (a: number): number => {
-  const p = 1 - a / 2;
+  const p = Math.max(1e-15, Math.min(1 - 1e-15, 1 - a / 2));
   const A = [-39.69683, 220.9461, -275.9285, 138.3578, -30.6648, 2.506628];
   const B = [-54.4761, 161.5858, -155.699, 66.80131, -13.28068];
   const C = [-0.007784894, -0.3223965, -2.400758, -2.549733, 4.374664, 2.938164];
@@ -154,6 +157,30 @@ export const benjaminiHochberg = (pValues: number[], alpha: number): BHResult =>
   return { results, sortedPValues: indexed };
 };
 
+export interface HolmResult {
+  results: boolean[];
+  sortedPValues: { p: number; i: number; threshold: number }[];
+}
+
+export const holm = (pValues: number[], alpha: number): HolmResult => {
+  const n = pValues.length;
+  const indexed = pValues.map((p, i) => ({ p, i, threshold: 0 }));
+  indexed.sort((a, b) => a.p - b.p);
+
+  const results = new Array(n).fill(false) as boolean[];
+  let rejected = true;
+  for (let k = 0; k < n; k++) {
+    const threshold = alpha / (n - k);
+    indexed[k].threshold = threshold;
+    if (rejected && indexed[k].p <= threshold) {
+      results[indexed[k].i] = true;
+    } else {
+      rejected = false;
+    }
+  }
+  return { results, sortedPValues: indexed };
+};
+
 // ── M13: Beta distribution / Bayesian ──
 
 export const logGamma = (x: number): number => {
@@ -225,7 +252,11 @@ export const alphaSpend = (stage: number, total: number, alpha: number, method: 
 export const cupedVariance = (originalVar: number, rho: number): number =>
   originalVar * (1 - rho * rho);
 
-export const effectiveN = (n: number, rho: number): number => n / (1 - rho * rho);
+export const effectiveN = (n: number, rho: number): number => {
+  const r2 = rho * rho;
+  if (r2 >= 1) return Infinity;
+  return n / (1 - r2);
+};
 
 // ── M30: Bayesian A/B Testing ──
 

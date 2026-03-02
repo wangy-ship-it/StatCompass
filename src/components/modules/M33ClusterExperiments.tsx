@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react';
 import {
   nCDF,
   zInv,
+  sRNormal,
   designEffect,
   clusterAdjustedN,
   clusterAdjustedSE,
@@ -76,6 +77,22 @@ export default function M33ClusterExperiments() {
     const userN80 = userCurve.find((pt) => pt.pw >= 0.8);
     const clusterN80 = clusterCurve.find((pt) => pt.pw >= 0.8);
 
+    // Generate cluster means for scatter plot
+    const clusterMeans: { id: number; mean: number; treatment: boolean }[] = [];
+    for (let c = 0; c < Math.min(nc, 40); c++) {
+      const isTreat = c % 2 === 0;
+      const clusterEffect = isTreat ? effVal : 0;
+      // Cluster-level random effect (ICC determines between-cluster variance)
+      const clusterRE = sRNormal(c * 73 + 17) * Math.sqrt(iccVal);
+      // Mean of cluster = grand mean + treatment + cluster random effect + within-cluster noise/sqrt(cs)
+      const withinNoise = (sRNormal(c * 41 + 99) * Math.sqrt(1 - iccVal)) / Math.sqrt(cs);
+      clusterMeans.push({
+        id: c,
+        mean: 0.5 + clusterEffect + clusterRE + withinNoise,
+        treatment: isTreat,
+      });
+    }
+
     return {
       iccVal,
       effVal,
@@ -94,6 +111,7 @@ export default function M33ClusterExperiments() {
       maxTotalN,
       nc,
       cs,
+      clusterMeans,
     };
   }, [nClusters, clusterSize, icc, effectSize]);
 
@@ -462,6 +480,103 @@ export default function M33ClusterExperiments() {
         </text>
       </ChartBox>
 
+      {/* Chart 3: Cluster Means Scatter Plot */}
+      {(() => {
+        const S_W = 600,
+          S_H = 180,
+          spl = 48,
+          spr = 20,
+          spt = 20,
+          spb = 30;
+        const means = computed.clusterMeans;
+        const yMin = Math.min(...means.map((m) => m.mean)) - 0.1;
+        const yMax = Math.max(...means.map((m) => m.mean)) + 0.1;
+        const sToX = (idx: number) => spl + ((idx + 0.5) / means.length) * (S_W - spl - spr);
+        const sToY = (v: number) => S_H - spb - ((v - yMin) / (yMax - yMin)) * (S_H - spt - spb);
+        const treatMeans = means.filter((m) => m.treatment);
+        const ctrlMeans = means.filter((m) => !m.treatment);
+        const treatAvg =
+          treatMeans.length > 0
+            ? treatMeans.reduce((s, m) => s + m.mean, 0) / treatMeans.length
+            : 0;
+        const ctrlAvg =
+          ctrlMeans.length > 0 ? ctrlMeans.reduce((s, m) => s + m.mean, 0) / ctrlMeans.length : 0;
+        return (
+          <ChartBox
+            h={S_H}
+            label="Scatter plot of cluster-level means showing within-group and between-group variation"
+          >
+            {/* Grand mean lines */}
+            <line
+              x1={spl}
+              y1={sToY(treatAvg)}
+              x2={S_W - spr}
+              y2={sToY(treatAvg)}
+              stroke={colors.emerald}
+              strokeWidth={1.5}
+              strokeDasharray="6,4"
+            />
+            <line
+              x1={spl}
+              y1={sToY(ctrlAvg)}
+              x2={S_W - spr}
+              y2={sToY(ctrlAvg)}
+              stroke={colors.indigo}
+              strokeWidth={1.5}
+              strokeDasharray="6,4"
+            />
+            {/* Cluster points */}
+            {means.map((m, i) => (
+              <circle
+                key={m.id}
+                cx={sToX(i)}
+                cy={sToY(m.mean)}
+                r={5}
+                fill={m.treatment ? colors.emerald : colors.indigo}
+                opacity={0.7}
+              />
+            ))}
+            {/* Axis */}
+            <line x1={spl} y1={S_H - spb} x2={S_W - spr} y2={S_H - spb} stroke={sv.axis} />
+            <text x={S_W / 2} y={S_H - 4} fill={sv.textFaint} fontSize={9} textAnchor="middle">
+              Clusters (green = treatment, blue = control)
+            </text>
+            {/* Y labels */}
+            {[yMin, (yMin + yMax) / 2, yMax].map((v) => (
+              <text
+                key={v}
+                x={spl - 5}
+                y={sToY(v) + 3}
+                fill={sv.text}
+                fontSize={8}
+                textAnchor="end"
+              >
+                {v.toFixed(2)}
+              </text>
+            ))}
+            {/* Legend */}
+            <text
+              x={S_W - spr - 4}
+              y={sToY(treatAvg) - 4}
+              fill={colors.emerald}
+              fontSize={8}
+              textAnchor="end"
+            >
+              {'Treat avg: ' + treatAvg.toFixed(3)}
+            </text>
+            <text
+              x={S_W - spr - 4}
+              y={sToY(ctrlAvg) - 4}
+              fill={colors.indigo}
+              fontSize={8}
+              textAnchor="end"
+            >
+              {'Ctrl avg: ' + ctrlAvg.toFixed(3)}
+            </text>
+          </ChartBox>
+        );
+      })()}
+
       {/* StatBoxes */}
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox label="Design Effect" value={computed.deff.toFixed(1)} color={colors.indigo} />
@@ -488,7 +603,7 @@ export default function M33ClusterExperiments() {
         value={nClusters as number}
         min={4}
         max={100}
-        step={2}
+        step={1}
         onChange={setNClusters}
         color={colors.indigo}
       />
@@ -497,7 +612,7 @@ export default function M33ClusterExperiments() {
         value={clusterSize as number}
         min={10}
         max={500}
-        step={10}
+        step={2}
         onChange={setClusterSize}
         color={colors.emerald}
       />
@@ -506,7 +621,7 @@ export default function M33ClusterExperiments() {
         value={icc as number}
         min={0}
         max={50}
-        step={1}
+        step={0.5}
         onChange={setICC}
         fmt={(v: number) => (v / 100).toFixed(2)}
         color={colors.amber}
@@ -516,7 +631,7 @@ export default function M33ClusterExperiments() {
         value={effectSize as number}
         min={5}
         max={100}
-        step={5}
+        step={1}
         onChange={setEffectSize}
         fmt={(v: number) => (v / 100).toFixed(2)}
         color={colors.red}

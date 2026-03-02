@@ -121,20 +121,20 @@ export default function M1TypeErrors() {
         label="Type I and Type II error regions under null and alternative distributions"
       >
         <defs>
-          <linearGradient id="grad-alpha" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-alpha-m1" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.35" />
             <stop offset="100%" stopColor={colors.red} stopOpacity="0.04" />
           </linearGradient>
-          <linearGradient id="grad-beta" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-beta-m1" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.amber} stopOpacity="0.30" />
             <stop offset="100%" stopColor={colors.amber} stopOpacity="0.04" />
           </linearGradient>
-          <linearGradient id="grad-power" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-power-m1" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.emerald} stopOpacity="0.30" />
             <stop offset="100%" stopColor={colors.emerald} stopOpacity="0.04" />
           </linearGradient>
           <pattern
-            id="hatch-beta"
+            id="hatch-beta-m1"
             width="6"
             height="6"
             patternUnits="userSpaceOnUse"
@@ -151,10 +151,10 @@ export default function M1TypeErrors() {
             />
           </pattern>
         </defs>
-        <path d={d.ap} fill="url(#grad-alpha)" />
-        <path d={d.bp} fill="url(#grad-beta)" />
-        <path d={d.bp} fill="url(#hatch-beta)" />
-        <path d={d.pp} fill="url(#grad-power)" />
+        <path d={d.ap} fill="url(#grad-alpha-m1)" />
+        <path d={d.bp} fill="url(#grad-beta-m1)" />
+        <path d={d.bp} fill="url(#hatch-beta-m1)" />
+        <path d={d.pp} fill="url(#grad-power-m1)" />
         <path d={d.h0} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
         <path d={d.h1} fill="none" stroke={colors.emerald} strokeWidth={2.5} />
         <line
@@ -216,7 +216,7 @@ export default function M1TypeErrors() {
         value={alp}
         min={0.005}
         max={0.2}
-        step={0.005}
+        step={0.001}
         onChange={setAlp}
         fmt={(v: number) => v.toFixed(3)}
         color={colors.red}
@@ -226,7 +226,7 @@ export default function M1TypeErrors() {
         value={eff}
         min={0}
         max={5}
-        step={0.1}
+        step={0.02}
         onChange={setEff}
         fmt={(v: number) => v.toFixed(1)}
         color={colors.emerald}

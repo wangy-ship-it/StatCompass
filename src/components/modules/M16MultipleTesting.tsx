@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { sR, nCDF, bonferroni, benjaminiHochberg } from '../../utils/math';
+import { sR, nCDF, bonferroni, benjaminiHochberg, holm } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
 import { Hdr, Desc, ChartBox, StatBox, Sl, PillBtn, QA, TechNote, Insight } from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
@@ -19,8 +19,9 @@ export default function M16MultipleTesting() {
     const pValues = [];
     const isTrue: boolean[] = [];
 
+    const clampedTrueEffects = Math.min(Math.round(trueEffects), Math.round(nTests));
     for (let i = 0; i < Math.round(nTests); i++) {
-      const hasEffect = i < trueEffects;
+      const hasEffect = i < clampedTrueEffects;
       isTrue.push(hasEffect);
       if (hasEffect) {
         const z = 2.5 + (sR(i * 37 + seed * 71) - 0.5) * 2;
@@ -33,10 +34,20 @@ export default function M16MultipleTesting() {
     let threshold = alpha;
     let significant: boolean[];
     let bhThresholds: { rank: number; threshold: number; p: number; idx: number }[] | null = null;
+    let holmThresholds: { rank: number; threshold: number; p: number; idx: number }[] | null = null;
 
     if (correction === 'bonferroni') {
       threshold = bonferroni(alpha, Math.round(nTests));
       significant = pValues.map((pv) => pv < threshold);
+    } else if (correction === 'holm') {
+      const h = holm(pValues, alpha);
+      significant = h.results;
+      holmThresholds = h.sortedPValues.map((sp, k) => ({
+        rank: k + 1,
+        threshold: sp.threshold,
+        p: sp.p,
+        idx: sp.i,
+      }));
     } else if (correction === 'bh') {
       const bh = benjaminiHochberg(pValues, alpha);
       significant = bh.results;
@@ -57,7 +68,19 @@ export default function M16MultipleTesting() {
     const fwer = fp > 0 ? 1 : 0;
     const fdr = totalSig > 0 ? fp / totalSig : 0;
 
-    return { pValues, isTrue, significant, threshold, bhThresholds, tp, fp, fn, fwer, fdr };
+    return {
+      pValues,
+      isTrue,
+      significant,
+      threshold,
+      bhThresholds,
+      holmThresholds,
+      tp,
+      fp,
+      fn,
+      fwer,
+      fdr,
+    };
   }, [nTests, trueEffects, correction, seed]);
 
   // ── Sorted visualization data (sorted by p-value, smallest first) ──
@@ -169,6 +192,9 @@ export default function M16MultipleTesting() {
         <PillBtn on={correction === 'bonferroni'} onClick={() => setCorrection('bonferroni')}>
           Bonferroni
         </PillBtn>
+        <PillBtn on={correction === 'holm'} onClick={() => setCorrection('holm')}>
+          Holm
+        </PillBtn>
         <PillBtn on={correction === 'bh'} onClick={() => setCorrection('bh')}>
           BH-FDR
         </PillBtn>
@@ -217,8 +243,40 @@ export default function M16MultipleTesting() {
           </>
         )}
 
+        {/* Holm stepped threshold */}
+        {correction === 'holm' &&
+          (() => {
+            let holmPath = '';
+            for (let k = 0; k < sorted.length; k++) {
+              const thr = -Math.log10(alpha / (Math.round(nTests) - k));
+              const x0 = pl + (k / sorted.length) * (W - pl - pr);
+              const x1 = pl + ((k + 1) / sorted.length) * (W - pl - pr);
+              holmPath += (k === 0 ? 'M' : 'L') + x0 + ',' + toY(thr) + 'L' + x1 + ',' + toY(thr);
+            }
+            return (
+              <>
+                <path
+                  d={holmPath}
+                  fill="none"
+                  stroke={colors.amber}
+                  strokeWidth={2}
+                  strokeDasharray="6,3"
+                />
+                <text
+                  x={pl + 4}
+                  y={toY(-Math.log10(alpha / Math.round(nTests))) - 6}
+                  fill={colors.amber}
+                  fontSize={9}
+                  fontWeight="600"
+                >
+                  Holm stepped threshold
+                </text>
+              </>
+            );
+          })()}
+
         {/* Active threshold line */}
-        {correction !== 'bh' && (
+        {correction !== 'bh' && correction !== 'holm' && (
           <>
             <line
               x1={pl}

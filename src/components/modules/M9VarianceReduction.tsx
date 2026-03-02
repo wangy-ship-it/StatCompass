@@ -29,8 +29,10 @@ export default function M9VarianceReduction() {
     // Power curves
     const powerPoints: { n: number; powOrig: number; powAdj: number }[] = [];
     const nSteps = 50;
+    const nMin = 100;
+    const nMax = Math.max(nMin + 100, sampleSize * 2);
     for (let i = 0; i <= nSteps; i++) {
-      const n = 500 + (i / nSteps) * (sampleSize * 2 - 500);
+      const n = nMin + (i / nSteps) * (nMax - nMin);
       const seOrig = origSD * Math.sqrt(2 / n);
       const seAdj = adjSD * Math.sqrt(2 / n);
       const zOrig = effectFrac / seOrig - zAlpha;
@@ -84,8 +86,10 @@ export default function M9VarianceReduction() {
 
   // Power curve chart
   const H2 = 200;
-  const pToX = (n: number) =>
-    pl + ((n - 500) / (data.powerPoints[data.powerPoints.length - 1].n - 500)) * (W - pl - pr);
+  const ppFirst = data.powerPoints[0].n;
+  const ppLast = data.powerPoints[data.powerPoints.length - 1].n;
+  const ppRange = ppLast - ppFirst || 1;
+  const pToX = (n: number) => pl + ((n - ppFirst) / ppRange) * (W - pl - pr);
   const pToY = (p: number) => H2 - pb - p * (H2 - pt - pb);
   let powOrigPath = '',
     powAdjPath = '';
@@ -123,12 +127,14 @@ export default function M9VarianceReduction() {
   const tooltipPower = useCallback(
     (vbX: number) => {
       if (vbX < pl || vbX > W - pr) return null;
-      const ppLast = data.powerPoints[data.powerPoints.length - 1];
-      const nVal = 500 + ((vbX - pl) / (W - pl - pr)) * (ppLast.n - 500);
+      const ppFirst2 = data.powerPoints[0];
+      const ppLast2 = data.powerPoints[data.powerPoints.length - 1];
+      const ppRange2 = ppLast2.n - ppFirst2.n || 1;
+      const nVal = ppFirst2.n + ((vbX - pl) / (W - pl - pr)) * ppRange2;
       const closest = data.powerPoints.reduce((best, pt2) =>
         Math.abs(pt2.n - nVal) < Math.abs(best.n - nVal) ? pt2 : best,
       );
-      const sx = pl + ((closest.n - 500) / (ppLast.n - 500)) * (W - pl - pr);
+      const sx = pl + ((closest.n - ppFirst2.n) / ppRange2) * (W - pl - pr);
       const syO = H2 - pb - closest.powOrig * (H2 - pt - pb);
       const syA = H2 - pb - closest.powAdj * (H2 - pt - pb);
       return {

@@ -115,8 +115,10 @@ export default function M32MultiarmedBandits() {
       pb = 30;
     const steps = 200;
     let maxY = 0;
+    // Guard: during spring animation nArms may exceed state.arms.length
+    const safeNArms = Math.min(nArms, state.arms.length);
     const curves: { path: string; area: string; color: string }[] = [];
-    for (let arm = 0; arm < nArms; arm++) {
+    for (let arm = 0; arm < safeNArms; arm++) {
       const a = state.arms[arm].wins + 1;
       const b = state.arms[arm].trials - state.arms[arm].wins + 1;
       const pts: { x: number; y: number }[] = [];
@@ -133,7 +135,7 @@ export default function M32MultiarmedBandits() {
     const toY = (v: number) => H - pb - (v / (maxY || 1)) * (H - pt - pb);
 
     const result: { path: string; area: string; color: string }[] = [];
-    for (let arm = 0; arm < nArms; arm++) {
+    for (let arm = 0; arm < safeNArms; arm++) {
       const a = state.arms[arm].wins + 1;
       const b = state.arms[arm].trials - state.arms[arm].wins + 1;
       let path = '';
@@ -229,16 +231,18 @@ export default function M32MultiarmedBandits() {
   // ── Tooltip for chart 1 ──
   const tooltipLookup1 = useCallback(
     (vbX: number) => {
-      const { W, H, pl, pr, pt, pb, n } = chart1;
+      const { W, pl, pr, n } = chart1;
       if (n === 0 || vbX < pl || vbX > W - pr) return null;
       const frac = (vbX - pl) / (W - pl - pr);
       const idx = Math.min(Math.round(frac * (n - 1)), n - 1);
       let cumR = 0;
       for (let i = 0; i <= idx; i++) cumR += state.rewards[i];
       const oracle = optimalRate * (idx + 1);
-      const toX = (i: number) => pl + (i / Math.max(n - 1, 1)) * (W - pl - pr);
-      const maxY = Math.max(oracle, cumR, 1);
-      const toY = (v: number) => H - pb - (v / maxY) * (H - pt - pb);
+      const toX = chart1.toX ?? ((i: number) => pl + (i / Math.max(n - 1, 1)) * (W - pl - pr));
+      const toY =
+        chart1.toY ??
+        ((v: number) =>
+          chart1.H - chart1.pb - (v / chart1.maxY) * (chart1.H - chart1.pt - chart1.pb));
       return {
         x: toX(idx),
         y: Math.min(toY(cumR), toY(oracle)),
@@ -559,7 +563,7 @@ export default function M32MultiarmedBandits() {
         value={epsilon}
         min={1}
         max={50}
-        step={1}
+        step={0.5}
         onChange={(v: number) => set('epsilon', v)}
         fmt={(v: number) => Math.round(v) + '%'}
         color={colors.emerald}

@@ -440,4 +440,58 @@ describe('useBanditSim', () => {
     expect(typeof result.current.reset).toBe('function');
     expect(typeof result.current.stepOnce).toBe('function');
   });
+
+  /* ── trueProbs change triggers reset ── */
+
+  it('changing trueProbs triggers reset', () => {
+    const { result, rerender } = renderBandit(3, [0.3, 0.5, 0.7], 'thompson');
+
+    // Step a few times
+    act(() => {
+      for (let i = 0; i < 5; i++) {
+        result.current.stepOnce();
+      }
+    });
+    expect(result.current.state.totalTrials).toBe(5);
+
+    // Change trueProbs (same nArms, different probabilities)
+    rerender({
+      nArms: 3,
+      trueProbs: [0.1, 0.2, 0.9],
+      algorithm: 'thompson' as Algorithm,
+      epsilon: 0.1,
+      speed: 50,
+    });
+
+    // State should be reset
+    expect(result.current.state.totalTrials).toBe(0);
+    expect(result.current.state.step).toBe(0);
+    expect(result.current.state.rewards).toEqual([]);
+    expect(result.current.state.selectedArms).toEqual([]);
+  });
+
+  /* ── Array integrity after many steps ── */
+
+  it('rewards and selectedArms arrays stay in sync after many steps', () => {
+    const { result } = renderBandit(3, [0.3, 0.5, 0.7], 'thompson');
+
+    act(() => {
+      for (let i = 0; i < 100; i++) {
+        result.current.stepOnce();
+      }
+    });
+
+    expect(result.current.state.rewards).toHaveLength(100);
+    expect(result.current.state.selectedArms).toHaveLength(100);
+    expect(result.current.state.totalTrials).toBe(100);
+
+    // Sum of arm trials must equal totalTrials
+    const armTrials = result.current.state.arms.reduce((s, a) => s + a.trials, 0);
+    expect(armTrials).toBe(100);
+
+    // Sum of arm wins must equal sum of rewards
+    const armWins = result.current.state.arms.reduce((s, a) => s + a.wins, 0);
+    const rewardSum = result.current.state.rewards.reduce((s, r) => s + r, 0);
+    expect(armWins).toBe(rewardSum);
+  });
 });

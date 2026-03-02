@@ -46,6 +46,10 @@ import M31 from '../M31RatioMetrics';
 import M32 from '../M32MultiarmedBandits';
 import M33 from '../M33ClusterExperiments';
 import M34 from '../M34BootstrapPermutation';
+import M35 from '../M35SRMDiagnostics';
+import M36 from '../M36CentralLimitTheorem';
+import M37 from '../M37DifferenceInDifferences';
+import M38 from '../M38MetricSensitivity';
 import Landing from '../Landing';
 
 const modules: [string, ComponentType][] = [
@@ -83,6 +87,10 @@ const modules: [string, ComponentType][] = [
   ['M32 – Multi-Armed Bandits', M32],
   ['M33 – Cluster Experiments', M33],
   ['M34 – Bootstrap & Permutation', M34],
+  ['M35 – SRM Diagnostics', M35],
+  ['M36 – Central Limit Theorem', M36],
+  ['M37 – Difference-in-Differences', M37],
+  ['M38 – Metric Sensitivity Analysis', M38],
 ];
 
 describe('Module smoke tests', () => {
@@ -105,6 +113,6 @@ describe('Module smoke tests', () => {
     );
     expect(container.firstChild).toBeTruthy();
     expect(container.textContent).toContain('StatCompass');
-    expect(container.textContent).toContain('2 of 34');
+    expect(container.textContent).toContain('2 of 38');
   });
 });

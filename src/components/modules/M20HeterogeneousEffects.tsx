@@ -379,7 +379,7 @@ export default function M20HeterogeneousEffects() {
         value={overallATE}
         min={0}
         max={2}
-        step={0.1}
+        step={0.02}
         onChange={setOverallATE}
         fmt={(v) => v.toFixed(1)}
         color={colors.amber}
@@ -389,7 +389,7 @@ export default function M20HeterogeneousEffects() {
         value={heterogeneity}
         min={0}
         max={1}
-        step={0.05}
+        step={0.01}
         onChange={setHeterogeneity}
         fmt={(v) => v.toFixed(2)}
         color={colors.red}
