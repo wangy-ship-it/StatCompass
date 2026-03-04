@@ -14,16 +14,16 @@ const scenarios = [
     title: 'Explaining experiment results',
     desc: 'Walk stakeholders through what the numbers mean',
     links: [
-      { id: 'm19', label: 'Result Interpreter' },
-      { id: 'm18', label: 'Practical Significance' },
+      { id: 'm28', label: 'Result Interpreter' },
+      { id: 'm24', label: 'Practical Significance' },
     ],
   },
   {
     title: 'Justifying test duration',
     desc: 'Show why we need more time or more users',
     links: [
-      { id: 'm7', label: 'Sample Size & Power' },
-      { id: 'm8', label: 'Effect Size & MDE' },
+      { id: 'm9', label: 'Sample Size & Power' },
+      { id: 'm10', label: 'Effect Size & MDE' },
     ],
   },
   {
@@ -31,15 +31,15 @@ const scenarios = [
     desc: 'Explain null results without losing credibility',
     links: [
       { id: 'm1', label: 'Type I & II Errors' },
-      { id: 'm22', label: 'Regression to Mean' },
+      { id: 'm31', label: 'Regression to Mean' },
     ],
   },
   {
     title: 'Reviewing test validity',
     desc: 'Check for threats before trusting the results',
     links: [
-      { id: 'm13', label: 'Validity Threats' },
-      { id: 'm15', label: 'Interaction Effects' },
+      { id: 'm17', label: 'Validity Threats' },
+      { id: 'm19', label: 'Interaction Effects' },
     ],
   },
 ];
@@ -66,7 +66,7 @@ export default function Landing({
           StatCompass
         </h1>
         <p className="text-[15px] text-[var(--svg-text)] leading-[1.7] max-w-[600px]">
-          34 interactive modules covering experiment design, analysis, and interpretation. Each one
+          38 interactive modules covering experiment design, analysis, and interpretation. Each one
           turns a complex statistical concept into a visual you can share in a meeting.
         </p>
         {visitedCount > 0 && (

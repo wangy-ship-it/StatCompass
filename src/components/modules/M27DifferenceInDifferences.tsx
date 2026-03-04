@@ -234,7 +234,7 @@ export default function M37DifferenceInDifferences() {
         label="Difference-in-differences: treatment vs control group trends with counterfactual"
       >
         <defs>
-          <linearGradient id="grad-did-m37" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-did-m27" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.emerald} stopOpacity="0.35" />
             <stop offset="100%" stopColor={colors.emerald} stopOpacity="0.06" />
           </linearGradient>
@@ -307,7 +307,7 @@ export default function M37DifferenceInDifferences() {
         </text>
 
         {/* Shaded DiD area */}
-        {d.shadePath && <path d={d.shadePath} fill="url(#grad-did-m37)" />}
+        {d.shadePath && <path d={d.shadePath} fill="url(#grad-did-m27)" />}
 
         {/* Counterfactual line (dashed) */}
         <path

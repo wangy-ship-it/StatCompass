@@ -30,13 +30,13 @@ function findStatBoxes(container: HTMLElement): { label: string; value: string }
   });
 }
 
-import M4 from '../M4BayesianFrequentist';
+import M5 from '../M5BayesianFrequentist';
 
-describe('M4 Bayesian vs Frequentist integration', () => {
+describe('M5 Bayesian vs Frequentist integration', () => {
   it('renders posterior mean and responds to slider change', () => {
     const { container } = render(
-      <Wrapper moduleId="m4">
-        <M4 />
+      <Wrapper moduleId="m5">
+        <M5 />
       </Wrapper>,
     );
 
@@ -59,13 +59,13 @@ describe('M4 Bayesian vs Frequentist integration', () => {
   });
 });
 
-import M8 from '../M8EffectSizeMDE';
+import M10 from '../M10EffectSizeMDE';
 
-describe('M8 Effect Size & MDE integration', () => {
+describe('M10 Effect Size & MDE integration', () => {
   it('renders MDE stat boxes and has working sliders', () => {
     const { container } = render(
-      <Wrapper moduleId="m8">
-        <M8 />
+      <Wrapper moduleId="m10">
+        <M10 />
       </Wrapper>,
     );
 
@@ -86,13 +86,13 @@ describe('M8 Effect Size & MDE integration', () => {
   });
 });
 
-import M12 from '../M12SequentialTesting';
+import M15 from '../M15SequentialTesting';
 
-describe('M12 Sequential Testing integration', () => {
+describe('M15 Sequential Testing integration', () => {
   it('renders and has interactive sliders', () => {
     const { container } = render(
-      <Wrapper moduleId="m12">
-        <M12 />
+      <Wrapper moduleId="m15">
+        <M15 />
       </Wrapper>,
     );
 
@@ -106,13 +106,13 @@ describe('M12 Sequential Testing integration', () => {
   });
 });
 
-import M17 from '../M17LiftCalculator';
+import M22 from '../M22LiftCalculator';
 
-describe('M17 Lift Calculator integration', () => {
+describe('M22 Lift Calculator integration', () => {
   it('computes lift when treatment rate differs from control', () => {
     const { container } = render(
-      <Wrapper moduleId="m17">
-        <M17 />
+      <Wrapper moduleId="m22">
+        <M22 />
       </Wrapper>,
     );
 
@@ -129,13 +129,13 @@ describe('M17 Lift Calculator integration', () => {
 
 // ── New module integration tests ──
 
-import M30 from '../M30BayesianABTesting';
+import M25 from '../M25BayesianABTesting';
 
-describe('M30 Bayesian A/B Testing integration', () => {
+describe('M25 Bayesian A/B Testing integration', () => {
   it('renders P(B beats A) and responds to conversion changes', () => {
     const { container } = render(
-      <Wrapper moduleId="m30">
-        <M30 />
+      <Wrapper moduleId="m25">
+        <M25 />
       </Wrapper>,
     );
 
@@ -152,13 +152,13 @@ describe('M30 Bayesian A/B Testing integration', () => {
   });
 });
 
-import M31 from '../M31RatioMetrics';
+import M23 from '../M23RatioMetrics';
 
-describe('M31 Ratio Metrics integration', () => {
+describe('M23 Ratio Metrics integration', () => {
   it('renders ratio estimate and correction factor', () => {
     const { container } = render(
-      <Wrapper moduleId="m31">
-        <M31 />
+      <Wrapper moduleId="m23">
+        <M23 />
       </Wrapper>,
     );
 
@@ -171,13 +171,13 @@ describe('M31 Ratio Metrics integration', () => {
   });
 });
 
-import M32 from '../M32MultiarmedBandits';
+import M26 from '../M26MultiarmedBandits';
 
-describe('M32 Multi-Armed Bandits integration', () => {
+describe('M26 Multi-Armed Bandits integration', () => {
   it('renders with stat boxes and chart', () => {
     const { container } = render(
-      <Wrapper moduleId="m32">
-        <M32 />
+      <Wrapper moduleId="m26">
+        <M26 />
       </Wrapper>,
     );
 
@@ -189,13 +189,13 @@ describe('M32 Multi-Armed Bandits integration', () => {
   });
 });
 
-import M33 from '../M33ClusterExperiments';
+import M13 from '../M13ClusterExperiments';
 
-describe('M33 Cluster Experiments integration', () => {
+describe('M13 Cluster Experiments integration', () => {
   it('renders design effect and power', () => {
     const { container } = render(
-      <Wrapper moduleId="m33">
-        <M33 />
+      <Wrapper moduleId="m13">
+        <M13 />
       </Wrapper>,
     );
 
@@ -211,13 +211,13 @@ describe('M33 Cluster Experiments integration', () => {
   });
 });
 
-import M34 from '../M34BootstrapPermutation';
+import M21 from '../M21BootstrapPermutation';
 
-describe('M34 Bootstrap & Permutation integration', () => {
+describe('M21 Bootstrap & Permutation integration', () => {
   it('renders bootstrap CI and permutation p-value', () => {
     const { container } = render(
-      <Wrapper moduleId="m34">
-        <M34 />
+      <Wrapper moduleId="m21">
+        <M21 />
       </Wrapper>,
     );
 
@@ -228,34 +228,45 @@ describe('M34 Bootstrap & Permutation integration', () => {
     expect(svgs.length).toBeGreaterThan(0);
   });
 
-  it('bootstrap CI contains the observed difference', () => {
+  it('bootstrap CI shows dash before simulation and values after stepping', () => {
     const { container } = render(
-      <Wrapper moduleId="m34">
-        <M34 />
+      <Wrapper moduleId="m21">
+        <M21 />
       </Wrapper>,
     );
 
     const stats = findStatBoxes(container);
     const bootCI = stats.find((s) => s.label === 'Bootstrap CI');
     expect(bootCI).toBeDefined();
+    // Before stepping, should show dash
+    expect(bootCI!.value).toBe('\u2014');
 
-    // Parse CI bounds: format is "[lo, hi]"
-    const match = bootCI!.value.match(/\[(-?[\d.]+),\s*(-?[\d.]+)\]/);
+    // Click Step button to populate data
+    const stepBtn = container.querySelector('button[aria-label="Step one batch"]');
+    expect(stepBtn).not.toBeNull();
+    for (let i = 0; i < 5; i++) fireEvent.click(stepBtn!);
+
+    const statsAfter = findStatBoxes(container);
+    const bootCIAfter = statsAfter.find((s) => s.label === 'Bootstrap CI');
+    const match = bootCIAfter!.value.match(/\[(-?[\d.]+),\s*(-?[\d.]+)\]/);
     expect(match).not.toBeNull();
     const lo = parseFloat(match![1]);
     const hi = parseFloat(match![2]);
-    // CI lower bound should be less than upper bound
     expect(lo).toBeLessThan(hi);
-    // Since treatment adds +5, the CI should contain positive values
     expect(hi).toBeGreaterThan(0);
   });
 
-  it('permutation p-value is significant for the +5 treatment effect', () => {
+  it('permutation p-value shows after stepping the simulation', () => {
     const { container } = render(
-      <Wrapper moduleId="m34">
-        <M34 />
+      <Wrapper moduleId="m21">
+        <M21 />
       </Wrapper>,
     );
+
+    // Click Step button to populate data
+    const stepBtn = container.querySelector('button[aria-label="Step one batch"]');
+    expect(stepBtn).not.toBeNull();
+    for (let i = 0; i < 5; i++) fireEvent.click(stepBtn!);
 
     const stats = findStatBoxes(container);
     const permP = stats.find((s) => s.label === 'Permutation p');
@@ -312,14 +323,14 @@ describe('M1 Type Errors integration', () => {
 
 // ── Bug regression tests ──
 
-import M9 from '../M9VarianceReduction';
+import M11 from '../M11VarianceReduction';
 
-describe('M9 Variance Reduction – power chart at min sample size', () => {
+describe('M11 Variance Reduction – power chart at min sample size', () => {
   it('renders without NaN when sampleSize is at minimum (100)', () => {
-    window.location.hash = '#m9?sampleSize=100';
+    window.location.hash = '#m11?sampleSize=100';
     const { container } = render(
-      <Wrapper moduleId="m9">
-        <M9 />
+      <Wrapper moduleId="m11">
+        <M11 />
       </Wrapper>,
     );
 
@@ -333,14 +344,14 @@ describe('M9 Variance Reduction – power chart at min sample size', () => {
   });
 });
 
-import M15 from '../M15InteractionEffects';
+import M19 from '../M19InteractionEffects';
 
-describe('M15 Interaction Effects – zero effects', () => {
+describe('M19 Interaction Effects – zero effects', () => {
   it('renders without NaN when both effects are 0', () => {
-    window.location.hash = '#m15?effectA=0&effectB=0';
+    window.location.hash = '#m19?effectA=0&effectB=0';
     const { container } = render(
-      <Wrapper moduleId="m15">
-        <M15 />
+      <Wrapper moduleId="m19">
+        <M19 />
       </Wrapper>,
     );
 
@@ -357,13 +368,13 @@ describe('M15 Interaction Effects – zero effects', () => {
   });
 });
 
-import M16 from '../M16MultipleTesting';
+import M20 from '../M20MultipleTesting';
 
-describe('M16 Multiple Testing – trueEffects clamping', () => {
+describe('M20 Multiple Testing – trueEffects clamping', () => {
   it('renders correctly when trueEffects slider is changed', () => {
     const { container } = render(
-      <Wrapper moduleId="m16">
-        <M16 />
+      <Wrapper moduleId="m20">
+        <M20 />
       </Wrapper>,
     );
 
@@ -377,13 +388,13 @@ describe('M16 Multiple Testing – trueEffects clamping', () => {
   });
 });
 
-import M35 from '../M35SRMDiagnostics';
+import M16 from '../M16SRMDiagnostics';
 
-describe('M35 SRM Diagnostics integration', () => {
+describe('M16 SRM Diagnostics integration', () => {
   it('renders SRM chi-squared result and responds to slider changes', () => {
     const { container } = render(
-      <Wrapper moduleId="m35">
-        <M35 />
+      <Wrapper moduleId="m16">
+        <M16 />
       </Wrapper>,
     );
 
@@ -401,17 +412,17 @@ describe('M35 SRM Diagnostics integration', () => {
   });
 });
 
-import M36 from '../M36CentralLimitTheorem';
+import M3 from '../M3CentralLimitTheorem';
 
-describe('M36 Central Limit Theorem integration', () => {
+describe('M3 Central Limit Theorem integration', () => {
   it('renders sampling distribution and responds to slider changes', () => {
     const { container } = render(
-      <Wrapper moduleId="m36">
-        <M36 />
+      <Wrapper moduleId="m3">
+        <M3 />
       </Wrapper>,
     );
 
-    // M36 uses ChartBox but no StatBox — check SVG renders
+    // M3 uses ChartBox but no StatBox — check SVG renders
     const svgs = container.querySelectorAll('svg');
     expect(svgs.length).toBeGreaterThan(0);
 
@@ -427,13 +438,13 @@ describe('M36 Central Limit Theorem integration', () => {
   });
 });
 
-import M37 from '../M37DifferenceInDifferences';
+import M27 from '../M27DifferenceInDifferences';
 
-describe('M37 Difference-in-Differences integration', () => {
+describe('M27 Difference-in-Differences integration', () => {
   it('renders DiD estimate and responds to slider changes', () => {
     const { container } = render(
-      <Wrapper moduleId="m37">
-        <M37 />
+      <Wrapper moduleId="m27">
+        <M27 />
       </Wrapper>,
     );
 
@@ -451,13 +462,13 @@ describe('M37 Difference-in-Differences integration', () => {
   });
 });
 
-import M38 from '../M38MetricSensitivity';
+import M8 from '../M8MetricSensitivity';
 
-describe('M38 Metric Sensitivity Analysis integration', () => {
+describe('M8 Metric Sensitivity Analysis integration', () => {
   it('renders sensitivity metrics and responds to slider changes', () => {
     const { container } = render(
-      <Wrapper moduleId="m38">
-        <M38 />
+      <Wrapper moduleId="m8">
+        <M8 />
       </Wrapper>,
     );
 
@@ -475,13 +486,13 @@ describe('M38 Metric Sensitivity Analysis integration', () => {
   });
 });
 
-import M21 from '../M21SimpsonsParadox';
+import M30 from '../M30SimpsonsParadox';
 
-describe("M21 Simpson's Paradox integration", () => {
+describe("M30 Simpson's Paradox integration", () => {
   it('renders with preset buttons and detects active preset', () => {
     const { container } = render(
-      <Wrapper moduleId="m21">
-        <M21 />
+      <Wrapper moduleId="m30">
+        <M30 />
       </Wrapper>,
     );
 
@@ -500,8 +511,8 @@ describe("M21 Simpson's Paradox integration", () => {
 
   it('slider changes update chart data', () => {
     const { container } = render(
-      <Wrapper moduleId="m21">
-        <M21 />
+      <Wrapper moduleId="m30">
+        <M30 />
       </Wrapper>,
     );
 

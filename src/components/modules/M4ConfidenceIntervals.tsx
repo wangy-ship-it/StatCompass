@@ -19,7 +19,10 @@ export default function M3ConfidenceIntervals() {
     const z = zInv(1 - cl);
     const se = sigma / Math.sqrt(ss);
     return Array.from({ length: 25 }, (_, i) => {
-      const m = truM + (((sR(i * 7 + seed * 131) - 0.5) * 2 * sigma) / Math.sqrt(ss)) * 3;
+      const u1 = Math.max(1e-10, sR(i * 7 + seed * 131));
+      const u2 = sR(i * 13 + seed * 97);
+      const zz = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      const m = truM + zz * se;
       return { m, lo: m - z * se, hi: m + z * se, cap: m - z * se <= truM && m + z * se >= truM };
     });
   }, [cl, ss, seed]);

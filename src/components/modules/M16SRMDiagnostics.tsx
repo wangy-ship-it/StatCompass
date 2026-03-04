@@ -162,7 +162,7 @@ export default function M35SRMDiagnostics() {
 
   return (
     <div>
-      <Hdr sub="Analyze">Sample Ratio Mismatch (SRM)</Hdr>
+      <Hdr sub="Validate & Run">Sample Ratio Mismatch (SRM)</Hdr>
       <Desc>
         SRM is the #1 data quality check in A/B testing. When your observed traffic split does not
         match the expected ratio, something is wrong with randomization. Before analyzing any

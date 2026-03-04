@@ -16,7 +16,7 @@ export default function M1TypeErrors() {
   const d = useMemo(() => {
     const std = 3 / Math.sqrt(ss / 30);
     const m1 = eff;
-    const cv = zInv(alp) * std;
+    const cv = zInv(2 * alp) * std;
     const beta = nCDF(cv, m1, std);
     const pow = 1 - beta;
     const W = 600,
@@ -222,7 +222,7 @@ export default function M1TypeErrors() {
         color={colors.red}
       />
       <Sl
-        label="True Effect Size"
+        label="True Effect Size (raw Δ)"
         value={eff}
         min={0}
         max={5}

@@ -1,6 +1,6 @@
 # StatCompass
 
-Interactive statistics reference app: 34 modules covering experiment design, A/B testing, and ML evaluation. Built with React 19, Vite 6, Tailwind 4, TypeScript (strict mode). No chart libraries -- all visualizations are hand-crafted SVG.
+Interactive statistics reference app: 38 modules covering experiment design, A/B testing, and ML evaluation. Built with React 19, Vite 6, Tailwind 4, TypeScript (strict mode). No chart libraries -- all visualizations are hand-crafted SVG.
 
 ## Quick Start
 
@@ -18,7 +18,7 @@ Husky pre-commit hooks run `lint-staged` (ESLint --fix + Prettier) on `*.{ts,tsx
 
 ## Architecture
 
-- **Hash routing** -- `window.location.hash` drives navigation (no react-router). `App.tsx` maps `#m1`..`#m34` to lazy-loaded module components.
+- **Hash routing** -- `window.location.hash` drives navigation (no react-router). `App.tsx` maps `#m1`..`#m38` to lazy-loaded module components.
 - **Lazy loading** -- Every module is `React.lazy(() => import(...))` with a shared `<Suspense>` fallback and `<ErrorBoundary>`.
 - **ModuleContext** -- Wraps each module with `<ModuleProvider moduleId={active}>`, used by `ConceptLink` auto-linking.
 - **ThemeContext** -- Light/dark theme via CSS custom properties. Toggle in sidebar footer.
@@ -30,7 +30,7 @@ Husky pre-commit hooks run `lint-staged` (ESLint --fix + Prettier) on `*.{ts,tsx
 src/
   App.tsx                 -- root: hash router, lazy imports, search overlay
   components/
-    modules/              -- M1TypeErrors.tsx .. M34BootstrapPermutation.tsx, Landing.tsx
+    modules/              -- M1TypeErrors.tsx .. M38ModelDrift.tsx, Landing.tsx
     modules/__tests__/    -- smoke.test.tsx, integration.test.tsx
     nav/Navigation.tsx    -- sidebar: sections array, module list, search filter
     ui/                   -- shared components (see below)
@@ -106,9 +106,9 @@ All exported from `src/components/ui/index.ts`.
 
 ## Adding a New Module
 
-1. **Create** `src/components/modules/M35YourModule.tsx` following the module pattern above.
-2. **Register in Navigation** -- Add `{ id: 'm35', label: 'Your Module' }` to the appropriate section in `src/components/nav/Navigation.tsx`.
-3. **Add lazy import** -- Add `m35: lazy(() => import('./components/modules/M35YourModule'))` to the `modules` record in `src/App.tsx`.
+1. **Create** `src/components/modules/M39YourModule.tsx` following the module pattern above.
+2. **Register in Navigation** -- Add `{ id: 'm39', label: 'Your Module' }` to the appropriate section in `src/components/nav/Navigation.tsx`.
+3. **Add lazy import** -- Add `m39: lazy(() => import('./components/modules/M39YourModule'))` to the `modules` record in `src/App.tsx`.
 4. **Add smoke test** -- Import and add to the `modules` array in `src/components/modules/__tests__/smoke.test.tsx`.
 5. **Register concepts** -- Add entries to `src/data/conceptRegistry.ts` for terms that should auto-link to your module. Use `wordBoundary: true` for short/ambiguous terms.
 

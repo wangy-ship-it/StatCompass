@@ -207,19 +207,19 @@ export default function M38MetricSensitivity() {
         label="Distribution histogram with mean, median, and trimmed mean markers"
       >
         <defs>
-          <linearGradient id="grad-hist-m38" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-hist-m8" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.45" />
             <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.08" />
           </linearGradient>
-          <linearGradient id="grad-mean-m38" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-mean-m8" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity="0.3" />
             <stop offset="100%" stopColor={colors.red} stopOpacity="0.05" />
           </linearGradient>
-          <linearGradient id="grad-median-m38" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-median-m8" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.emerald} stopOpacity="0.3" />
             <stop offset="100%" stopColor={colors.emerald} stopOpacity="0.05" />
           </linearGradient>
-          <linearGradient id="grad-trimmed-m38" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="grad-trimmed-m8" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.amber} stopOpacity="0.3" />
             <stop offset="100%" stopColor={colors.amber} stopOpacity="0.05" />
           </linearGradient>
@@ -246,7 +246,7 @@ export default function M38MetricSensitivity() {
             y={bar.y}
             width={Math.max(0, bar.w - 1)}
             height={bar.h}
-            fill="url(#grad-hist-m38)"
+            fill="url(#grad-hist-m8)"
             stroke={colors.indigo}
             strokeWidth={0.5}
             strokeOpacity={0.4}

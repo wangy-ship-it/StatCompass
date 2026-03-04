@@ -1219,7 +1219,7 @@ export default function M10TestChooser() {
 
   return (
     <div>
-      <Hdr sub="Analyze">Choosing the Right Statistical Test</Hdr>
+      <Hdr sub="Design">Choosing the Right Statistical Test</Hdr>
       <Desc>
         Answer a few questions about your data and this decision tree will recommend the appropriate
         statistical test. The right test depends on your outcome type, number of groups, pairing,

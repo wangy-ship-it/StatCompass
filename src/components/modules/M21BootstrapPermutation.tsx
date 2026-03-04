@@ -1,132 +1,69 @@
 import { useMemo, useCallback } from 'react';
-import { sR, sRNormal, bootstrapSample, permutationTest, zInv } from '../../utils/math';
+import { buildHistogramFixed } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import {
+  Hdr,
+  Desc,
+  ChartBox,
+  Sl,
+  PillBtn,
+  StatBox,
+  QA,
+  TechNote,
+  Insight,
+  SimControls,
+} from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
+import useBootstrapSim from '../../hooks/useBootstrapSim';
 
-const dists: Record<string, { label: string; gen: (seed: number, n: number) => number[] }> = {
-  normal: {
-    label: 'Normal',
-    gen: (seed, n) => Array.from({ length: n }, (_, i) => sRNormal(seed + i) * 10 + 50),
-  },
-  skewed: {
-    label: 'Right-skewed',
-    gen: (seed, n) => Array.from({ length: n }, (_, i) => Math.exp(sRNormal(seed + i) * 0.5 + 2)),
-  },
-  bimodal: {
-    label: 'Bimodal',
-    gen: (seed, n) =>
-      Array.from(
-        { length: n },
-        (_, i) => sRNormal(seed + i) * 5 + (sR(seed + i * 3) > 0.5 ? 60 : 40),
-      ),
-  },
-  heavy: {
-    label: 'Heavy-tailed',
-    gen: (seed, n) =>
-      Array.from(
-        { length: n },
-        (_, i) => (sRNormal(seed + i) * 10) / (0.3 + sR(seed + i * 5)) + 50,
-      ),
-  },
+const distLabels: Record<string, string> = {
+  normal: 'Normal',
+  skewed: 'Right-skewed',
+  bimodal: 'Bimodal',
+  heavy: 'Heavy-tailed',
 };
+const distKeys = Object.keys(distLabels);
 
-const distKeys = Object.keys(dists) as (keyof typeof dists)[];
-
-const defaults = { distKey: 'skewed', sampleSize: 50, nResamples: 500 };
-
-function buildHistogram(values: number[], nBins: number) {
-  const mn = Math.min(...values);
-  const mx = Math.max(...values);
-  const range = mx - mn || 1;
-  const binW = range / nBins;
-  const bins = Array.from({ length: nBins }, (_, i) => ({
-    lo: mn + i * binW,
-    hi: mn + (i + 1) * binW,
-    count: 0,
-  }));
-  for (const v of values) {
-    const idx = Math.min(Math.floor((v - mn) / binW), nBins - 1);
-    bins[idx].count++;
-  }
-  return { bins, mn, mx, binW };
-}
-
-function mean(arr: number[]): number {
-  return arr.reduce((s, v) => s + v, 0) / arr.length;
-}
-
-function std(arr: number[]): number {
-  const m = mean(arr);
-  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
-}
+const defaults = { distKey: 'skewed', sampleSize: 50, nResamples: 500, speed: 50 };
 
 export default function M34BootstrapPermutation() {
   const [p, set] = useAnimatedParams(defaults);
-  const { distKey, sampleSize, nResamples } = p;
-  const setDistKey = (v: string) => set('distKey', v);
-  const setSampleSize = (v: number) => set('sampleSize', v);
-  const setNResamples = (v: number) => set('nResamples', v);
+  const { distKey, sampleSize, nResamples, speed } = p;
+  const dk = distKey as string;
 
   const n = Math.round(sampleSize as number);
   const nBoot = Math.round(nResamples as number);
-  const dk = distKey as string;
-  const gen = useMemo(() => dists[dk]?.gen || dists.skewed.gen, [dk]);
+  const spd = Math.round(speed as number);
 
-  const data = useMemo(() => {
-    const groupA = gen(1000, n);
-    const groupB = gen(2000, n).map((v) => v + 5);
+  const sim = useBootstrapSim(dk, n, nBoot, spd);
+  const s = sim.state;
 
-    // Parametric CI of mean difference
-    const meanA = mean(groupA);
-    const meanB = mean(groupB);
-    const diffMean = meanB - meanA;
-    const sdA = std(groupA);
-    const sdB = std(groupB);
-    const seDiff = Math.sqrt(sdA ** 2 / n + sdB ** 2 / n);
-    const z = zInv(0.05);
-    const paramLo = diffMean - z * seDiff;
-    const paramHi = diffMean + z * seDiff;
+  // ── Build histograms from sim state ──
+  const bootHist = useMemo(
+    () =>
+      s.bootDist.length > 0
+        ? buildHistogramFixed(s.bootDist, 30, s.bootBinRange[0], s.bootBinRange[1])
+        : {
+            bins: [],
+            mn: s.bootBinRange[0],
+            mx: s.bootBinRange[1],
+            binW: (s.bootBinRange[1] - s.bootBinRange[0]) / 30,
+          },
+    [s.bootDist, s.bootBinRange],
+  );
 
-    // Bootstrap CI for mean difference (resample each group independently)
-    const bootDist: number[] = [];
-    for (let b = 0; b < nBoot; b++) {
-      const sA = bootstrapSample(groupA, 42 + b * 13);
-      const sB = bootstrapSample(groupB, 42 + b * 13 + 7);
-      bootDist.push(mean(sB) - mean(sA));
-    }
-    bootDist.sort((a, b) => a - b);
-    const loIdx = Math.floor(0.025 * nBoot);
-    const hiIdx = Math.min(Math.floor(0.975 * nBoot), nBoot - 1);
-    const bootResult = { lo: bootDist[loIdx], hi: bootDist[hiIdx], dist: bootDist };
-
-    // Permutation test for mean difference
-    const permResult = permutationTest(groupA, groupB, (a, b) => mean(b) - mean(a), nBoot, 99);
-
-    // Histograms
-    const bootHist = buildHistogram(bootResult.dist, 30);
-    const permHist = buildHistogram(permResult.nullDist, 30);
-
-    // Observed statistic for permutation chart
-    const observedDiff = diffMean;
-
-    return {
-      groupA,
-      groupB,
-      meanA,
-      meanB,
-      diffMean,
-      sdA,
-      sdB,
-      paramLo,
-      paramHi,
-      bootResult,
-      permResult,
-      bootHist,
-      permHist,
-      observedDiff,
-    };
-  }, [n, nBoot, gen]);
+  const permHist = useMemo(
+    () =>
+      s.permDist.length > 0
+        ? buildHistogramFixed(s.permDist, 30, s.permBinRange[0], s.permBinRange[1])
+        : {
+            bins: [],
+            mn: s.permBinRange[0],
+            mx: s.permBinRange[1],
+            binW: (s.permBinRange[1] - s.permBinRange[0]) / 30,
+          },
+    [s.permDist, s.permBinRange],
+  );
 
   // ── Chart 1: Bootstrap Distribution ──
   const W = 600,
@@ -136,8 +73,8 @@ export default function M34BootstrapPermutation() {
     pt = 24,
     pb = 32;
 
-  const bH = data.bootHist;
-  const bMaxCount = Math.max(...bH.bins.map((b) => b.count), 1);
+  const bH = bootHist;
+  const bMaxCount = Math.max(...(bH.bins.length > 0 ? bH.bins.map((b) => b.count) : [1]), 1);
   const bToX = useCallback(
     (v: number) => pl + ((v - bH.mn) / (bH.mx - bH.mn || 1)) * (W - pl - pr),
     [bH.mn, bH.mx],
@@ -147,7 +84,7 @@ export default function M34BootstrapPermutation() {
 
   const bootTooltipLookup = useCallback(
     (vbX: number) => {
-      if (vbX < pl || vbX > W - pr) return null;
+      if (vbX < pl || vbX > W - pr || bH.bins.length === 0) return null;
       const xVal = bH.mn + ((vbX - pl) / (W - pl - pr)) * (bH.mx - bH.mn);
       const idx = Math.max(0, Math.min(bH.bins.length - 1, Math.floor((xVal - bH.mn) / bH.binW)));
       const bin = bH.bins[idx];
@@ -163,20 +100,23 @@ export default function M34BootstrapPermutation() {
           { label: 'Count', value: String(bin.count), color: colors.indigo },
           {
             label: 'Boot CI',
-            value: '[' + data.bootResult.lo.toFixed(2) + ', ' + data.bootResult.hi.toFixed(2) + ']',
+            value:
+              s.bootDist.length > 0
+                ? '[' + s.bootLo.toFixed(2) + ', ' + s.bootHi.toFixed(2) + ']'
+                : '\u2014',
             color: colors.emerald,
           },
         ],
         markers: [{ y: bToY(bin.count), color: colors.indigo }],
       };
     },
-    [data.bootResult, bH, bToX, bToY],
+    [s.bootDist.length, s.bootLo, s.bootHi, bH, bToX, bToY],
   );
 
   // ── Chart 2: Permutation Null Distribution ──
   const H2 = 200;
-  const pH = data.permHist;
-  const pMaxCount = Math.max(...pH.bins.map((b) => b.count), 1);
+  const pH = permHist;
+  const pMaxCount = Math.max(...(pH.bins.length > 0 ? pH.bins.map((b) => b.count) : [1]), 1);
   const pToX = useCallback(
     (v: number) => pl + ((v - pH.mn) / (pH.mx - pH.mn || 1)) * (W - pl - pr),
     [pH.mn, pH.mx],
@@ -186,7 +126,7 @@ export default function M34BootstrapPermutation() {
 
   const permTooltipLookup = useCallback(
     (vbX: number) => {
-      if (vbX < pl || vbX > W - pr) return null;
+      if (vbX < pl || vbX > W - pr || pH.bins.length === 0) return null;
       const xVal = pH.mn + ((vbX - pl) / (W - pl - pr)) * (pH.mx - pH.mn);
       const idx = Math.max(0, Math.min(pH.bins.length - 1, Math.floor((xVal - pH.mn) / pH.binW)));
       const bin = pH.bins[idx];
@@ -198,21 +138,26 @@ export default function M34BootstrapPermutation() {
           { label: 'Count', value: String(bin.count), color: sv.text },
           {
             label: 'p-value',
-            value: data.permResult.pValue.toFixed(3),
-            color: data.permResult.pValue < 0.05 ? colors.emerald : colors.red,
+            value: s.permDist.length > 0 ? s.permPValue.toFixed(3) : '\u2014',
+            color: s.permPValue < 0.05 ? colors.emerald : colors.red,
           },
         ],
         markers: [{ y: pToY(bin.count), color: sv.text }],
       };
     },
-    [data.permResult, pH, pToX, pToY],
+    [s.permPValue, s.permDist.length, pH, pToX, pToY],
   );
 
   // ── Chart 3: CI Comparison ──
   const H3 = 100,
     ciPt = 16,
     ciPb = 16;
-  const allCIVals = [data.paramLo, data.paramHi, data.bootResult.lo, data.bootResult.hi];
+  const hasBoot = s.bootDist.length > 0;
+  const allCIVals = [
+    s.paramLo,
+    s.paramHi,
+    ...(hasBoot ? [s.bootLo, s.bootHi] : [s.paramLo, s.paramHi]),
+  ];
   const ciMin = Math.min(...allCIVals) - 1;
   const ciMax = Math.max(...allCIVals) + 1;
   const ciToX = useCallback(
@@ -222,34 +167,27 @@ export default function M34BootstrapPermutation() {
 
   const ciRows = useMemo(
     () => [
-      {
-        label: 'Parametric',
-        lo: data.paramLo,
-        hi: data.paramHi,
-        mean: data.diffMean,
-        color: colors.amber,
-      },
+      { label: 'Parametric', lo: s.paramLo, hi: s.paramHi, mean: s.diffMean, color: colors.amber },
       {
         label: 'Bootstrap',
-        lo: data.bootResult.lo,
-        hi: data.bootResult.hi,
-        mean: data.diffMean,
+        lo: hasBoot ? s.bootLo : s.diffMean,
+        hi: hasBoot ? s.bootHi : s.diffMean,
+        mean: s.diffMean,
         color: colors.emerald,
       },
     ],
-    [data.paramLo, data.paramHi, data.bootResult.lo, data.bootResult.hi, data.diffMean],
+    [s.paramLo, s.paramHi, s.bootLo, s.bootHi, s.diffMean, hasBoot],
   );
   const ciRowH = useMemo(() => (H3 - ciPt - ciPb) / ciRows.length, [ciRows.length]);
 
   const ciTooltipLookup = useCallback(
     (vbX: number, vbY: number) => {
       if (vbX < pl || vbX > W - pr) return null;
-      const xVal = ciMin + ((vbX - pl) / (W - pl - pr)) * (ciMax - ciMin);
       const rowIdx = Math.max(0, Math.min(ciRows.length - 1, Math.floor((vbY - ciPt) / ciRowH)));
       const row = ciRows[rowIdx];
       const y = ciPt + rowIdx * ciRowH + ciRowH / 2;
       return {
-        x: ciToX(xVal),
+        x: vbX,
         y,
         lines: [
           {
@@ -263,13 +201,15 @@ export default function M34BootstrapPermutation() {
         markers: [{ y, color: row.color }],
       };
     },
-    [ciRows, ciMin, ciMax, ciRowH, ciToX],
+    [ciRows, ciRowH],
   );
 
   // ── Format helpers ──
-  const pColor = data.permResult.pValue < 0.05 ? colors.emerald : colors.red;
-  const bootWidth = data.bootResult.hi - data.bootResult.lo;
-  const paramWidth = data.paramHi - data.paramLo;
+  const pColor = s.permPValue < 0.05 ? colors.emerald : colors.red;
+  const bootWidth = hasBoot ? s.bootHi - s.bootLo : 0;
+  const paramWidth = s.paramHi - s.paramLo;
+
+  const progress = s.bootStep + ' / ' + nBoot;
 
   return (
     <div>
@@ -281,6 +221,25 @@ export default function M34BootstrapPermutation() {
         shuffling group labels. Neither requires normality assumptions.
       </Desc>
 
+      {/* Distribution PillBtns */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {distKeys.map((k) => (
+          <PillBtn key={k} on={dk === k} onClick={() => set('distKey', k)}>
+            {distLabels[k]}
+          </PillBtn>
+        ))}
+      </div>
+
+      {/* Simulation Controls */}
+      <SimControls
+        running={s.running}
+        onPlay={sim.start}
+        onPause={sim.pause}
+        onStep={sim.stepOnce}
+        onReset={sim.reset}
+        progress={progress}
+      />
+
       {/* Chart 1: Bootstrap Sampling Distribution */}
       <div className="text-[11px] text-[var(--svg-text)] text-center mb-2 font-bold uppercase tracking-widest">
         Bootstrap Distribution of Mean Difference
@@ -291,7 +250,7 @@ export default function M34BootstrapPermutation() {
         label="Bootstrap sampling distribution showing resampled mean differences with confidence interval bounds"
       >
         <defs>
-          <linearGradient id="bootGrad-34" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="bootGrad-21" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.indigo} stopOpacity={0.7} />
             <stop offset="100%" stopColor={colors.indigo} stopOpacity={0.25} />
           </linearGradient>
@@ -305,65 +264,69 @@ export default function M34BootstrapPermutation() {
             y={bToY(bin.count)}
             width={Math.max(1, bBarW - 1)}
             height={H1 - pb - bToY(bin.count)}
-            fill="url(#bootGrad-34)"
+            fill="url(#bootGrad-21)"
             rx={1}
           />
         ))}
 
         {/* Bootstrap CI bounds */}
-        <line
-          x1={bToX(data.bootResult.lo)}
-          y1={pt}
-          x2={bToX(data.bootResult.lo)}
-          y2={H1 - pb}
-          stroke={colors.emerald}
-          strokeWidth={2}
-        />
-        <line
-          x1={bToX(data.bootResult.hi)}
-          y1={pt}
-          x2={bToX(data.bootResult.hi)}
-          y2={H1 - pb}
-          stroke={colors.emerald}
-          strokeWidth={2}
-        />
-        <text
-          x={bToX(data.bootResult.lo)}
-          y={pt - 4}
-          fill={colors.emerald}
-          fontSize={8}
-          textAnchor="middle"
-        >
-          {data.bootResult.lo.toFixed(2)}
-        </text>
-        <text
-          x={bToX(data.bootResult.hi)}
-          y={pt - 4}
-          fill={colors.emerald}
-          fontSize={8}
-          textAnchor="middle"
-        >
-          {data.bootResult.hi.toFixed(2)}
-        </text>
+        {hasBoot && (
+          <>
+            <line
+              x1={bToX(s.bootLo)}
+              y1={pt}
+              x2={bToX(s.bootLo)}
+              y2={H1 - pb}
+              stroke={colors.emerald}
+              strokeWidth={2}
+            />
+            <line
+              x1={bToX(s.bootHi)}
+              y1={pt}
+              x2={bToX(s.bootHi)}
+              y2={H1 - pb}
+              stroke={colors.emerald}
+              strokeWidth={2}
+            />
+            <text
+              x={bToX(s.bootLo)}
+              y={pt - 4}
+              fill={colors.emerald}
+              fontSize={8}
+              textAnchor="middle"
+            >
+              {s.bootLo.toFixed(2)}
+            </text>
+            <text
+              x={bToX(s.bootHi)}
+              y={pt - 4}
+              fill={colors.emerald}
+              fontSize={8}
+              textAnchor="middle"
+            >
+              {s.bootHi.toFixed(2)}
+            </text>
+          </>
+        )}
 
         {/* Observed statistic */}
         <line
-          x1={bToX(data.diffMean)}
+          x1={bToX(s.diffMean)}
           y1={pt}
-          x2={bToX(data.diffMean)}
+          x2={bToX(s.diffMean)}
           y2={H1 - pb}
           stroke={colors.indigo}
           strokeWidth={2}
           strokeDasharray="6,3"
         />
         <text
-          x={bToX(data.diffMean) + 4}
+          x={bToX(s.diffMean) + 4}
           y={pt + 10}
           fill={colors.indigo}
           fontSize={9}
           fontWeight="700"
         >
-          {'Observed = ' + data.diffMean.toFixed(2)}
+          {'Observed = ' + s.diffMean.toFixed(2)}
         </text>
 
         {/* Axes */}
@@ -384,11 +347,11 @@ export default function M34BootstrapPermutation() {
         label="Permutation null distribution showing shuffled group differences with observed test statistic"
       >
         <defs>
-          <linearGradient id="permGrad-34" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="permGrad-21" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.slate400} stopOpacity={0.6} />
             <stop offset="100%" stopColor={colors.slate400} stopOpacity={0.2} />
           </linearGradient>
-          <linearGradient id="permTailGrad-34" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="permTailGrad-21" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.red} stopOpacity={0.7} />
             <stop offset="100%" stopColor={colors.red} stopOpacity={0.3} />
           </linearGradient>
@@ -397,7 +360,7 @@ export default function M34BootstrapPermutation() {
         {/* Histogram bars with tail shading */}
         {pH.bins.map((bin, i) => {
           const midpoint = bin.lo + pH.binW / 2;
-          const inTail = Math.abs(midpoint) >= Math.abs(data.observedDiff);
+          const inTail = Math.abs(midpoint) >= Math.abs(s.observedDiff);
           return (
             <rect
               key={i}
@@ -405,7 +368,7 @@ export default function M34BootstrapPermutation() {
               y={pToY(bin.count)}
               width={Math.max(1, pBarW - 1)}
               height={H2 - pb - pToY(bin.count)}
-              fill={inTail ? 'url(#permTailGrad-34)' : 'url(#permGrad-34)'}
+              fill={inTail ? 'url(#permTailGrad-21)' : 'url(#permGrad-21)'}
               rx={1}
             />
           );
@@ -413,21 +376,21 @@ export default function M34BootstrapPermutation() {
 
         {/* Observed test statistic */}
         <line
-          x1={pToX(data.observedDiff)}
+          x1={pToX(s.observedDiff)}
           y1={pt}
-          x2={pToX(data.observedDiff)}
+          x2={pToX(s.observedDiff)}
           y2={H2 - pb}
           stroke={colors.red}
           strokeWidth={2}
         />
         <text
-          x={pToX(data.observedDiff) + 4}
+          x={pToX(s.observedDiff) + 4}
           y={pt + 10}
           fill={colors.red}
           fontSize={9}
           fontWeight="700"
         >
-          {'Observed = ' + data.observedDiff.toFixed(2)}
+          {'Observed = ' + s.observedDiff.toFixed(2)}
         </text>
 
         {/* p-value annotation */}
@@ -439,7 +402,7 @@ export default function M34BootstrapPermutation() {
           textAnchor="end"
           fontWeight="700"
         >
-          {'p = ' + data.permResult.pValue.toFixed(3)}
+          {s.permDist.length > 0 ? 'p = ' + s.permPValue.toFixed(3) : ''}
         </text>
 
         {/* Axes */}
@@ -483,7 +446,6 @@ export default function M34BootstrapPermutation() {
           const y = ciPt + i * ciRowH + ciRowH / 2;
           return (
             <g key={row.label}>
-              {/* CI bar */}
               <line
                 x1={ciToX(row.lo)}
                 y1={y}
@@ -494,9 +456,7 @@ export default function M34BootstrapPermutation() {
                 strokeLinecap="round"
                 opacity={0.7}
               />
-              {/* Point estimate */}
               <circle cx={ciToX(row.mean)} cy={y} r={4} fill={row.color} />
-              {/* Label */}
               <text
                 x={pl - 6}
                 y={y + 4}
@@ -519,18 +479,26 @@ export default function M34BootstrapPermutation() {
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox
           label="Bootstrap CI"
-          value={'[' + data.bootResult.lo.toFixed(2) + ', ' + data.bootResult.hi.toFixed(2) + ']'}
+          value={hasBoot ? '[' + s.bootLo.toFixed(2) + ', ' + s.bootHi.toFixed(2) + ']' : '\u2014'}
           color={colors.emerald}
         />
-        <StatBox label="Permutation p" value={data.permResult.pValue.toFixed(3)} color={pColor} />
+        <StatBox
+          label="Permutation p"
+          value={s.permDist.length > 0 ? s.permPValue.toFixed(3) : '\u2014'}
+          color={pColor}
+        />
         <StatBox
           label="Parametric CI"
-          value={'[' + data.paramLo.toFixed(2) + ', ' + data.paramHi.toFixed(2) + ']'}
+          value={'[' + s.paramLo.toFixed(2) + ', ' + s.paramHi.toFixed(2) + ']'}
           color={colors.amber}
         />
         <StatBox
           label="CI Width"
-          value={'P: ' + paramWidth.toFixed(2) + ' | B: ' + bootWidth.toFixed(2)}
+          value={
+            hasBoot
+              ? 'P: ' + paramWidth.toFixed(2) + ' | B: ' + bootWidth.toFixed(2)
+              : 'P: ' + paramWidth.toFixed(2)
+          }
           color={colors.indigo}
         />
       </div>
@@ -542,7 +510,7 @@ export default function M34BootstrapPermutation() {
         min={10}
         max={200}
         step={5}
-        onChange={setSampleSize}
+        onChange={(v) => set('sampleSize', v)}
         fmt={(v) => String(Math.round(v))}
         color={colors.indigo}
       />
@@ -552,19 +520,19 @@ export default function M34BootstrapPermutation() {
         min={100}
         max={2000}
         step={100}
-        onChange={setNResamples}
+        onChange={(v) => set('nResamples', v)}
         fmt={(v) => String(Math.round(v))}
         color={colors.emerald}
       />
-
-      {/* Distribution PillBtns */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {distKeys.map((k) => (
-          <PillBtn key={k} on={dk === k} onClick={() => setDistKey(k)}>
-            {dists[k].label}
-          </PillBtn>
-        ))}
-      </div>
+      <Sl
+        label="Simulation Speed"
+        value={speed as number}
+        min={10}
+        max={100}
+        step={10}
+        onChange={(v) => set('speed', v)}
+        color={colors.amber}
+      />
 
       <QA
         items={[

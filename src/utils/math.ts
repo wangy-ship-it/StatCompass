@@ -50,7 +50,7 @@ export const sR = (s: number): number => {
   return x - Math.floor(x);
 };
 
-// ── M7: Lift Calculator helpers ──
+// ── M22: Lift Calculator helpers ──
 
 export const sePropDiff = (p1: number, p2: number, n: number): number =>
   Math.sqrt((p1 * (1 - p1)) / n + (p2 * (1 - p2)) / n);
@@ -79,7 +79,7 @@ export const liftCI = (pC: number, pT: number, n: number, alpha = 0.05): LiftCIR
   return { absLift, relLift, se, ciLo, ciHi, pValue, significant, zStat };
 };
 
-// ── M10: Polynomial regression ──
+// ── M32: Polynomial regression (Bias-Variance) ──
 
 export const polyFit = (xs: number[], ys: number[], deg: number): number[] => {
   const n = xs.length;
@@ -131,7 +131,7 @@ export const polyEval = (coeffs: number[], x: number): number => {
   return y;
 };
 
-// ── M11: Multiple testing corrections ──
+// ── M20: Multiple testing corrections ──
 
 export const bonferroni = (alpha: number, nTests: number): number => alpha / nTests;
 
@@ -181,7 +181,7 @@ export const holm = (pValues: number[], alpha: number): HolmResult => {
   return { results, sortedPValues: indexed };
 };
 
-// ── M13: Beta distribution / Bayesian ──
+// ── M5: Beta distribution / Bayesian ──
 
 export const logGamma = (x: number): number => {
   const g = 7;
@@ -206,7 +206,7 @@ export const betaPDF = (x: number, a: number, b: number): number => {
   return Math.exp((a - 1) * Math.log(x) + (b - 1) * Math.log(1 - x) - logB);
 };
 
-// ── M16: Effect size & MDE ──
+// ── M10: Effect size & MDE ──
 
 export const cohensD = (p1: number, p2: number): number => {
   const pooledSD = Math.sqrt((p1 * (1 - p1) + p2 * (1 - p2)) / 2);
@@ -226,7 +226,7 @@ export const nFromMDE = (mde: number, alpha: number, power: number, p: number): 
   return Math.ceil((2 * p * (1 - p) * Math.pow(za + zb, 2)) / Math.pow(mde, 2));
 };
 
-// ── M18: Sequential testing boundaries ──
+// ── M15: Sequential testing boundaries ──
 
 export const obfBounds = (stages: number, alpha: number): number[] => {
   const za = zInv(alpha);
@@ -247,7 +247,7 @@ export const alphaSpend = (stage: number, total: number, alpha: number, method: 
   return alpha * t;
 };
 
-// ── M22: CUPED / Variance reduction ──
+// ── M11: CUPED / Variance reduction ──
 
 export const cupedVariance = (originalVar: number, rho: number): number =>
   originalVar * (1 - rho * rho);
@@ -258,7 +258,7 @@ export const effectiveN = (n: number, rho: number): number => {
   return n / (1 - r2);
 };
 
-// ── M30: Bayesian A/B Testing ──
+// ── M25: Bayesian A/B Testing ──
 
 /** Regularized incomplete beta function via continued fraction (Lentz's method) */
 export const betaCDF = (x: number, a: number, b: number): number => {
@@ -347,7 +347,7 @@ export const expectedLossOfB = (aA: number, bA: number, aB: number, bB: number):
   return loss;
 };
 
-// ── M31: Ratio Metrics & Delta Method ──
+// ── M23: Ratio Metrics & Delta Method ──
 
 /** Seeded normal random via Box-Muller */
 export const sRNormal = (seed: number): number => {
@@ -399,7 +399,7 @@ export const naiveRatioVar = (
   return varX / (muY * muY * n);
 };
 
-// ── M33: Switchback & Cluster Experiments ──
+// ── M13: Switchback & Cluster Experiments ──
 
 /** Design effect: DEFF = 1 + (clusterSize - 1) * ICC */
 export const designEffect = (icc: number, clusterSize: number): number =>
@@ -430,7 +430,7 @@ export const switchbackPower = (
   return nCDF(zBeta, 0, 1);
 };
 
-// ── M34: Bootstrap & Permutation Tests ──
+// ── M21: Bootstrap & Permutation Tests ──
 
 /** Resample with replacement (seeded) */
 export const bootstrapSample = (data: number[], seed: number): number[] => {
@@ -486,7 +486,30 @@ export const permutationTest = (
   return { pValue: count / nPerms, nullDist };
 };
 
-// ── M32: Multi-Armed Bandits ──
+// ── Histogram with fixed bin boundaries ──
+
+export function buildHistogramFixed(
+  values: number[],
+  nBins: number,
+  min: number,
+  max: number,
+): { bins: { lo: number; hi: number; count: number }[]; mn: number; mx: number; binW: number } {
+  const range = max - min || 1;
+  const binW = range / nBins;
+  const bins = Array.from({ length: nBins }, (_, i) => ({
+    lo: min + i * binW,
+    hi: min + (i + 1) * binW,
+    count: 0,
+  }));
+  for (const v of values) {
+    if (v < min || v > max) continue;
+    const idx = Math.min(Math.floor((v - min) / binW), nBins - 1);
+    bins[idx].count++;
+  }
+  return { bins, mn: min, mx: max, binW };
+}
+
+// ── M26: Multi-Armed Bandits ──
 
 /** Sample from Beta distribution using Joehnk's method (a,b<1) or gamma ratio */
 export const betaSample = (a: number, b: number, seed: number): number => {
@@ -512,7 +535,7 @@ export const cumulativeRegret = (rewards: number[], optimalRate: number): number
   return regret;
 };
 
-// ── M20: Cross-validation ──
+// ── M33: Cross-validation ──
 
 export interface KFoldSplit {
   train: number[];

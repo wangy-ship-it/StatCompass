@@ -248,7 +248,7 @@ export default function M23ModelMetrics() {
             label="Confusion matrix and ROC curve showing model classification performance"
           >
             <defs>
-              <linearGradient id="m23-roc-fill" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="m34-roc-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={colors.indigo} stopOpacity="0.18" />
                 <stop offset="100%" stopColor={colors.indigo} stopOpacity="0.03" />
               </linearGradient>
@@ -291,7 +291,7 @@ export default function M23ModelMetrics() {
               strokeDasharray="4,3"
             />
             {/* AUC fill + ROC curve */}
-            <path d={rocFill} fill="url(#m23-roc-fill)" />
+            <path d={rocFill} fill="url(#m34-roc-fill)" />
             <path d={rocP} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
             {/* Current threshold marker */}
             <circle
