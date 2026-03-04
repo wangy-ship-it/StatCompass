@@ -260,8 +260,8 @@ export default function M1TypeErrors() {
       </TechNote>
       <Insight>
         The tradeoff is fundamental: you cannot eliminate both errors simultaneously without more
-        data. Increasing sample size is the only free lunch — it narrows both distributions and
-        separates them, reducing both false alarms and missed signals.
+        data. Increasing sample size is the most reliable lever — it narrows both distributions.
+        Variance reduction techniques like CUPED (→ M11) can achieve similar gains.
       </Insight>
     </div>
   );

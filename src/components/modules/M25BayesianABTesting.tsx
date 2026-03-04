@@ -1,8 +1,20 @@
-import { useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { betaPDF, betaQuantile, probBBeatsA, expectedLossOfB } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import {
+  Hdr,
+  Desc,
+  ChartBox,
+  Sl,
+  PillBtn,
+  StatBox,
+  SimControls,
+  QA,
+  TechNote,
+  Insight,
+} from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
+import useBayesianSim from '../../hooks/useBayesianSim';
 
 const priors: Record<string, { label: string; a: number; b: number }> = {
   uninformative: { label: 'Uninformative', a: 1, b: 1 },
@@ -16,49 +28,67 @@ const defaults = {
   nTreat: 500,
   convControl: 50,
   convTreat: 65,
+  trueRateA: 0.1,
+  trueRateB: 0.12,
+  speed: 50,
 };
 
 export default function M30BayesianABTesting() {
   const [p, set] = useAnimatedParams(defaults);
-  const { priorKey, nControl, nTreat, convControl, convTreat } = p;
+  const { priorKey, nControl, nTreat, convControl, convTreat, trueRateA, trueRateB, speed } = p;
   const setPriorKey = (v: string) => set('priorKey', v);
   const setNControl = (v: number) => set('nControl', v);
   const setNTreat = (v: number) => set('nTreat', v);
   const setConvControl = (v: number) => set('convControl', v);
   const setConvTreat = (v: number) => set('convTreat', v);
+  const setTrueRateA = (v: number) => set('trueRateA', v);
+  const setTrueRateB = (v: number) => set('trueRateB', v);
+  const setSpeed = (v: number) => set('speed', v);
+  const [simMode, setSimMode] = useState(false);
 
+  const prior = priors[priorKey as string] || priors.uninformative;
+
+  // Simulation hook
+  const sim = useBayesianSim(trueRateA, trueRateB, prior.a, prior.b, speed);
+
+  // Compute chart data from either sim state or slider values
   const data = useMemo(() => {
-    const prior = priors[priorKey as string] || priors.uninformative;
-    const nC = Math.round(nControl);
-    const nT = Math.round(nTreat);
-    const cC = Math.min(Math.round(convControl), nC);
-    const cT = Math.min(Math.round(convTreat), nT);
+    let ctrlA: number, ctrlB: number, treatA: number, treatB: number;
+    let nC: number, nT: number, cC: number, cT: number;
 
-    // Posterior parameters
-    const ctrlA = prior.a + cC;
-    const ctrlB = prior.b + nC - cC;
-    const treatA = prior.a + cT;
-    const treatB = prior.b + nT - cT;
+    if (simMode) {
+      const s = sim.state;
+      ctrlA = s.postAlphaA;
+      ctrlB = s.postBetaA;
+      treatA = s.postAlphaB;
+      treatB = s.postBetaB;
+      nC = s.visitorsA;
+      nT = s.visitorsB;
+      cC = s.conversionsA;
+      cT = s.conversionsB;
+    } else {
+      nC = Math.round(nControl);
+      nT = Math.round(nTreat);
+      cC = Math.min(Math.round(convControl), nC);
+      cT = Math.min(Math.round(convTreat), nT);
+      ctrlA = prior.a + cC;
+      ctrlB = prior.b + nC - cC;
+      treatA = prior.a + cT;
+      treatB = prior.b + nT - cT;
+    }
 
-    // Posterior means
     const ctrlMean = ctrlA / (ctrlA + ctrlB);
     const treatMean = treatA / (treatA + treatB);
-
-    // 95% credible intervals
     const ctrlCI = [betaQuantile(0.025, ctrlA, ctrlB), betaQuantile(0.975, ctrlA, ctrlB)];
     const treatCI = [betaQuantile(0.025, treatA, treatB), betaQuantile(0.975, treatA, treatB)];
 
-    // P(B > A)
-    const pBbeatsA = probBBeatsA(ctrlA, ctrlB, treatA, treatB);
-
-    // Expected loss of choosing B (when A might be better)
-    const expLossB = expectedLossOfB(ctrlA, ctrlB, treatA, treatB);
-    // Expected loss of choosing A (when B might be better)
+    const pBbeatsA = simMode ? sim.state.pBbeatsA : probBBeatsA(ctrlA, ctrlB, treatA, treatB);
+    const expLossB = simMode
+      ? sim.state.expectedLoss
+      : expectedLossOfB(ctrlA, ctrlB, treatA, treatB);
     const expLossA = expectedLossOfB(treatA, treatB, ctrlA, ctrlB);
-    const expLoss = expLossB;
 
-    // Decision using loss threshold
-    const lossThreshold = 0.0005; // 0.05 percentage points
+    const lossThreshold = 0.0005;
     let decision: string;
     if (expLossB < lossThreshold && pBbeatsA > 0.5) decision = 'Ship B';
     else if (expLossA < lossThreshold && pBbeatsA < 0.5) decision = 'Ship A';
@@ -105,7 +135,6 @@ export default function M30BayesianABTesting() {
     ctrlArea += 'L' + toX1(xMax1) + ',' + toY1(0) + 'Z';
     treatArea += 'L' + toX1(xMax1) + ',' + toY1(0) + 'Z';
 
-    // X-axis ticks for chart 1
     const tickStep1 = Math.max(0.01, Math.round(((xMax1 - xMin1) / 6) * 100) / 100);
     const ticks1: number[] = [];
     for (let v = Math.ceil(xMin1 / tickStep1) * tickStep1; v <= xMax1; v += tickStep1) {
@@ -119,7 +148,6 @@ export default function M30BayesianABTesting() {
       pr2 = 36,
       pt2 = 20,
       pb2 = 34;
-    // Approximate difference distribution by convolution on a grid
     const diffSteps = 200;
     const diffMin = -0.15;
     const diffMax = 0.15;
@@ -147,7 +175,6 @@ export default function M30BayesianABTesting() {
     let posArea = '',
       negArea = '',
       diffLine = '';
-    // Positive area (B beats A, diff > 0)
     const posPts: { sx: number; sy: number }[] = [];
     const negPts: { sx: number; sy: number }[] = [];
     diffPts.forEach((pt, i) => {
@@ -160,7 +187,6 @@ export default function M30BayesianABTesting() {
 
     if (posPts.length > 1) {
       posArea = 'M' + toX2(0) + ',' + toY2(0);
-      // Find density at diff=0 for starting point
       posPts.forEach((pt) => (posArea += 'L' + pt.sx + ',' + pt.sy));
       posArea += 'L' + posPts[posPts.length - 1].sx + ',' + toY2(0) + 'Z';
     }
@@ -170,9 +196,7 @@ export default function M30BayesianABTesting() {
       negArea += 'L' + toX2(0) + ',' + toY2(0) + 'Z';
     }
 
-    // Credible interval for difference (approximate)
     const diffMean = treatMean - ctrlMean;
-    // Use cumulative sum approach for quantiles of difference
     let cumSum = 0;
     let diffCILo = diffMin,
       diffCIHi = diffMax;
@@ -197,9 +221,8 @@ export default function M30BayesianABTesting() {
       ctrlCI,
       treatCI,
       pBbeatsA,
-      expLoss,
-      expLossA,
       expLossB,
+      expLossA,
       lossThreshold,
       decision,
       W1,
@@ -240,7 +263,7 @@ export default function M30BayesianABTesting() {
       cC,
       cT,
     };
-  }, [priorKey, nControl, nTreat, convControl, convTreat]);
+  }, [simMode, sim.state, nControl, nTreat, convControl, convTreat, prior]);
 
   const tooltipLookup1 = useCallback(
     (vbX: number) => {
@@ -287,7 +310,6 @@ export default function M30BayesianABTesting() {
       } = data;
       if (vbX < pl2 || vbX > W2 - pr2) return null;
       const dVal = diffMin + ((vbX - pl2) / (W2 - pl2 - pr2)) * (diffMax - diffMin);
-      // Approximate density at this diff value
       const gridSteps2 = 100;
       const gridDx2 = 1 / gridSteps2;
       let density = 0;
@@ -329,6 +351,35 @@ export default function M30BayesianABTesting() {
         distributions update as you adjust conversion data.
       </Desc>
 
+      {/* Mode toggle */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <PillBtn on={!simMode} onClick={() => setSimMode(false)}>
+          Explore
+        </PillBtn>
+        <PillBtn on={simMode} onClick={() => setSimMode(true)}>
+          Simulate
+        </PillBtn>
+      </div>
+
+      {/* Sim controls */}
+      {simMode && (
+        <SimControls
+          running={sim.state.running}
+          onPlay={sim.start}
+          onPause={sim.pause}
+          onStep={sim.stepOnce}
+          onReset={sim.reset}
+          progress={
+            sim.state.visitorsA +
+            sim.state.visitorsB +
+            ' visitors | ' +
+            'P(B>A) = ' +
+            (sim.state.pBbeatsA * 100).toFixed(1) +
+            '%'
+          }
+        />
+      )}
+
       {/* Chart 1: Posterior Distributions */}
       <ChartBox
         h={data.H1}
@@ -349,7 +400,6 @@ export default function M30BayesianABTesting() {
         <path d={data.treatArea} fill="url(#grad-treat-30)" />
         <path d={data.ctrlPath} fill="none" stroke={colors.indigo} strokeWidth={2.5} />
         <path d={data.treatPath} fill="none" stroke={colors.emerald} strokeWidth={2.5} />
-        {/* Posterior mean lines */}
         <line
           x1={data.toX1(data.ctrlMean)}
           y1={data.pt1}
@@ -368,7 +418,6 @@ export default function M30BayesianABTesting() {
           strokeWidth={1}
           strokeDasharray="3,3"
         />
-        {/* X axis */}
         <line
           x1={data.pl1}
           y1={data.H1 - data.pb1}
@@ -388,7 +437,6 @@ export default function M30BayesianABTesting() {
             {v.toFixed(2)}
           </text>
         ))}
-        {/* Legend */}
         <text x={data.pl1 + 4} y={data.pt1 - 4} fill={colors.indigo} fontSize={9} fontWeight="600">
           Control
         </text>
@@ -423,7 +471,6 @@ export default function M30BayesianABTesting() {
         {data.posArea && <path d={data.posArea} fill="url(#grad-pos-30)" />}
         {data.negArea && <path d={data.negArea} fill="url(#grad-neg-30)" />}
         <path d={data.diffLine} fill="none" stroke={sv.text} strokeWidth={2} />
-        {/* Zero line */}
         <line
           x1={data.toX2(0)}
           y1={data.pt2}
@@ -433,7 +480,6 @@ export default function M30BayesianABTesting() {
           strokeWidth={1}
           strokeDasharray="4,3"
         />
-        {/* Credible interval bar */}
         <line
           x1={data.toX2(data.diffCILo)}
           y1={data.H2 - data.pb2 - 12}
@@ -450,7 +496,6 @@ export default function M30BayesianABTesting() {
           r={3}
           fill={colors.emerald}
         />
-        {/* X axis */}
         <line
           x1={data.pl2}
           y1={data.H2 - data.pb2}
@@ -470,7 +515,6 @@ export default function M30BayesianABTesting() {
             {(v * 100).toFixed(0) + '%'}
           </text>
         ))}
-        {/* Label */}
         <text
           x={data.W2 - data.pr2 - 4}
           y={data.pt2 - 4}
@@ -575,46 +619,83 @@ export default function M30BayesianABTesting() {
       </div>
 
       {/* Sliders */}
-      <Sl
-        label="Control Sample Size"
-        value={nControl}
-        min={50}
-        max={5000}
-        step={50}
-        onChange={setNControl}
-        fmt={(v: number) => String(Math.round(v))}
-        color={colors.indigo}
-      />
-      <Sl
-        label="Treatment Sample Size"
-        value={nTreat}
-        min={50}
-        max={5000}
-        step={50}
-        onChange={setNTreat}
-        fmt={(v: number) => String(Math.round(v))}
-        color={colors.emerald}
-      />
-      <Sl
-        label="Control Conversions"
-        value={convControl}
-        min={1}
-        max={nC}
-        step={1}
-        onChange={setConvControl}
-        fmt={(v: number) => String(Math.round(v))}
-        color={colors.indigo}
-      />
-      <Sl
-        label="Treatment Conversions"
-        value={convTreat}
-        min={1}
-        max={nT}
-        step={1}
-        onChange={setConvTreat}
-        fmt={(v: number) => String(Math.round(v))}
-        color={colors.emerald}
-      />
+      {simMode ? (
+        <>
+          <Sl
+            label="True Control Rate"
+            value={trueRateA}
+            min={0.01}
+            max={0.5}
+            step={0.005}
+            onChange={setTrueRateA}
+            fmt={(v: number) => (v * 100).toFixed(1) + '%'}
+            color={colors.indigo}
+          />
+          <Sl
+            label="True Treatment Rate"
+            value={trueRateB}
+            min={0.01}
+            max={0.5}
+            step={0.005}
+            onChange={setTrueRateB}
+            fmt={(v: number) => (v * 100).toFixed(1) + '%'}
+            color={colors.emerald}
+          />
+          <Sl
+            label="Simulation Speed"
+            value={speed}
+            min={10}
+            max={100}
+            step={1}
+            onChange={setSpeed}
+            fmt={(v) => Math.round(v) + '%'}
+            color={colors.amber}
+          />
+        </>
+      ) : (
+        <>
+          <Sl
+            label="Control Sample Size"
+            value={nControl}
+            min={50}
+            max={5000}
+            step={50}
+            onChange={setNControl}
+            fmt={(v: number) => String(Math.round(v))}
+            color={colors.indigo}
+          />
+          <Sl
+            label="Treatment Sample Size"
+            value={nTreat}
+            min={50}
+            max={5000}
+            step={50}
+            onChange={setNTreat}
+            fmt={(v: number) => String(Math.round(v))}
+            color={colors.emerald}
+          />
+          <Sl
+            label="Control Conversions"
+            value={convControl}
+            min={1}
+            max={nC}
+            step={1}
+            onChange={setConvControl}
+            fmt={(v: number) => String(Math.round(v))}
+            color={colors.indigo}
+          />
+          <Sl
+            label="Treatment Conversions"
+            value={convTreat}
+            min={1}
+            max={nT}
+            step={1}
+            onChange={setConvTreat}
+            fmt={(v: number) => String(Math.round(v))}
+            color={colors.emerald}
+          />
+        </>
+      )}
 
       <QA
         items={[

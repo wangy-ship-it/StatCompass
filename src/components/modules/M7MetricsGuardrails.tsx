@@ -417,7 +417,7 @@ export default function M6MetricsGuardrails() {
           color={data.trippedCount > 0 ? colors.red : colors.emerald}
         />
         <StatBox
-          label="Bonferroni \u03b1"
+          label={'Bonferroni \u03b1'}
           value={(data.bonferroniAlpha * 100).toFixed(2) + '%'}
           color={colors.indigo}
         />

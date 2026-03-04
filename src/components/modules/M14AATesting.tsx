@@ -1,25 +1,43 @@
 import { useState, useMemo, useCallback } from 'react';
 import { sR, nCDF } from '../../utils/math';
 import { colors, sv } from '../../styles/theme';
-import { Hdr, Desc, ChartBox, Sl, PillBtn, StatBox, QA, TechNote, Insight } from '../ui';
+import {
+  Hdr,
+  Desc,
+  ChartBox,
+  Sl,
+  PillBtn,
+  StatBox,
+  SimControls,
+  QA,
+  TechNote,
+  Insight,
+} from '../ui';
 import useAnimatedParams from '../../hooks/useAnimatedParams';
+import useAASim from '../../hooks/useAASim';
 
-const paramDefaults = { nSims: 500, alpha: 0.05 };
+const paramDefaults = { nSims: 500, alpha: 0.05, speed: 50 };
 
 export default function M11AATesting() {
   const [p, set] = useAnimatedParams(paramDefaults);
-  const { nSims, alpha } = p;
+  const { nSims, alpha, speed } = p;
   const setNSims = (v: number) => set('nSims', v);
   const setAlpha = (v: number) => set('alpha', v);
+  const setSpeed = (v: number) => set('speed', v);
+  const [simMode, setSimMode] = useState(false);
   const [seed, setSeed] = useState(1);
 
-  const data = useMemo(() => {
+  // Simulation hook
+  const sim = useAASim(alpha, speed);
+
+  // Static data for explore mode
+  const staticData = useMemo(() => {
+    if (simMode) return null;
     const nBins = 20;
     const binWidth = 1 / nBins;
     const bins = new Array(nBins).fill(0);
     let falsePositives = 0;
 
-    // Generate uniform p-values (A/A test: both groups identical)
     for (let i = 0; i < Math.round(nSims); i++) {
       const pValue = sR(seed * 1000 + i * 71 + 200);
       const binIdx = Math.min(Math.floor(pValue / binWidth), nBins - 1);
@@ -30,17 +48,50 @@ export default function M11AATesting() {
     const expectedPerBin = Math.round(nSims) / nBins;
     const observedFPR = falsePositives / Math.round(nSims);
 
-    // Chi-square uniformity test
     let chiSq = 0;
     for (let b = 0; b < nBins; b++) {
       chiSq += Math.pow(bins[b] - expectedPerBin, 2) / expectedPerBin;
     }
-    // Wilson-Hilferty approximation for chi-sq CDF with df=19
     const df = nBins - 1;
     const chiPValue = 1 - nCDF(Math.sqrt(2 * chiSq) - Math.sqrt(2 * df - 1), 0, 1);
 
     return { bins, expectedPerBin, falsePositives, observedFPR, chiSq, chiPValue };
-  }, [nSims, alpha, seed]);
+  }, [simMode, nSims, alpha, seed]);
+
+  // Unified data: sim mode builds histogram from growing pValues, static uses precomputed
+  const chartData = useMemo(() => {
+    if (simMode) {
+      const nBins = 20;
+      const binWidth = 1 / nBins;
+      const bins = new Array(nBins).fill(0);
+      for (const pv of sim.state.pValues) {
+        const idx = Math.min(Math.floor(pv / binWidth), nBins - 1);
+        bins[idx]++;
+      }
+      const total = sim.state.pValues.length;
+      const expectedPerBin = total > 0 ? total / nBins : 1;
+
+      let chiSq = 0;
+      if (total > 0) {
+        for (let b = 0; b < nBins; b++) {
+          chiSq += Math.pow(bins[b] - expectedPerBin, 2) / expectedPerBin;
+        }
+      }
+      const df = nBins - 1;
+      const chiPValue =
+        total > 0 ? 1 - nCDF(Math.sqrt(2 * chiSq) - Math.sqrt(2 * df - 1), 0, 1) : 1;
+
+      return {
+        bins,
+        expectedPerBin,
+        falsePositives: sim.state.falsePositives,
+        observedFPR: sim.state.fpr,
+        chiSq,
+        chiPValue,
+      };
+    }
+    return staticData!;
+  }, [simMode, sim.state, staticData]);
 
   const W = 600,
     H = 240,
@@ -49,8 +100,8 @@ export default function M11AATesting() {
     pt = 20,
     pb = 36;
   const nBins = 20;
-  const binWidth = useMemo(() => 1 / nBins, []);
-  const maxCount = Math.max(...data.bins, data.expectedPerBin * 1.5);
+  const binWidth = 1 / nBins;
+  const maxCount = Math.max(...chartData.bins, chartData.expectedPerBin * 1.5);
   const barGap = 2;
   const totalBarArea = W - pl - pr;
   const barW = (totalBarArea - barGap * (nBins - 1)) / nBins;
@@ -63,7 +114,7 @@ export default function M11AATesting() {
       if (vbX < pl || vbX > W - pr) return null;
       const bIdx = Math.floor((vbX - pl) / (barW + barGap));
       if (bIdx < 0 || bIdx >= nBins) return null;
-      const count = data.bins[bIdx];
+      const count = chartData.bins[bIdx];
       const binStart = bIdx * binWidth;
       const isBelow = binStart + binWidth <= alpha + 1e-9;
       const cx = pl + bIdx * (barW + barGap) + barW / 2;
@@ -82,7 +133,7 @@ export default function M11AATesting() {
         markers: [{ y: cy, color: isBelow ? colors.red : colors.indigo }],
       };
     },
-    [data.bins, alpha, barW, barGap, maxCount, binWidth],
+    [chartData.bins, alpha, barW, barGap, maxCount, binWidth],
   );
 
   return (
@@ -94,6 +145,28 @@ export default function M11AATesting() {
         tests should appear "significant." This is the sanity check before running real experiments.
       </Desc>
 
+      {/* Mode toggle */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <PillBtn on={!simMode} onClick={() => setSimMode(false)}>
+          Explore
+        </PillBtn>
+        <PillBtn on={simMode} onClick={() => setSimMode(true)}>
+          Simulate
+        </PillBtn>
+      </div>
+
+      {/* Sim controls */}
+      {simMode && (
+        <SimControls
+          running={sim.state.running}
+          onPlay={sim.start}
+          onPause={sim.pause}
+          onStep={sim.stepOnce}
+          onReset={sim.reset}
+          progress={sim.state.step + ' / 500 tests | FPR ' + (sim.state.fpr * 100).toFixed(1) + '%'}
+        />
+      )}
+
       <ChartBox
         h={H}
         label="A/A test results showing distribution of p-values across simulated tests to verify the testing system produces expected false positive rates"
@@ -102,22 +175,22 @@ export default function M11AATesting() {
         {/* Expected frequency dashed line */}
         <line
           x1={pl}
-          y1={toY(data.expectedPerBin)}
+          y1={toY(chartData.expectedPerBin)}
           x2={W - pr}
-          y2={toY(data.expectedPerBin)}
+          y2={toY(chartData.expectedPerBin)}
           stroke={colors.amber}
           strokeWidth={1.5}
           strokeDasharray="6,4"
         />
         <text
           x={W - pr}
-          y={toY(data.expectedPerBin) - 5}
+          y={toY(chartData.expectedPerBin) - 5}
           fill={colors.amber}
           fontSize={9}
           textAnchor="end"
           fontWeight="600"
         >
-          {'Expected = ' + data.expectedPerBin.toFixed(1)}
+          {'Expected = ' + chartData.expectedPerBin.toFixed(1)}
         </text>
 
         {/* Alpha threshold vertical line */}
@@ -150,7 +223,7 @@ export default function M11AATesting() {
         })()}
 
         {/* Histogram bars */}
-        {data.bins.map((count, i) => {
+        {chartData.bins.map((count, i) => {
           const binStart = i * binWidth;
           const isBelow = binStart + binWidth <= alpha + 1e-9;
           const barColor = isBelow ? colors.red : colors.indigo;
@@ -167,7 +240,6 @@ export default function M11AATesting() {
                 fill={barColor}
                 opacity={barOpacity}
               />
-              {/* Count label on taller bars */}
               {count > 0 && (
                 <text
                   x={toX(i) + barW / 2}
@@ -206,7 +278,6 @@ export default function M11AATesting() {
         <text x={pl - 4} y={pt + 4} fill={sv.text} fontSize={9} textAnchor="end">
           Count
         </text>
-        {/* Y-axis ticks */}
         {[0, Math.round(maxCount / 2), Math.round(maxCount)].map((v) => (
           <text key={v} x={pl - 6} y={toY(v) + 3} fill={sv.text} fontSize={8} textAnchor="end">
             {v}
@@ -243,8 +314,10 @@ export default function M11AATesting() {
       <div className="flex gap-3 mb-5 flex-wrap">
         <StatBox
           label="Observed FP Rate"
-          value={(data.observedFPR * 100).toFixed(1) + '%'}
-          color={Math.abs(data.observedFPR - alpha) > alpha * 0.5 ? colors.amber : colors.emerald}
+          value={(chartData.observedFPR * 100).toFixed(1) + '%'}
+          color={
+            Math.abs(chartData.observedFPR - alpha) > alpha * 0.5 ? colors.amber : colors.emerald
+          }
         />
         <StatBox
           label="Expected Rate"
@@ -253,20 +326,22 @@ export default function M11AATesting() {
         />
         <StatBox
           label="Uniformity p-value"
-          value={data.chiPValue < 0.001 ? '< 0.001' : data.chiPValue.toFixed(3)}
-          color={data.chiPValue < 0.05 ? colors.red : colors.emerald}
+          value={chartData.chiPValue < 0.001 ? '< 0.001' : chartData.chiPValue.toFixed(3)}
+          color={chartData.chiPValue < 0.05 ? colors.red : colors.emerald}
         />
       </div>
 
-      <Sl
-        label="Number of Simulations"
-        value={nSims}
-        min={100}
-        max={2000}
-        step={20}
-        onChange={setNSims}
-        color={colors.indigo}
-      />
+      {!simMode && (
+        <Sl
+          label="Number of Simulations"
+          value={nSims}
+          min={100}
+          max={2000}
+          step={20}
+          onChange={setNSims}
+          color={colors.indigo}
+        />
+      )}
       <Sl
         label="Alpha Level"
         value={alpha}
@@ -277,12 +352,26 @@ export default function M11AATesting() {
         fmt={(v) => v.toFixed(2)}
         color={colors.amber}
       />
+      {simMode && (
+        <Sl
+          label="Simulation Speed"
+          value={speed}
+          min={10}
+          max={100}
+          step={1}
+          onChange={setSpeed}
+          fmt={(v) => Math.round(v) + '%'}
+          color={colors.indigo}
+        />
+      )}
 
-      <div className="flex gap-2 mb-4 flex-wrap">
-        <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>
-          Re-simulate
-        </PillBtn>
-      </div>
+      {!simMode && (
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <PillBtn on={false} onClick={() => setSeed((s) => s + 1)}>
+            Re-simulate
+          </PillBtn>
+        </div>
+      )}
 
       <QA
         items={[

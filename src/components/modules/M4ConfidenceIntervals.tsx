@@ -6,7 +6,7 @@ import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const paramDefaults = { cl: 0.95, ss: 30 };
 
-export default function M3ConfidenceIntervals() {
+export default function M4ConfidenceIntervals() {
   const [p, set] = useAnimatedParams(paramDefaults);
   const { cl, ss } = p;
   const setCl = (v: number) => set('cl', v);
@@ -15,6 +15,7 @@ export default function M3ConfidenceIntervals() {
   const truM = 50,
     sigma = 10;
 
+  // Static intervals for explore mode
   const ivs = useMemo(() => {
     const z = zInv(1 - cl);
     const se = sigma / Math.sqrt(ss);
@@ -28,6 +29,8 @@ export default function M3ConfidenceIntervals() {
   }, [cl, ss, seed]);
 
   const capN = ivs.filter((c) => c.cap).length;
+  const totalN = ivs.length;
+
   const W = 600,
     H = 340,
     pl = 36,
@@ -35,16 +38,16 @@ export default function M3ConfidenceIntervals() {
     pt = 20,
     ppb = 20;
   const toX = (v: number) => pl + ((v - 32) / 36) * (W - pl - pr);
-  const rH = useMemo(() => (H - pt - ppb) / 25, []);
+  const rH = (H - pt - ppb) / Math.max(totalN, 1);
 
   const tooltipLookup = useCallback(
     (vbX: number, vbY: number) => {
-      if (vbX < pl || vbX > W - pr) return null;
+      if (vbX < pl || vbX > W - pr || totalN === 0) return null;
       const xVal = 32 + ((vbX - pl) / (W - pl - pr)) * 36;
-      // Find the nearest CI bar by vertical position
       let bestIdx = Math.round((vbY - pt - rH / 2) / rH);
-      bestIdx = Math.max(0, Math.min(bestIdx, ivs.length - 1));
+      bestIdx = Math.max(0, Math.min(bestIdx, totalN - 1));
       const ci = ivs[bestIdx];
+      if (!ci) return null;
       const ciY = pt + bestIdx * rH + rH / 2;
       const c = ci.cap ? colors.indigo : colors.red;
       return {
@@ -67,7 +70,7 @@ export default function M3ConfidenceIntervals() {
         markers: [{ y: ciY, color: c }],
       };
     },
-    [ivs, rH],
+    [ivs, totalN, rH],
   );
 
   return (
@@ -131,13 +134,13 @@ export default function M3ConfidenceIntervals() {
 
       <div className="rounded-xl py-3 px-4 mb-4 text-center" style={{ background: sv.fillIndigo }}>
         <span className="text-lg font-extrabold" style={{ color: colors.indigo }}>
-          {capN + '/' + ivs.length}
+          {capN + '/' + totalN}
         </span>
         <span className="text-sm text-[var(--svg-text)]">
-          {' captured true value (' + Math.round((capN / ivs.length) * 100) + '%)'}
+          {' captured true value (' + (totalN > 0 ? Math.round((capN / totalN) * 100) : 0) + '%)'}
         </span>
         <span className="text-sm ml-2" style={{ color: colors.red }}>
-          {'  ' + (ivs.length - capN) + ' missed'}
+          {'  ' + (totalN - capN) + ' missed'}
         </span>
       </div>
 

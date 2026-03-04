@@ -5,7 +5,7 @@ import useAnimatedParams from '../../hooks/useAnimatedParams';
 
 const effectTypes = {
   novelty: { label: 'Novelty Decay', desc: 'Initial spike, then decay' },
-  primacy: { label: 'Primacy Adaptation', desc: 'Initial resistance, then adaptation' },
+  primacy: { label: 'Habituation Lag', desc: 'Initial resistance, then gradual adaptation' },
   sustained: { label: 'Sustained', desc: 'Stable effect over time' },
 };
 
@@ -135,9 +135,9 @@ export default function M14NoveltyTimeEffects() {
       <Hdr sub="Validate & Run">Novelty & Time Effects</Hdr>
       <Desc>
         Treatment effects are not always stable over time. Novelty effects inflate early results as
-        users engage with anything new. Primacy effects bias toward the status quo as users resist
-        change initially. Understanding these dynamics is critical for reading experiment results
-        correctly.
+        users engage with anything new. Habituation effects bias toward the status quo as users
+        resist change initially. Understanding these dynamics is critical for reading experiment
+        results correctly.
       </Desc>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -150,7 +150,7 @@ export default function M14NoveltyTimeEffects() {
 
       <ChartBox
         h={H}
-        label="Time series showing how novelty and primacy effects cause treatment impact to change over the experiment duration"
+        label="Time series showing how novelty and habituation effects cause treatment impact to change over the experiment duration"
         tooltipLookup={tooltipLookup}
       >
         <defs>
@@ -303,9 +303,9 @@ export default function M14NoveltyTimeEffects() {
         ]}
       />
       <TechNote>
-        Novelty effects are modeled as exponential decay: effect(t) = E₀·e^(-kt). Primacy effects
-        follow exponential adaptation: effect(t) = E_ss·(1 - e^(-kt)). The measurement bias is the
-        gap between what you measure at time t and the true long-run effect.
+        Novelty effects are modeled as exponential decay: effect(t) = E₀·e^(-kt). Habituation
+        effects follow exponential adaptation: effect(t) = E_ss·(1 - e^(-kt)). The measurement bias
+        is the gap between what you measure at time t and the true long-run effect.
       </TechNote>
       <Insight>
         The most common mistake is reading experiment results too early. A +15% initial lift that
