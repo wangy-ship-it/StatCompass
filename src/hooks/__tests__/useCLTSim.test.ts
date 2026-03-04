@@ -254,6 +254,58 @@ describe('useCLTSim', () => {
     expect(typeof result.current.stepOnce).toBe('function');
   });
 
+  /* ── Distribution coverage ── */
+
+  it('exponential shape produces valid sample means', () => {
+    const { result } = renderSim('exponential');
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.means).toHaveLength(5);
+    for (const m of result.current.state.means) {
+      expect(Number.isFinite(m)).toBe(true);
+      expect(m).toBeGreaterThan(-10);
+    }
+  });
+
+  it('bimodal shape produces valid sample means', () => {
+    const { result } = renderSim('bimodal');
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.means).toHaveLength(5);
+    for (const m of result.current.state.means) {
+      expect(Number.isFinite(m)).toBe(true);
+    }
+    expect(result.current.state.mu).toBe(0.5);
+  });
+
+  it('unknown shape defaults to uniform (0.5 mean)', () => {
+    const { result } = renderSim('unknown');
+
+    expect(result.current.state.mu).toBe(0.5);
+    expect(result.current.state.seMean).toBeGreaterThan(0);
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.means).toHaveLength(5);
+    for (const m of result.current.state.means) {
+      expect(Number.isFinite(m)).toBe(true);
+    }
+  });
+
+  it('bimodal initializes with correct SE', () => {
+    const { result } = renderSim('bimodal');
+    // bimodal sd=0.21, se = 0.21 / sqrt(30) ≈ 0.0383
+    expect(result.current.state.seMean).toBeCloseTo(0.21 / Math.sqrt(30), 2);
+  });
+
   /* ── Seed reproducibility ── */
 
   it('produces the same means for same parameters', () => {

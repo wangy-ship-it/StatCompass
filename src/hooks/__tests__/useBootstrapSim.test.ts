@@ -279,6 +279,67 @@ describe('useBootstrapSim', () => {
     expect(typeof result.current.stepOnce).toBe('function');
   });
 
+  /* ── Distribution coverage ── */
+
+  it('works with normal distribution', () => {
+    const { result } = renderSim('normal');
+    const { state } = result.current;
+
+    expect(state.groupA).toHaveLength(SAMPLE_SIZE);
+    expect(state.diffMean).toBeGreaterThan(0);
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.bootDist).toHaveLength(10);
+    expect(result.current.state.permDist).toHaveLength(10);
+  });
+
+  it('works with bimodal distribution', () => {
+    const { result } = renderSim('bimodal');
+    const { state } = result.current;
+
+    expect(state.groupA).toHaveLength(SAMPLE_SIZE);
+    expect(Number.isFinite(state.diffMean)).toBe(true);
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.bootDist).toHaveLength(10);
+  });
+
+  it('works with heavy-tailed distribution', () => {
+    const { result } = renderSim('heavy');
+    const { state } = result.current;
+
+    expect(state.groupA).toHaveLength(SAMPLE_SIZE);
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.bootDist).toHaveLength(10);
+    for (const v of result.current.state.bootDist) {
+      expect(Number.isFinite(v)).toBe(true);
+    }
+  });
+
+  it('falls back to skewed for unknown distribution', () => {
+    const { result } = renderSim('unknown');
+    const { state } = result.current;
+
+    // Should use skewed fallback
+    expect(state.groupA).toHaveLength(SAMPLE_SIZE);
+
+    act(() => {
+      result.current.stepOnce();
+    });
+
+    expect(result.current.state.bootDist).toHaveLength(10);
+  });
+
   /* ── Seed reproducibility ── */
 
   it('produces the same initial data for same parameters', () => {
